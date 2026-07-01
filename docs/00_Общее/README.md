@@ -1,7 +1,16 @@
 # 🛡️ FAB Shield — Документация
 
-> Современная система безопасности для Node.js приложений  
-> Разработано ООО «Деворбит» (DEVORBIT LLC)
+> Современная система безопасности для Node.js-приложений  
+> Разработано **ООО «Деворбит» (DEVORBIT LLC)**
+
+<p align="center">
+
+[GitHub](https://github.com/zammartin2/shield) •
+[npm](https://www.npmjs.com/package/@fab-orbita/shield) •
+[Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield) •
+[Telegram](https://t.me/fab_shield)
+
+</p>
 
 ---
 
@@ -14,29 +23,40 @@
 - [Сообщество](#-сообщество)
 - [Лицензия](#-лицензия)
 - [Контакты](#-контакты)
+- [Благодарности](#-благодарности)
+- [Версии](#-версии)
 
 ---
 
 ## 🏢 О проекте
 
-**FAB Shield** — это полноценный security-фреймворк для Node.js, который объединяет:
+**FAB Shield** — это полноценный security-фреймворк для Node.js, который объединяет современные инструменты защиты веб-приложений и API.
+
+Основные возможности:
 
 - 🔒 **25+ security-заголовков** из коробки
-- 🤖 **AI-защиту** от современных угроз
-- 🔌 **Систему плагинов** для расширения
+- 🤖 **AI-защита** от современных угроз
+- 🔌 **Система плагинов** для расширения
 - 📊 **Метрики и мониторинг** в реальном времени
-- ⚡ **Молниеносную производительность**
+- ⚡ **Молниеносная производительность**
+- 🛡️ **Динамический CSP**
+- 🚦 **Rate limiting**
+- 📚 **Документация и примеры**
+
+---
 
 ### 📊 Сравнение с аналогами
 
-| Фича | Helmet | FAB Shield |
-|:---|:---|:---|
+| Возможность | Helmet | FAB Shield |
+|:---|:---:|:---:|
 | Security-заголовки | 15 | 25+ |
 | AI-защита | ❌ | ✅ |
 | Динамический CSP | ❌ | ✅ |
 | Система плагинов | ❌ | ✅ |
 | Метрики | ❌ | ✅ |
 | Отчеты | ❌ | ✅ |
+| Rate Limiting | ❌ | ✅ |
+| Мониторинг | ❌ | ✅ |
 
 ---
 
@@ -45,11 +65,16 @@
 ### 1. Установка
 
 ```bash
-npm install @fab-registry/shield
-2. Базовое использование
-typescript
+npm install @fab-orbita/shield
+```
+
+---
+
+### 2. Базовое использование
+
+```typescript
 import express from 'express'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 const app = express()
 const shield = new FABShield()
@@ -58,117 +83,186 @@ const shield = new FABShield()
 app.use(shield.middleware())
 
 app.get('/', (req, res) => {
-    res.json({ message: 'Hello World!' })
+  res.json({ message: 'Hello World!' })
 })
 
 app.listen(3000)
-3. Расширенная конфигурация
-typescript
-import { FABShield } from '@fab-registry/shield'
+```
+
+---
+
+### 3. Расширенная конфигурация
+
+```typescript
+import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
-    // AI-защита
-    ai: {
-        enabled: true,
-        anomalyDetection: true,
-        threatPrediction: true
-    },
-    
-    // Динамический CSP
-    csp: {
-        dynamic: true,
-        trustedCDNs: [
-            'https://cdnjs.cloudflare.com',
-            'https://cdn.jsdelivr.net'
-        ]
-    },
-    
-    // Мониторинг
-    monitoring: {
-        enabled: true,
-        export: ['prometheus', 'json']
-    }
+  // AI-защита
+  ai: {
+    enabled: true,
+    anomalyDetection: true,
+    threatPrediction: true
+  },
+
+  // Динамический CSP
+  csp: {
+    dynamic: true,
+    trustedCDNs: [
+      'https://cdnjs.cloudflare.com',
+      'https://cdn.jsdelivr.net'
+    ]
+  },
+
+  // Мониторинг
+  monitoring: {
+    enabled: true,
+    export: ['prometheus', 'json']
+  }
 })
-✨ Ключевые возможности
-🔒 25+ Security-заголовков
-Content-Security-Policy (CSP)
+```
 
-Strict-Transport-Security (HSTS)
+---
 
-X-Frame-Options (Clickjacking защита)
+## ✨ Ключевые возможности
 
-X-Content-Type-Options
+### 🔒 25+ Security-заголовков
 
-Referrer-Policy
+FAB Shield помогает автоматически настраивать важные security-заголовки:
 
-И еще 20+ заголовков
+- `Content-Security-Policy` — защита от XSS и контроль источников ресурсов
+- `Strict-Transport-Security` — принудительное использование HTTPS
+- `X-Frame-Options` — защита от clickjacking
+- `X-Content-Type-Options` — защита от MIME sniffing
+- `Referrer-Policy` — контроль передачи referrer
+- `Permissions-Policy` — ограничение возможностей браузера
+- и еще 20+ заголовков
 
-🤖 AI-защита
-Обнаружение аномалий в запросах
+---
 
-Анализ поведения пользователей
+### 🤖 AI-защита
 
-Прогнозирование угроз
+AI-модуль помогает анализировать подозрительную активность и выявлять угрозы.
 
-Автоматическая адаптация защиты
+Возможности:
 
-Самообучение на новых атаках
+- обнаружение аномалий в запросах;
+- анализ поведения пользователей;
+- прогнозирование угроз;
+- автоматическая адаптация защиты;
+- самообучение на новых атаках;
+- выявление подозрительных payload;
+- анализ XSS и SQL Injection паттернов.
 
-🔌 Система плагинов
-Легкое расширение функциональности
+---
 
-Официальные плагины
+### 🔌 Система плагинов
 
-API для создания своих плагинов
+FAB Shield поддерживает расширение функциональности через плагины.
 
-Маркетплейс плагинов (в планах)
+Возможности системы плагинов:
 
-📊 Метрики и мониторинг
-Сбор метрик в реальном времени
+- легкое расширение функциональности;
+- официальные плагины;
+- API для создания собственных плагинов;
+- возможность интеграции с внешними сервисами;
+- маркетплейс плагинов в планах.
 
-Экспорт в Prometheus, JSON, CSV
+Пример плагина:
 
-Генерация отчетов (PDF, HTML, JSON)
+```typescript
+const auditPlugin = {
+  name: 'audit-logger',
+  version: '1.0.0',
 
-Система алертов и уведомлений
+  middleware(req, res, next) {
+    console.log(`[AUDIT] ${req.method} ${req.url}`)
+    next()
+  }
+}
 
-📚 Документация
-Раздел	Описание
-📁 01_Введение	Что такое FAB Shield
-📁 02_Установка	Установка и настройка
-📁 03_Архитектура	Архитектура проекта
-📁 04_Функциональность	Все функции
-📁 05_API	API Reference
-📁 06_Плагины	Система плагинов
-📁 07_Примеры	Примеры использования
-📁 08_Разработка	Разработка и сборка
-📁 09_Безопасность	Безопасность
-📁 10_Сообщество	Сообщество
-💬 Сообщество
-Присоединяйтесь!
-Платформа	Ссылка	Назначение
-GitHub	github.com/fab-registry/shield	Код, Issues, PR
-Telegram	t.me/fab_shield	Обсуждения
-Discord	discord.gg/fab-shield	Помощь, вопросы
-Email	derector@devorbit.ru	Официальные контакты
-Как помочь
-⭐ Поставьте звезду на GitHub
+const shield = new FABShield({
+  plugins: [auditPlugin]
+})
+```
 
-🐛 Сообщайте о багах
+---
 
-📝 Улучшайте документацию
+### 📊 Метрики и мониторинг
 
-💻 Пишите код
+FAB Shield может собирать и экспортировать метрики безопасности.
 
-🎙️ Рассказывайте о проекте
+Поддерживаемые возможности:
 
-Кодекс поведения
-Мы придерживаемся Кодекса поведения. Пожалуйста, ознакомьтесь с ним перед участием.
+- сбор метрик в реальном времени;
+- экспорт в Prometheus, JSON, CSV;
+- генерация отчетов в PDF, HTML, JSON;
+- система алертов и уведомлений;
+- мониторинг подозрительных запросов;
+- отслеживание заблокированных атак.
 
-📄 Лицензия
-Проект распространяется под лицензией MIT.
+---
 
-text
+## 📚 Документация
+
+| Раздел | Описание |
+|:---|:---|
+| 📁 `01_Введение` | Что такое FAB Shield |
+| 📁 `02_Установка` | Установка и настройка |
+| 📁 `03_Архитектура` | Архитектура проекта |
+| 📁 `04_Функциональность` | Все функции |
+| 📁 `05_API` | API Reference |
+| 📁 `06_Плагины` | Система плагинов |
+| 📁 `07_Примеры` | Примеры использования |
+| 📁 `08_Разработка` | Разработка и сборка |
+| 📁 `09_Безопасность` | Безопасность |
+| 📁 `10_Сообщество` | Сообщество |
+
+---
+
+## 💬 Сообщество
+
+Присоединяйтесь к развитию проекта!
+
+| Платформа | Ссылка | Назначение |
+|:---|:---|:---|
+| GitHub | [github.com/zammartin2/shield](https://github.com/zammartin2/shield) | Код, Issues, Pull Requests |
+| Telegram | [t.me/fab_shield](https://t.me/fab_shield) | Обсуждения и помощь |
+| npm | [@fab-orbita/shield](https://www.npmjs.com/package/@fab-orbita/shield) | npm-пакет |
+| Fab Registry | [fab.devorbit.ru](https://fab.devorbit.ru/packages/@fab-orbita/shield) | Пакет в Fab Registry |
+| Email | [derector@devorbit.ru](mailto:derector@devorbit.ru) | Официальные контакты |
+
+---
+
+### Как помочь проекту
+
+- ⭐ Поставьте звезду на GitHub
+- 🐛 Сообщайте о багах
+- 📝 Улучшайте документацию
+- 💻 Пишите код
+- 🔌 Создавайте плагины
+- 🎙️ Рассказывайте о проекте
+
+---
+
+### Кодекс поведения
+
+Мы придерживаемся уважительного и открытого подхода к общению.
+
+Пожалуйста:
+
+- уважайте других участников;
+- обсуждайте идеи конструктивно;
+- не допускайте токсичного поведения;
+- помогайте новичкам;
+- предлагайте улучшения через Issues и Pull Requests.
+
+---
+
+## 📄 Лицензия
+
+Проект распространяется под лицензией **MIT**.
+
+```text
 MIT License
 
 Copyright (c) 2026 ООО «Деворбит» (DEVORBIT LLC)
@@ -190,26 +284,61 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Реестр	fab.devorbit.ru
-Сайт	devorbit.ru
-Email	derector@devorbit.ru
-🙏 Благодарности
+```
+
+---
+
+## 📞 Контакты
+
+| | |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
+| **Сайт** | [devorbit.ru](https://devorbit.ru) |
+| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **GitHub** | [github.com/zammartin2/shield](https://github.com/zammartin2/shield) |
+| **Telegram** | [t.me/fab_shield](https://t.me/fab_shield) |
+
+---
+
+## 🙏 Благодарности
+
 Спасибо всем, кто помогает развивать проект!
 
-Всем контрибьюторам
+- всем контрибьюторам;
+- сообществу за поддержку;
+- партнерам за сотрудничество;
+- разработчикам Node.js и TypeScript экосистемы;
+- пользователям, которые тестируют FAB Shield и предлагают улучшения.
 
-Сообществу за поддержку
+---
 
-Партнерам за сотрудничество
+## 📅 Версии
 
-📅 Версии
-Версия	Дата	Изменения
-1.0.0	2026-07-01	Первый стабильный релиз
-0.9.0	2026-06-15	Бета-версия
-0.5.0	2026-05-01	Альфа-версия
-Подробнее в CHANGELOG.md
+| Версия | Дата | Изменения |
+|:---|:---|:---|
+| `1.0.0` | 2026-07-01 | Первый стабильный релиз |
+| `0.9.0` | 2026-06-15 | Бета-версия |
+| `0.5.0` | 2026-05-01 | Альфа-версия |
+
+Подробнее см. в файле [`CHANGELOG.md`](../CHANGELOG.md).
+
+---
+
+<p align="center">
+
+**FAB Shield — современная защита для Node.js-приложений.**
+
+Разработано с ❤️ компанией **ООО «Деворбит» (DEVORBIT LLC)**
+
+[GitHub](https://github.com/zammartin2/shield) •
+[npm](https://www.npmjs.com/package/@fab-orbita/shield) •
+[Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield) •
+[Telegram](https://t.me/fab_shield)
+
+</p>
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.
