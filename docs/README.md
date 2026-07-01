@@ -274,8 +274,7 @@ Copyright (c) 2026 ООО «Деворбит» (DEVORBIT LLC)
 | Поле | Значение |
 |---|---|
 | Автор | Фабрициус Владимир Николаевич |
-<div class="badge-base LI-profile-badge" data-locale="ru_RU" data-size="large" data-theme="light" data-type="HORIZONTAL" data-vanity="vladimir-fabrisius-3019b041a" data-version="v1"><a class="badge-base__link LI-simple-link" href="https://ru.linkedin.com/in/vladimir-fabrisius-3019b041a?trk=profile-badge">vladimir fabrisius</a></div>
-              
+| LinkedIn | [vladimir-fabrisius](https://ru.linkedin.com/in/vladimir-fabrisius-3019b041a) |
 | Компания | ООО «Деворбит» (DEVORBIT LLC) |
 | Email | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
 | Реестр | [fab.devorbit.ru](https://fab.devorbit.ru) |
