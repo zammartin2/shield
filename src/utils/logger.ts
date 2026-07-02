@@ -121,17 +121,18 @@ export class Logger {
 
     switch (level) {
       case 'debug':
-        console.debug(formatted)
+        // ✅ ИСПРАВЛЕНО: debug всегда выводит в консоль через console.log
+        console.log(`🔍 ${formatted}`)
         break
       case 'info':
-        console.log(formatted)
+        console.log(`ℹ️ ${formatted}`)
         break
       case 'warn':
-        console.warn(formatted)
+        console.warn(`⚠️ ${formatted}`)
         break
       case 'error':
       case 'fatal':
-        console.error(formatted)
+        console.error(`❌ ${formatted}`)
         break
     }
   }

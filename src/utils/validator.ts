@@ -11,16 +11,20 @@ export class Validator {
    * Проверка email
    */
   isEmail(email: string): boolean {
+    if (!email) return false
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 
   /**
    * Проверка URL
+   * ✅ ИСПРАВЛЕНО: ftp:// не считается валидным, только http и https
    */
   isURL(url: string): boolean {
+    if (!url) return false
     try { 
-      new URL(url); 
-      return true 
+      const parsed = new URL(url)
+      // Разрешаем только http и https
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
     } catch { 
       return false 
     }
@@ -28,22 +32,62 @@ export class Validator {
 
   /**
    * Проверка IP (IPv4)
+   * ✅ ИСПРАВЛЕНО: Добавлена проверка на пустую строку и валидация чисел
    */
   isIPv4(ip: string): boolean {
-    return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip)
+    if (!ip) return false
+    if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) return false
+    return ip.split('.').every(p => {
+      const num = parseInt(p, 10)
+      return num >= 0 && num <= 255 && p === num.toString()
+    })
   }
 
   /**
    * Проверка IP (IPv6)
+   * ✅ ИСПРАВЛЕНО: Добавлена поддержка всех форматов IPv6
    */
   isIPv6(ip: string): boolean {
-    return /^([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}$/i.test(ip)
+    if (!ip) return false
+    
+    // Полный IPv6
+    if (/^([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}$/i.test(ip)) return true
+    
+    // ::1 (самый простой случай)
+    if (/^::1$/.test(ip)) return true
+    
+    // :: (unspecified)
+    if (/^::$/.test(ip)) return true
+    
+    // Сжатый IPv6 (fe80::1, 2001:db8::1)
+    if (/^([0-9a-f]{1,4}:){1,6}:[0-9a-f]{1,4}$/i.test(ip)) return true
+    
+    // Сжатый IPv6 с несколькими :: (2001:db8::, ::1, etc)
+    if (/^([0-9a-f]{1,4}:){0,7}::([0-9a-f]{1,4}:){0,7}[0-9a-f]{1,4}$/i.test(ip)) return true
+    
+    // :: в начале (::1, ::ffff:192.0.2.1)
+    if (/^::[0-9a-f]{1,4}$/i.test(ip)) return true
+    
+    // :: в конце (2001:db8::)
+    if (/^[0-9a-f]{1,4}::$/i.test(ip)) return true
+    
+    // IPv4-mapped IPv6 (::ffff:192.0.2.1)
+    if (/^::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+      const parts = ip.split(':')[1].split('.')
+      return parts.every(p => {
+        const num = parseInt(p, 10)
+        return num >= 0 && num <= 255
+      })
+    }
+    
+    return false
   }
 
   /**
    * Проверка IP (любой)
    */
   isIP(ip: string): boolean {
+    if (!ip) return false
     return this.isIPv4(ip) || this.isIPv6(ip)
   }
 
@@ -51,6 +95,7 @@ export class Validator {
    * Проверка UUID
    */
   isUUID(uuid: string): boolean {
+    if (!uuid) return false
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid)
   }
 
@@ -65,6 +110,7 @@ export class Validator {
    * Проверка хеша SHA-256
    */
   isSHA256(hash: string): boolean {
+    if (!hash) return false
     return /^[0-9a-f]{64}$/i.test(hash)
   }
 
@@ -72,6 +118,7 @@ export class Validator {
    * Проверка Base64
    */
   isBase64(str: string): boolean {
+    if (!str) return false
     return /^[A-Za-z0-9+/=]+$/.test(str)
   }
 
@@ -79,6 +126,7 @@ export class Validator {
    * Проверка HEX
    */
   isHex(str: string): boolean {
+    if (!str) return false
     return /^[0-9a-f]+$/i.test(str)
   }
 
@@ -86,6 +134,7 @@ export class Validator {
    * Проверка JWT
    */
   isJWT(token: string): boolean {
+    if (!token) return false
     return /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(token)
   }
 
@@ -144,6 +193,7 @@ export class Validator {
    * Проверка на XSS
    */
   hasXSS(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /<script.*>.*<\/script>/i,
       /javascript:/i,
@@ -175,6 +225,7 @@ export class Validator {
    * Проверка на SQL инъекцию
    */
   hasSQLInjection(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /SELECT.*FROM/i,
       /INSERT.*INTO/i,
@@ -201,6 +252,7 @@ export class Validator {
    * Проверка на NoSQL инъекцию
    */
   hasNoSQLInjection(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /\$gt\s*:/,
       /\$lt\s*:/,
@@ -224,6 +276,7 @@ export class Validator {
    * Проверка на path traversal
    */
   hasPathTraversal(input: string): boolean {
+    if (!input) return false
     return /\.\.\/|\.\.\\|\.\.\//.test(input)
   }
 
@@ -231,6 +284,7 @@ export class Validator {
    * Проверка на command injection
    */
   hasCommandInjection(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /;.*rm\s+-rf/,
       /;.*wget/,
@@ -255,6 +309,7 @@ export class Validator {
    * Проверка на SSRF
    */
   hasSSRF(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /http:\/\/169.254.169.254/,
       /http:\/\/localhost/,
@@ -272,6 +327,7 @@ export class Validator {
    * Проверка на XXE
    */
   hasXXE(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /<!DOCTYPE.*\[/,
       /<!ENTITY.*SYSTEM/,
@@ -287,6 +343,7 @@ export class Validator {
    * Проверка на LDAP инъекцию
    */
   hasLDAPInjection(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /\*\(.*\)/,
       /\|\(.*\)/,
@@ -304,6 +361,7 @@ export class Validator {
    * Проверка на RCE (Remote Code Execution)
    */
   hasRCE(input: string): boolean {
+    if (!input) return false
     const patterns = [
       /system\s*\(/i,
       /exec\s*\(/i,
@@ -327,6 +385,7 @@ export class Validator {
    * Санитизация строки
    */
   sanitize(input: string): string {
+    if (!input) return ''
     return input
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -340,6 +399,7 @@ export class Validator {
    * Санитизация URL
    */
   sanitizeURL(url: string): string {
+    if (!url) return ''
     try {
       const parsed = new URL(url)
       // Удаляем потенциально опасные протоколы
@@ -356,6 +416,7 @@ export class Validator {
    * Санитизация пути
    */
   sanitizePath(path: string): string {
+    if (!path) return ''
     return path
       .replace(/\.\./g, '')
       .replace(/\/\//g, '/')
@@ -366,6 +427,7 @@ export class Validator {
    * Экранирование для HTML
    */
   escapeHTML(input: string): string {
+    if (!input) return ''
     const map: Record<string, string> = {
       '&': '&amp;',
       '<': '&lt;',
@@ -383,6 +445,7 @@ export class Validator {
    * Экранирование для HTML атрибутов
    */
   escapeHTMLAttribute(input: string): string {
+    if (!input) return ''
     const map: Record<string, string> = {
       '&': '&amp;',
       '<': '&lt;',
@@ -401,6 +464,7 @@ export class Validator {
    * Экранирование для JavaScript
    */
   escapeJS(input: string): string {
+    if (!input) return ''
     const map: Record<string, string> = {
       '\\': '\\\\',
       "'": "\\'",
@@ -418,6 +482,7 @@ export class Validator {
    * Экранирование для SQL
    */
   escapeSQL(input: string): string {
+    if (!input) return ''
     return input.replace(/'/g, "''")
   }
 
@@ -425,6 +490,7 @@ export class Validator {
    * Экранирование для JSON
    */
   escapeJSON(input: string): string {
+    if (!input) return ''
     return JSON.stringify(input).slice(1, -1)
   }
 
@@ -560,6 +626,7 @@ export class Validator {
     checkLDAP?: boolean
     checkRCE?: boolean
   }): boolean {
+    if (!input) return true
     const opts = { ...options }
     
     // По умолчанию проверяем всё
@@ -695,7 +762,26 @@ export class Validator {
   }
 }
 
+// ============================================
+// ✅ ЭКСПОРТЫ ДЛЯ СОВМЕСТИМОСТИ С ТЕСТАМИ
+// ============================================
+
 /**
  * Экземпляр валидатора (синглтон)
  */
 export const validator = new Validator()
+
+/**
+ * Экспорт отдельных функций для совместимости с тестами
+ */
+export const validateEmail = validator.isEmail.bind(validator)
+export const validateURL = validator.isURL.bind(validator)
+export const sanitizeInput = validator.sanitize.bind(validator)
+export const isIPv4 = validator.isIPv4.bind(validator)
+export const isIPv6 = validator.isIPv6.bind(validator)
+export const isIP = validator.isIP.bind(validator)
+
+/**
+ * Экспорт по умолчанию
+ */
+export default validator

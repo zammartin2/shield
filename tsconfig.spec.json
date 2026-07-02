@@ -1,12 +1,23 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "types": ["node", "jest"],
+    "types": ["jest", "node"],
+    "module": "commonjs",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "ignoreDeprecations": "6.0"
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true
   },
-  "include": ["tests/**/*.ts", "src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "examples/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

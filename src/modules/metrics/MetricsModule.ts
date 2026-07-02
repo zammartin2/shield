@@ -32,6 +32,13 @@ export class MetricsModule {
     this.collector.recordError(error)
   }
 
+  /**
+   * Получение метрик (для совместимости с тестами)
+   */
+  collect(): any {
+    return this.collector.getMetrics()
+  }
+
   getMetrics(): any {
     return this.collector.getMetrics()
   }

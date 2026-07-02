@@ -59,8 +59,12 @@ export class CryptoUtils {
 
   /**
    * Сравнение строк с защитой от timing attacks
+   * ✅ ИСПРАВЛЕНО: обрабатываем случаи разной длины
    */
   safeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false
+    }
     return crypto.timingSafeEqual(
       Buffer.from(a),
       Buffer.from(b)
@@ -86,4 +90,103 @@ export class CryptoUtils {
     }
     return password
   }
+
+  /**
+   * Хеширование с солью (для паролей)
+   */
+  hashWithSalt(data: string, salt?: string): { hash: string; salt: string } {
+    const generatedSalt = salt || crypto.randomBytes(16).toString('hex')
+    const hash = crypto
+      .createHash('sha256')
+      .update(generatedSalt + data)
+      .digest('hex')
+    return { hash, salt: generatedSalt }
+  }
+
+  /**
+   * Проверка пароля с солью
+   */
+  verifyPassword(password: string, hash: string, salt: string): boolean {
+    const { hash: computedHash } = this.hashWithSalt(password, salt)
+    return computedHash === hash
+  }
+
+  /**
+   * Сравнение хеша с паролем
+   */
+  compare(password: string, hash: string): boolean {
+    const computedHash = this.hash(password)
+    return computedHash === hash
+  }
+
+  /**
+   * Генерация соли
+   */
+  generateSalt(length: number = 16): string {
+    return crypto.randomBytes(length).toString('hex')
+  }
+
+  /**
+   * Генерация случайного числа в диапазоне
+   */
+  randomInt(min: number, max: number): number {
+    return crypto.randomInt(min, max + 1)
+  }
+
+  /**
+   * Генерация случайной строки из набора символов
+   */
+  randomString(length: number = 16, charset?: string): string {
+    const defaultCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const chars = charset || defaultCharset
+    let result = ''
+    for (let i = 0; i < length; i++) {
+      result += chars[crypto.randomInt(0, chars.length)]
+    }
+    return result
+  }
 }
+
+// ============================================
+// ✅ АЛИАСЫ ДЛЯ СОВМЕСТИМОСТИ С ТЕСТАМИ
+// ============================================
+
+/**
+ * Алиас Crypto для совместимости с тестами
+ * Тесты ожидают: new Crypto()
+ */
+export const Crypto = CryptoUtils
+
+/**
+ * Экземпляр по умолчанию (синглтон)
+ */
+export const cryptoUtil = new CryptoUtils()
+
+/**
+ * ✅ ИСПРАВЛЕНО: Привязка методов к контексту
+ * Экспорт всех методов как отдельных функций для удобства
+ */
+export const generateNonce = cryptoUtil.generateNonce.bind(cryptoUtil)
+export const generateId = cryptoUtil.generateId.bind(cryptoUtil)
+export const hash = cryptoUtil.hash.bind(cryptoUtil)
+export const hmac = cryptoUtil.hmac.bind(cryptoUtil)
+export const encrypt = cryptoUtil.encrypt.bind(cryptoUtil)
+export const decrypt = cryptoUtil.decrypt.bind(cryptoUtil)
+export const safeCompare = cryptoUtil.safeCompare.bind(cryptoUtil)
+export const generateToken = cryptoUtil.generateToken.bind(cryptoUtil)
+export const generatePassword = cryptoUtil.generatePassword.bind(cryptoUtil)
+export const hashWithSalt = cryptoUtil.hashWithSalt.bind(cryptoUtil)
+export const verifyPassword = cryptoUtil.verifyPassword.bind(cryptoUtil)
+export const compare = cryptoUtil.compare.bind(cryptoUtil)
+export const generateSalt = cryptoUtil.generateSalt.bind(cryptoUtil)
+export const randomInt = cryptoUtil.randomInt.bind(cryptoUtil)
+export const randomString = cryptoUtil.randomString.bind(cryptoUtil)
+
+// ============================================
+// ✅ ЕДИНСТВЕННЫЙ ЭКСПОРТ ПО УМОЛЧАНИЮ
+// ============================================
+
+/**
+ * Экспорт класса как default (для совместимости)
+ */
+export default CryptoUtils

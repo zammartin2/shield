@@ -8,9 +8,12 @@ import { CSPModule } from '../modules/csp/CSPModule'
 import { AIModule } from '../modules/ai/AIModule'
 import { PluginManager } from '../modules/plugins/PluginManager'
 import { MetricsCollector } from '../modules/metrics/MetricsCollector'
-import { RateLimiter } from '../modules/rate-limit/RateLimiter'  // ← ДОБАВЛЕНО
+import { RateLimiter } from '../modules/rate-limit/RateLimiter'
+import { ContextManager } from './ContextManager'
 import { ShieldConfig, Plugin, Threat } from '../types'
 import { EventEmitter } from 'events'
+// ✅ ИСПРАВЛЕНО: Убираем импорт logger, используем console напрямую
+// import { logger } from '../utils/logger'  // ← УДАЛЕНО
 
 export class FABShield extends EventEmitter {
   private config: ConfigManager
@@ -19,17 +22,20 @@ export class FABShield extends EventEmitter {
   private ai: AIModule
   private plugins: PluginManager
   private metrics: MetricsCollector
+  private contextManager: ContextManager
   private startTime: number
   private active: boolean = true
-  private version: string = '1.0.0'
-  private rateLimiter: RateLimiter | null = null  // ← ИЗМЕНЁН ТИП
+  private version: string = '1.1.0'
+  private rateLimiter: RateLimiter | null = null
   private logger: any
+  private static instance: FABShield | null = null
 
   constructor(config: Partial<ShieldConfig> = {}) {
     super()
     
     this.startTime = Date.now()
     this.config = new ConfigManager(config)
+    this.contextManager = new ContextManager()
     
     this.headers = new HeadersModule(this.config)
     this.csp = new CSPModule(this.config)
@@ -37,13 +43,26 @@ export class FABShield extends EventEmitter {
     this.plugins = new PluginManager(this.config)
     this.metrics = new MetricsCollector()
     
-    this.setupRateLimiter()  // ← ИНИЦИАЛИЗАЦИЯ
+    this.setupRateLimiter()
     this.setupLogger()
     this.setupEventListeners()
     
     this.start()
+    
+    // Singleton pattern
+    FABShield.instance = this
   }
 
+  /**
+   * Получить экземпляр FABShield (Singleton)
+   */
+  static getInstance(): FABShield | null {
+    return FABShield.instance
+  }
+
+  /**
+   * Основной middleware для Express/Fastify/Koa
+   */
   middleware() {
     return async (req: any, res: any, next: any) => {
       const startTime = Date.now()
@@ -59,7 +78,7 @@ export class FABShield extends EventEmitter {
       try {
         this.logger?.debug(`📝 ${req.method} ${req.path} [${requestId}]`)
 
-        // === RATE LIMITING (ИСПРАВЛЕНО) ===
+        // === RATE LIMITING ===
         const rateLimitConfig = this.config.get().rateLimit
         if (rateLimitConfig?.enabled && this.rateLimiter) {
           const rateResult = await this.rateLimiter.check(req)
@@ -76,9 +95,13 @@ export class FABShield extends EventEmitter {
           }
         }
         
+        // === HEADERS ===
         await this.headers.apply(req, res)
+        
+        // === CSP ===
         await this.csp.apply(req, res)
         
+        // === AI ANALYSIS ===
         const analysis = await this.ai.analyze(req)
         
         if (analysis && analysis.threats && analysis.threats.length > 0) {
@@ -111,12 +134,15 @@ export class FABShield extends EventEmitter {
           }
         }
         
+        // === PLUGINS ===
         const pluginContext = this.createPluginContext(req, res)
         await this.plugins.execute(req, res, pluginContext)
         
+        // === METRICS ===
         const duration = Date.now() - startTime
         this.metrics.recordRequest(req, res, duration)
         
+        // === RESPONSE HEADERS ===
         res.setHeader('X-Request-ID', requestId)
         res.setHeader('X-Shield-Version', this.version)
         res.setHeader('X-Shield-Status', 'active')
@@ -151,28 +177,79 @@ export class FABShield extends EventEmitter {
     }
   }
 
+  /**
+   * Защита запроса (для Fastify)
+   * ✅ ИСПРАВЛЕНО: Правильный Promise с void
+   */
+  async protect(req: any, res: any): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const middleware = this.middleware()
+      middleware(req, res, (err?: any) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+  }
+
+  /**
+   * Защита для Koa
+   * ✅ ИСПРАВЛЕНО: Правильный Promise с void
+   */
+  async koa(ctx: any, next: any): Promise<void> {
+    const req = ctx.request
+    const res = ctx.response
+    
+    return new Promise<void>((resolve, reject) => {
+      const middleware = this.middleware()
+      middleware(req, res, (err?: any) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    }).then(() => next()).catch((err) => next(err))
+  }
+
+  /**
+   * Получение метрик
+   */
   getMetrics(): any {
     return this.metrics.getMetrics()
   }
 
+  /**
+   * Получение конфигурации
+   */
   getConfig(): ShieldConfig {
     return this.config.get()
   }
 
+  /**
+   * Обновление конфигурации
+   */
   updateConfig(config: Partial<ShieldConfig>): void {
     const oldConfig = this.config.get()
     this.config.update(config)
+    this.setupRateLimiter()
     this.emit('config:updated', { old: oldConfig, new: this.config.get() })
+    this.logger?.info('⚙️ Config updated')
   }
 
+  /**
+   * Получение версии
+   */
   getVersion(): string {
     return this.version
   }
 
+  /**
+   * Проверка активности
+   */
   isActive(): boolean {
     return this.active
   }
 
+  /**
+   * Запуск
+   */
   start(): void {
     if (this.active) return
     this.active = true
@@ -180,6 +257,9 @@ export class FABShield extends EventEmitter {
     this.logger?.info('🛡️ FAB Shield started')
   }
 
+  /**
+   * Остановка
+   */
   stop(): void {
     if (!this.active) return
     this.active = false
@@ -187,20 +267,34 @@ export class FABShield extends EventEmitter {
     this.logger?.info('🛑 FAB Shield stopped')
   }
 
+  /**
+   * Регистрация плагина
+   */
   registerPlugin(plugin: Plugin): void {
     this.plugins.register(plugin)
     this.emit('plugin:registered', { name: plugin.name, version: plugin.version })
+    this.logger?.info(`🔌 Plugin registered: ${plugin.name} v${plugin.version || '1.0.0'}`)
   }
 
+  /**
+   * Удаление плагина
+   */
   unregisterPlugin(name: string): void {
     this.plugins.unregister(name)
     this.emit('plugin:unregistered', { name })
+    this.logger?.info(`🗑️ Plugin unregistered: ${name}`)
   }
 
+  /**
+   * Экспорт метрик
+   */
   exportMetrics(format: 'json' | 'prometheus' | 'csv' = 'json'): string {
     return this.metrics.export(format)
   }
 
+  /**
+   * Генерация отчета
+   */
   async generateReport(options?: any): Promise<any> {
     const metrics = this.metrics.getMetrics()
     return {
@@ -226,6 +320,9 @@ export class FABShield extends EventEmitter {
     }
   }
 
+  /**
+   * Получение статуса
+   */
   getStatus(): any {
     const config = this.config.get()
     return {
@@ -245,11 +342,42 @@ export class FABShield extends EventEmitter {
     }
   }
 
+  /**
+   * Сброс метрик
+   */
   reset(): void {
     this.metrics.reset()
     this.startTime = Date.now()
     this.emit('reset')
     this.logger?.info('🔄 FAB Shield reset')
+  }
+
+  /**
+   * Получение контекстного менеджера
+   */
+  getContextManager(): ContextManager {
+    return this.contextManager
+  }
+
+  /**
+   * Получение плагин менеджера
+   */
+  getPluginManager(): PluginManager {
+    return this.plugins
+  }
+
+  /**
+   * Получение AI модуля
+   */
+  getAIModule(): AIModule {
+    return this.ai
+  }
+
+  /**
+   * Получение Rate Limiter
+   */
+  getRateLimiter(): RateLimiter | null {
+    return this.rateLimiter
   }
 
   private createPluginContext(req: any, _res: any): any {
@@ -268,8 +396,8 @@ export class FABShield extends EventEmitter {
       getMetrics: () => this.metrics.getMetrics(),
       getServer: () => req.app || req.server,
       getLogger: () => this.logger || console,
-      log: (_level: string, message: string, data?: any) => {
-        const logFn = console.log.bind(console)
+      log: (level: string, message: string, data?: any) => {
+        const logFn = this.logger?.[level] || console.log
         logFn(message, data || '')
       },
       getStorage: () => ({
@@ -308,7 +436,7 @@ export class FABShield extends EventEmitter {
       },
       registerRoutes: (prefix: string, _router: any) => {
         if (req.app) {
-          console.log(`📌 Routes registered at ${prefix}`)
+          this.logger?.info(`📌 Routes registered at ${prefix}`)
         }
       },
       on: (event: string, handler: (...args: any[]) => void) => {
@@ -335,9 +463,6 @@ export class FABShield extends EventEmitter {
     return `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
   }
 
-  // ============================================
-  // 🔧 ИСПРАВЛЕНО: Реальный RateLimiter
-  // ============================================
   private setupRateLimiter(): void {
     const config = this.config.get()
     if (config.rateLimit?.enabled) {
@@ -354,17 +479,20 @@ export class FABShield extends EventEmitter {
     this.logger = {
       level: config?.level || 'info',
       debug: (msg: any, ...args: any[]) => {
-        if (this.logger?.level === 'debug') console.debug(msg, ...args)
+        // Всегда выводим debug для тестов
+        if (process.env.NODE_ENV === 'test' || this.logger?.level === 'debug') {
+          console.debug('🔍', msg, ...args)
+        }
       },
-      info: (msg: any, ...args: any[]) => console.log(msg, ...args),
-      warn: (msg: any, ...args: any[]) => console.warn(msg, ...args),
-      error: (msg: any, ...args: any[]) => console.error(msg, ...args)
+      info: (msg: any, ...args: any[]) => console.log('ℹ️', msg, ...args),
+      warn: (msg: any, ...args: any[]) => console.warn('⚠️', msg, ...args),
+      error: (msg: any, ...args: any[]) => console.error('❌', msg, ...args)
     }
   }
 
   private setupEventListeners(): void {
     this.on('error', (error: any) => {
-      this.logger?.error(`❌ FAB Shield error: ${error.message}`, error)
+      this.logger?.error(`FAB Shield error: ${error.message}`, error)
     })
     
     this.on('request:processed', ({ req, res, duration, requestId, threatsDetected }: any) => {
@@ -409,6 +537,9 @@ export class FABShield extends EventEmitter {
     })
   }
 
+  /**
+   * Уничтожение экземпляра
+   */
   destroy(): void {
     this.stop()
     this.removeAllListeners()
@@ -416,7 +547,15 @@ export class FABShield extends EventEmitter {
     if (this.rateLimiter) {
       this.rateLimiter.resetAll()
     }
+    FABShield.instance = null
     this.logger?.info('💀 FAB Shield destroyed')
+  }
+
+  /**
+   * Получение статистики контекстов
+   */
+  getContextStats(): any {
+    return this.contextManager.getStats()
   }
 }
 

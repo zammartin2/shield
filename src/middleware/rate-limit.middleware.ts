@@ -1,31 +1,61 @@
 // ============================================
-// RATE LIMIT MIDDLEWARE
+// RATE LIMIT MIDDLEWARE - ИСПРАВЛЕННАЯ ВЕРСИЯ
 // ============================================
 
-import { FABShield } from '../core/FABShield'
+// ✅ ИСПОЛЬЗУЕМ ГЛОБАЛЬНЫЙ ОБЪЕКТ для хранения
+const globalAny = global as any
+if (!globalAny.__rateLimitStore) {
+  globalAny.__rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+}
+const store: Map<string, { count: number; resetTime: number }> = globalAny.__rateLimitStore
 
-export const rateLimitMiddleware = (shield: FABShield) => {
-  return async (req: any, res: any, next: any) => {
+/**
+ * Rate Limit Middleware
+ */
+export const rateLimitMiddleware = (config?: any) => {
+  return (req: any, res: any, next: any) => {
     try {
-      const rateLimiter = (shield as any).rateLimiter
-      if (!rateLimiter) {
-        next()
-        return
+      // Если конфиг не передан или отключен - пропускаем
+      if (!config || config.enabled === false) {
+        return next()
       }
 
-      const result = await rateLimiter.check(req)
+      const max = config.max || 100
+      const windowMs = config.windowMs || 60000
+      const key = req.ip || 'unknown'
+      const now = Date.now()
       
-      if (!result.allowed) {
-        const { limit, windowMs } = result.info
-        res.status(429).json({
-          error: 'Too many requests',
-          retryAfter: Math.ceil(windowMs / 1000),
-          limit: limit,
-          timestamp: new Date().toISOString()
-        })
-        return
+      // Получаем или создаем запись
+      let record = store.get(key)
+      
+      // Если записи нет или окно истекло - создаем новую
+      if (!record || now > record.resetTime) {
+        record = { count: 0, resetTime: now + windowMs }
+        store.set(key, record)
       }
-
+      
+      // Увеличиваем счетчик
+      record.count++
+      store.set(key, record)
+      
+      // Устанавливаем заголовки
+      res.setHeader('X-RateLimit-Limit', String(max))
+      const remaining = Math.max(0, max - record.count)
+      res.setHeader('X-RateLimit-Remaining', String(remaining))
+      res.setHeader('X-RateLimit-Reset', new Date(record.resetTime).toISOString())
+      
+      // Проверяем лимит
+      if (record.count > max) {
+        return res.status(429).json({
+          error: 'Too many requests',
+          message: 'Rate limit exceeded',
+          retryAfter: Math.ceil((record.resetTime - now) / 1000),
+          limit: max,
+          remaining: 0
+        })
+      }
+      
+      // Пропускаем запрос
       next()
     } catch (error) {
       // В случае ошибки пропускаем запрос
@@ -34,3 +64,12 @@ export const rateLimitMiddleware = (shield: FABShield) => {
     }
   }
 }
+
+/**
+ * Очистка хранилища (для тестов)
+ */
+export const clearRateLimitStore = (): void => {
+  store.clear()
+}
+
+export default rateLimitMiddleware

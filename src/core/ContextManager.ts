@@ -42,6 +42,85 @@ export class ContextManager {
   }
 
   /**
+   * Создание контекста по ID (для совместимости с тестами)
+   */
+  createContext(id: string, data?: any): any {
+    if (this.contexts.has(id)) {
+      throw new Error(`Context with id ${id} already exists`)
+    }
+
+    const context = {
+      id,
+      data: data || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      timestamp: new Date(),
+      startTime: Date.now()
+    }
+
+    this.contexts.set(id, context)
+    return context
+  }
+
+  /**
+   * Получение контекста по ID (для совместимости с тестами)
+   */
+  getContext(id: string): any {
+    return this.contexts.get(id)
+  }
+
+  /**
+   * Обновление контекста (для совместимости с тестами)
+   */
+  updateContext(id: string, data: any): any {
+    const context = this.contexts.get(id)
+    if (!context) return undefined
+
+    context.data = { ...context.data, ...data }
+    context.updatedAt = new Date()
+    this.contexts.set(id, context)
+    return context
+  }
+
+  /**
+   * Удаление контекста (для совместимости с тестами)
+   * ✅ ИСПРАВЛЕНО: Возвращаем undefined вместо false
+   */
+  deleteContext(id: string): boolean | undefined {
+    if (!this.contexts.has(id)) {
+      return undefined
+    }
+    return this.contexts.delete(id)
+  }
+
+  /**
+   * Получение всех контекстов (для совместимости с тестами)
+   */
+  getAllContexts(): any[] {
+    return Array.from(this.contexts.values())
+  }
+
+  /**
+   * Установка данных контекста (для совместимости с тестами)
+   */
+  setContextData(id: string, key: string, value: any): void {
+    const context = this.contexts.get(id)
+    if (context) {
+      context.data[key] = value
+      context.updatedAt = new Date()
+      this.contexts.set(id, context)
+    }
+  }
+
+  /**
+   * Получение данных контекста (для совместимости с тестами)
+   */
+  getContextData(id: string, key: string): any {
+    const context = this.contexts.get(id)
+    return context ? context.data[key] : undefined
+  }
+
+  /**
    * Получение контекста по ID
    */
   get(id: string): any {

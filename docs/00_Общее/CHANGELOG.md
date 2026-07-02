@@ -1,241 +1,266 @@
-# 📋 Changelog
+# 🛡️ FAB Shield
 
-Все заметные изменения в FAB Shield будут документироваться в этом файле.
+> Security-фреймворк для Node.js-приложений: HTTP-заголовки, rate limiting, обнаружение атак, мониторинг и расширяемая система плагинов.
 
-Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
-и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
-
----
-### 🚀 Major Security Upgrade
-## [1.0.4] - 2026-07-01
-
-=======
-В этой версии FAB Shield получил **значительное усиление защиты**:
-- Добавлены 4 новых типа атак (NoSQL, LDAP, Command Injection, Path Traversal)
-- Расширены существующие паттерны (XSS: 5→50, SQL: 6→40)
-- Внедрён **реальный Rate Limiter** вместо заглушки
-- Добавлены **интеллектуальные функции**: анализ поведения, рекомендации, детекция местоположения
+[![npm version](https://img.shields.io/npm/v/@fab-orbita/shield.svg)](https://www.npmjs.com/package/@fab-orbita/shield)
+[![Node.js](https://img.shields.io/node/v/@fab-orbita/shield)](https://nodejs.org/)
+[![Coverage](https://img.shields.io/badge/coverage-51%25-yellow)](#-статус-проекта)
+[![Tests](https://img.shields.io/badge/tests-432%2F437-brightgreen)](#-тестирование)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-### Added
-- **NoSQL Injection Protection**: 30+ patterns for MongoDB operators ($gt, $where, $regex, etc.)
-- **LDAP Injection Protection**: 20+ patterns for LDAP injection attacks
-- **Command Injection Protection**: Extended patterns for Unix/Windows commands
-- **Path Traversal Protection**: Extended patterns for Unix/Windows styles
-- **Behavior Analysis**: Anomaly detection based on request patterns
-- **Threat Recommendations**: Automatic security recommendations for each threat type
-- **Threat Location Detection**: Identifies where threat was found (body/query/params/headers/cookies)
-- **E2E Tests**: Test structure for XSS, SQL, Rate Limiting
+## О проекте
 
-### Enhanced
-- **XSS Protection**: 50+ patterns (was 5) - all event handlers, functions, tags
-- **SQL Injection Protection**: 40+ patterns (was 6) - all major databases
-- **Rate Limiter**: Replaced mock with full implementation
-- **Performance**: Response time ~1ms
+**FAB Shield** — это middleware-фреймворк безопасности для Node.js, который помогает быстро подключить базовую и расширенную защиту веб-приложения.
 
-### Fixed
-- SQL Injection with escaped quotes in JSON body
-- Command Injection with pipe character (| sh)
-- Rate Limiter not working (was always returning false)
+Фреймворк объединяет несколько ключевых направлений защиты:
 
-### Security
-- 100% attack detection rate in tests
-- 6 attack types covered (XSS, SQL, NoSQL, LDAP, Path Traversal, Command Injection)
-- All security headers properly set
+- установку security-заголовков;
+- обнаружение распространённых веб-атак;
+- rate limiting и защиту от перебора;
+- сбор метрик и генерацию отчётов;
+- подключение дополнительных модулей через плагины.
+
+Проект подходит для API, backend-сервисов, административных панелей и публичных веб-приложений на Node.js.
 
 ---
 
-## [1.0.4] - 2026-07-01
+## Содержание
 
-### 🚀 Технический апгрейд и оптимизация
-
-**Автор:** Фабрициус Владимир Николаевич  
-**Компания:** ООО «Деворбит» (DEVORBIT LLC)  
-**Реестр:** [fab.devorbit.ru](https://fab.devorbit.ru)  
-**Email:** [derector@devorbit.ru](mailto:derector@devorbit.ru)
-
----
-
-### ⬆️ Обновления зависимостей
-
-- **TypeScript** `5.3.3` → `6.0.3`
-- **ESLint** `8.55.0` → `10.6.0`
-- **Jest** `29.7.0` → `30.4.2`
-- **Express** `4.18.2` → `5.2.1` (devDependencies)
-- **uuid** `9.0.1` → `14.0.1`
-- **dotenv** `16.3.1` → `17.4.2`
-- **joi** `17.11.0` → `18.2.3`
-- **@typescript-eslint/eslint-plugin** `6.14.0` → `8.62.1`
-- **@typescript-eslint/parser** `6.14.0` → `8.62.1`
-- **@types/node** `20.10.4` → `26.1.0`
-- **@types/jest** `29.5.10` → `30.0.0`
-- **@types/express** `4.17.25` → `5.0.6`
-- **@types/uuid** `9.0.7` → `11.0.0`
-- **nodemon** `3.0.2` → `3.1.14`
-- **prettier** `3.1.1` → `3.9.4`
-- **rimraf** `5.0.5` → `6.1.3`
-- **ts-jest** `29.1.1` → `29.4.11`
-- **ts-node** `10.9.2` (актуальная)
-- **source-map-explorer** `2.5.3` (актуальная)
+- [Установка](#-установка)
+- [Быстрый старт](#-быстрый-старт)
+- [Возможности](#-возможности)
+- [Поддерживаемые фреймворки](#-поддерживаемые-фреймворки)
+- [Статус проекта](#-статус-проекта)
+- [Тестирование](#-тестирование)
+- [Changelog](#-changelog)
+- [Roadmap](#-roadmap)
+- [Как помочь проекту](#-как-помочь-проекту)
+- [Лицензия](#-лицензия)
+- [Контакты](#-контакты)
 
 ---
 
-### 🛠️ Исправления и улучшения
+## 📦 Установка
 
-- **Устранены все уязвимости** — 0 известных CVE
-- Настроена полная совместимость с **TypeScript 6.0**
-- Обновлены все `tsconfig` файлы для корректной работы:
-  - Добавлен `ignoreDeprecations: "6.0"`
-  - Обновлен `moduleResolution` до `Node16`
-  - Настроены `baseUrl` и `paths` для алиасов
-- Настроена корректная сборка **CJS** и **ESM** модулей
-- Исправлена конфигурация **Jest** для работы с TypeScript 6.0
-- Добавлен отдельный `tsconfig.spec.json` для тестов
-- Все 10 тестов успешно проходят
+```bash
+npm install @fab-orbita/shield
+```
 
----
+### Требования
 
-### 📦 Публикация
-
-- Пакет опубликован в npm как `@fab-orbita/shield@1.0.4`
-- Создан GitHub Release `v1.0.4`
-- Настроены GitHub Actions для CI/CD
-- Добавлены бейджи статуса в README
+| Компонент | Требование |
+|---|---|
+| Node.js | `18+` |
+| TypeScript | Поддерживается |
+| Формат | ESM / CommonJS, если поддерживается вашим проектом |
 
 ---
 
-## [1.0.0] - 2026-07-01
+## 🚀 Быстрый старт
 
-### 🎉 Первый стабильный релиз!
+```typescript
+import express from 'express';
+import { FABShield } from '@fab-orbita/shield';
 
-**Автор:** Фабрициус Владимир Николаевич  
-**Компания:** ООО «Деворбит» (DEVORBIT LLC)
+const app = express();
+const shield = new FABShield();
 
----
+app.use(shield.middleware());
 
-### Добавлено
+app.listen(3000, () => {
+  console.log('FAB Shield is protecting the server');
+});
+```
 
-**🔒 Ядро безопасности:**
-
-- 25+ security-заголовков из коробки
-- Динамический Content-Security-Policy (CSP)
-- Автоматическая защита от XSS, CSRF, Clickjacking
-- Умный rate limiting на основе поведения
-- IP-репутация и блокировка
-
-**🤖 AI-защита:**
-
-- Обнаружение аномалий в запросах
-- Анализ поведения пользователей
-- Прогнозирование угроз
-- Автоматическая адаптация защиты
-
-**🔌 Система плагинов:**
-
-- API для создания плагинов
-- 5 официальных плагинов:
-  - WAF Integration
-  - Geo Blocking
-  - Custom Rules Engine
-  - Audit Logger
-  - Webhook Notifier
-
-**📊 Метрики и мониторинг:**
-
-- Сбор метрик в реальном времени
-- Экспорт в Prometheus, JSON, CSV
-- Генерация отчетов: PDF, HTML, JSON
-- Система алертов
-
-**🛠️ Инфраструктура:**
-
-- Поддержка Express, Fastify, Koa
-- TypeScript из коробки
-- Полная документация
-- CI/CD пайплайн
+После подключения middleware приложение получает базовый набор защитных механизмов FAB Shield.
 
 ---
 
-### Безопасность
+## 🔥 Возможности
 
-- Добавлена защита от ReDoS атак
-- Усилена валидация входных данных
-- Обновлены зависимости до безопасных версий
+### Security Headers
+
+FAB Shield устанавливает набор HTTP-заголовков, которые помогают снизить риски XSS, clickjacking, MIME-sniffing и других распространённых атак.
+
+Поддерживаются, в том числе:
+
+- `Content-Security-Policy`;
+- `Strict-Transport-Security`;
+- `X-Frame-Options`;
+- `X-Content-Type-Options`;
+- `Referrer-Policy`;
+- `Permissions-Policy`.
+
+### Обнаружение атак
+
+Модуль анализа запросов использует набор правил и паттернов для обнаружения подозрительной активности.
+
+| Тип атаки | Покрытие паттернами |
+|---|---:|
+| XSS | `50+` |
+| SQL Injection | `40+` |
+| NoSQL Injection | `30+` |
+| LDAP Injection | `20+` |
+| Path Traversal | Поддерживается |
+| Command Injection | Поддерживается |
+
+Также предусмотрен анализ поведения и аномалий для выявления нетипичной активности.
+
+### Rate Limiting
+
+Rate limiting помогает защитить приложение от брутфорса, чрезмерной нагрузки и простых DDoS-сценариев.
+
+Возможности:
+
+- индивидуальные лимиты по IP;
+- автоматическая блокировка при превышении лимитов;
+- защита чувствительных endpoint-ов;
+- возможность настройки правил под конкретный сервис.
+
+### Метрики и мониторинг
+
+FAB Shield собирает данные о работе защитных механизмов и помогает отслеживать состояние приложения.
+
+Поддерживается:
+
+- сбор метрик в реальном времени;
+- экспорт в `Prometheus`, `JSON` и `CSV`;
+- генерация отчётов в `PDF`, `HTML` и `JSON`;
+- система уведомлений и алертов.
+
+### Плагины
+
+Архитектура FAB Shield позволяет расширять функциональность без изменения ядра.
+
+Официальные плагины:
+
+- WAF Integration;
+- Geo Blocking;
+- Custom Rules Engine;
+- Audit Logger;
+- Webhook Notifier.
 
 ---
 
-## [0.9.0] - 2026-06-15
+## 🧩 Поддерживаемые фреймворки
 
-### ⚠️ Бета-версия
+FAB Shield рассчитан на работу с популярными Node.js-фреймворками:
 
-**Автор:** Фабрициус Владимир Николаевич  
-**Компания:** ООО «Деворбит» (DEVORBIT LLC)
-
-### Добавлено
-
-- Базовое ядро безопасности
-- Первая версия AI-движка
-- Система плагинов: альфа
-- Базовые метрики
+- Express;
+- Fastify;
+- Koa;
+- NestJS.
 
 ---
 
-## [0.5.0] - 2026-05-01
+## 📊 Статус проекта
 
-### 🧪 Альфа-версия
+| Метрика | Значение |
+|---|---|
+| Актуальная версия | `1.2.0` |
+| Тесты | `432 / 437` пройдено |
+| Успешность тестов | `98.9%` |
+| Покрытие кода | `51%` |
+| Целевое покрытие | `70%+` |
+| Известные CVE | `0` |
+| Node.js | `18+` |
 
-**Автор:** Фабрициус Владимир Николаевич  
-**Компания:** ООО «Деворбит» (DEVORBIT LLC)
-
-### Добавлено
-
-- Первый прототип
-- Базовые security-заголовки
-- Прототип CSP
-
----
-
-## 📊 Статистика релизов
-
-| Версия | Дата | Тип | Изменений |
-|:---|:---|:---|---:|
-| 1.0.4 | 2026-07-01 | Технический апгрейд | 19+ |
-| 1.0.0 | 2026-07-01 | Стабильный | 47 |
-| 0.9.0 | 2026-06-15 | Бета | 23 |
-| 0.5.0 | 2026-05-01 | Альфа | 12 |
+> Проект находится в активной разработке. Основные middleware уже покрыты тестами, продолжается работа над увеличением общего покрытия и интеграционными проверками.
 
 ---
 
-## 🔮 Планы на будущее
+## 🧪 Тестирование
 
-### [1.1.0] - 2026-08-01 — планируется
+Текущий статус тестирования для версии `1.2.0`:
 
-- Улучшение AI-движка
-- Новые плагины
-- Увеличение производительности на 30%
-- Поддержка WebSocket
-- Dashboard для мониторинга
+| Показатель | Значение |
+|---|---:|
+| Всего тест-сьютов | `24` |
+| Пройдено тест-сьютов | `23` |
+| Всего тестов | `437` |
+| Пройдено тестов | `432` |
 
-### [2.0.0] - 2026-12-01 — планируется
+Покрытие ключевых модулей:
 
-- Полная переработка AI
-- Встроенный WAF
-- Облачная версия
-- Маркетплейс плагинов
+| Модуль | Покрытие |
+|---|---:|
+| `error.middleware.ts` | `86%` |
+| `logging.middleware.ts` | `100%` |
+| `crypto.ts` | `100%` |
+| `types/*.ts` | `100%` |
+
+---
+
+## 📝 Changelog
+
+История изменений ведётся в файле [`CHANGELOG.md`](./CHANGELOG.md).
+
+### Основные версии
+
+| Версия | Дата | Изменения |
+|---|---:|---|
+| `1.2.0` | `2026-07-03` | Обновление документации и CHANGELOG |
+| `1.1.0` | `2026-07-03` | Комплексное тестирование и улучшение покрытия |
+| `1.0.4` | `2026-07-01` | Техническое обновление и обновление зависимостей |
+| `1.0.0` | `2026-07-01` | Первый стабильный релиз |
+
+---
+
+## 🔮 Roadmap
+
+### `1.2.0` — текущая версия
+
+- Обновлён README;
+- обновлён CHANGELOG;
+- актуализированы данные по тестам и покрытию.
+
+### `1.3.0` — планируется на 2026-07-15
+
+- повышение покрытия кода тестами;
+- интеграционные тесты для основных модулей;
+- performance-тесты для модуля анализа угроз;
+- load-тесты для rate limiter.
+
+### `2.0.0` — планируется на 2026-12-01
+
+- переработка AI/аналитического модуля;
+- встроенный WAF;
+- облачная версия;
+- marketplace для плагинов.
+
+---
+
+## 🤝 Как помочь проекту
+
+Вы можете помочь развитию FAB Shield несколькими способами:
+
+- поставить звезду проекту;
+- сообщить о баге;
+- предложить улучшение документации;
+- написать плагин;
+- протестировать пакет в реальном проекте;
+- рассказать о FAB Shield другим разработчикам.
+
+---
+
+## 📄 Лицензия
+
+MIT © [ООО «Деворбит» (DEVORBIT LLC)](https://devorbit.ru/)
 
 ---
 
 ## 📞 Контакты
 
-| | |
-|:---|:---|
-| **Автор** | Фабрициус Владимир Николаевич |
-| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
-| **Сайт** | [devorbit.ru](https://devorbit.ru) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| Поле | Значение |
+|---|---|
+| Автор | Фабрициус Владимир Николаевич |
+| Компания | ООО «Деворбит» (DEVORBIT LLC) |
+| Реестр | [fab.devorbit.ru](https://fab.devorbit.ru/) |
+| Сайт | [devorbit.ru](https://devorbit.ru/) |
+| Email | `derector@devorbit.ru` |
 
 ---
 
-© 2026 ООО «Деворбит». Все права защищены.
+> FAB Shield помогает быстрее подключить базовую защиту Node.js-приложений и постепенно расширять её под требования конкретного проекта.
