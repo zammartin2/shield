@@ -2,7 +2,7 @@
 
 ---
 
-**Версия:** 1.0.0  
+**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -32,6 +32,8 @@
 ## 🧠 Как это работает
 
 ### Архитектура Rate Limiting
+
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ RATE LIMITING ENGINE │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -70,7 +72,7 @@
 │ │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-text
+```
 
 ---
 
@@ -86,7 +88,11 @@ const shield = new FABShield({
         max: 100            // 100 запросов в минуту
     }
 })
-Расширенная конфигурация
+```
+
+### Расширенная конфигурация
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -164,8 +170,12 @@ const shield = new FABShield({
         }
     }
 })
-🎯 Типы Rate Limiting
-1. Глобальный лимит
+```
+
+## 🎯 Типы Rate Limiting
+### 1. Глобальный лимит
+
+```typescript
 Назначение: Общий лимит для всех запросов.
 
 typescript
@@ -177,7 +187,11 @@ const shield = new FABShield({
         }
     }
 })
-2. Лимит по IP
+```
+
+### 2. Лимит по IP
+
+```typescript
 Назначение: Лимит для каждого IP-адреса.
 
 typescript
@@ -192,7 +206,11 @@ const shield = new FABShield({
         }
     }
 })
-3. Лимит по пользователю
+```
+
+### 3. Лимит по пользователю
+
+```typescript
 Назначение: Лимит для каждого пользователя.
 
 typescript
@@ -212,7 +230,11 @@ const shield = new FABShield({
         }
     }
 })
-4. Лимит по пути
+```
+
+### 4. Лимит по пути
+
+```typescript
 Назначение: Разные лимиты для разных путей.
 
 typescript
@@ -238,7 +260,11 @@ const shield = new FABShield({
         }
     }
 })
-5. Адаптивный лимит
+```
+
+### 5. Адаптивный лимит
+
+```typescript
 Назначение: Лимит, который меняется в зависимости от нагрузки.
 
 typescript
@@ -271,7 +297,11 @@ const shield = new FABShield({
         }
     }
 })
-6. Распределенный Rate Limiting
+```
+
+### 6. Распределенный Rate Limiting
+
+```typescript
 Назначение: Ограничение запросов в распределенной системе.
 
 typescript
@@ -291,8 +321,12 @@ const shield = new FABShield({
         }
     }
 })
-📊 Мониторинг Rate Limiting
-Метрики
+```
+
+## 📊 Мониторинг Rate Limiting
+### Метрики
+
+```typescript
 typescript
 const metrics = shield.rateLimit.getMetrics()
 
@@ -314,7 +348,11 @@ console.log({
     // Время
     windowStats: metrics.windowStats
 })
-Дашборд
+```
+
+### Дашборд
+
+```typescript
 typescript
 // Создаем дашборд для Rate Limiting
 const dashboard = shield.rateLimit.createDashboard({
@@ -339,8 +377,12 @@ const dashboard = shield.rateLimit.createDashboard({
         }
     ]
 })
-🚨 Обработка превышения
-Кастомные действия
+```
+
+## 🚨 Обработка превышения
+### Кастомные действия
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -376,15 +418,23 @@ const shield = new FABShield({
         }
     }
 })
-Заголовки ответа
+```
+
+### Заголовки ответа
+
+```text
 typescript
 // Автоматические заголовки (RFC 6585)
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 42
 X-RateLimit-Reset: 2026-07-01T12:00:00Z
 Retry-After: 3600
-🔧 Интеграция с AI
-Умный Rate Limiting
+```
+
+## 🔧 Интеграция с AI
+### Умный Rate Limiting
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -404,8 +454,12 @@ const shield = new FABShield({
         }
     }
 })
-📋 Примеры конфигураций
-1. Для высоконагруженного API
+```
+
+## 📋 Примеры конфигураций
+### 1. Для высоконагруженного API
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -421,7 +475,11 @@ const shield = new FABShield({
         }
     }
 })
-2. Для авторизации
+```
+
+### 2. Для авторизации
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -444,7 +502,11 @@ const shield = new FABShield({
         }
     }
 })
-3. Для загрузки файлов
+```
+
+### 3. Для загрузки файлов
+
+```typescript
 typescript
 const shield = new FABShield({
     rateLimit: {
@@ -457,8 +519,12 @@ const shield = new FABShield({
         }
     }
 })
-🚨 Устранение проблем
-Проблема: Слишком много ложных срабатываний
+```
+
+## 🚨 Устранение проблем
+### Проблема: Слишком много ложных срабатываний
+
+```typescript
 typescript
 // Увеличить лимиты
 const shield = new FABShield({
@@ -469,7 +535,11 @@ const shield = new FABShield({
         }
     }
 })
-Проблема: Блокировка легитимных пользователей
+```
+
+### Проблема: Блокировка легитимных пользователей
+
+```typescript
 typescript
 // Добавить в белый список
 const shield = new FABShield({
@@ -482,7 +552,9 @@ const shield = new FABShield({
         }
     }
 })
-📞 Контакты
+```
+
+## 📞 Контакты
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
 Email	derector@devorbit.ru

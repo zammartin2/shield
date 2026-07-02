@@ -2,7 +2,7 @@
 
 ---
 
-**Версия:** 1.0.0  
+**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -31,7 +31,9 @@
 
 ## 🏗️ Архитектура
 
-### Структура плагина
+### ### Структура плагина
+
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ PLUGIN STRUCTURE │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -64,8 +66,7 @@
 │ └─────────────────────────────────────────────────────────────────────┘ │
 │ │
 └─────────────────────────────────────────────────────────────────────────────┘
-
-text
+```
 
 ---
 
@@ -116,7 +117,9 @@ const customSecurityPlugin = {
         console.log('🛑 Плагин остановлен')
     }
 }
-Расширенный плагин с API
+### Расширенный плагин с API
+
+```typescript
 typescript
 import express from 'express'
 
@@ -155,8 +158,12 @@ const advancedPlugin = {
         await context.sendAlert(error)
     }
 }
-📦 Официальные плагины
-1. WAF Integration
+```
+
+## 📦 Официальные плагины
+### 1. WAF Integration
+
+```typescript
 typescript
 // Плагин для интеграции с WAF
 const wafPlugin = {
@@ -181,7 +188,11 @@ const wafPlugin = {
         next()
     }
 }
-2. Geo Blocking
+```
+
+### 2. Geo Blocking
+
+```typescript
 typescript
 // Плагин для гео-блокировки
 const geoPlugin = {
@@ -209,7 +220,11 @@ const geoPlugin = {
         next()
     }
 }
-3. Rate Limiting
+```
+
+### 3. Rate Limiting
+
+```typescript
 typescript
 // Плагин для умного rate limiting
 const rateLimitPlugin = {
@@ -244,7 +259,11 @@ const rateLimitPlugin = {
         return { block: false }
     }
 }
-4. Audit Logger
+```
+
+### 4. Audit Logger
+
+```typescript
 typescript
 // Плагин для аудит-логирования
 const auditPlugin = {
@@ -278,8 +297,12 @@ const auditPlugin = {
         })
     }
 }
-🚀 Использование плагинов
-Подключение плагинов
+```
+
+## 🚀 Использование плагинов
+### Подключение плагинов
+
+```typescript
 typescript
 const shield = new FABShield({
     plugins: [
@@ -294,7 +317,11 @@ const shield = new FABShield({
         advancedPlugin
     ]
 })
-Управление плагинами
+```
+
+### Управление плагинами
+
+```typescript
 typescript
 // Получить список плагинов
 const plugins = shield.plugins.getList()
@@ -313,11 +340,17 @@ await shield.plugins.update('rate-limit', {
 
 // Удалить плагин
 await shield.plugins.remove('audit-logger')
-📦 Создание плагинов
+```
+
+## 📦 Создание плагинов
 Структура плагина
-text
+```text
 my-plugin/
-├── package.json
+├── ```
+
+### package.json
+
+```json
 ├── index.ts
 ├── config/
 │   └── default.json
@@ -341,8 +374,12 @@ json
         "@fab-registry/shield": "^1.0.0"
     }
 }
-📊 Мониторинг плагинов
-Метрики плагинов
+```
+
+## 📊 Мониторинг плагинов
+### Метрики плагинов
+
+```typescript
 typescript
 const metrics = shield.plugins.getMetrics()
 console.log({
@@ -358,7 +395,11 @@ console.log({
         byPlugin: metrics.errors.byPlugin
     }
 })
-Логирование плагинов
+```
+
+### Логирование плагинов
+
+```typescript
 typescript
 // Логирование работы плагинов
 shield.plugins.on('plugin:error', (plugin, error) => {
@@ -368,8 +409,12 @@ shield.plugins.on('plugin:error', (plugin, error) => {
 shield.plugins.on('plugin:success', (plugin, result) => {
     console.log(`✅ Плагин ${plugin.name} выполнен`)
 })
-🛡️ Безопасность плагинов
-Ограничения
+```
+
+## 🛡️ Безопасность плагинов
+### Ограничения
+
+```typescript
 typescript
 // Настройка ограничений для плагинов
 const shield = new FABShield({
@@ -393,7 +438,11 @@ const shield = new FABShield({
         }
     }
 })
-Валидация плагинов
+```
+
+### Валидация плагинов
+
+```typescript
 typescript
 // Валидация плагина перед загрузкой
 function validatePlugin(plugin) {
@@ -410,8 +459,12 @@ function validatePlugin(plugin) {
     
     return true
 }
-📚 Примеры плагинов
-1. Telegram Bot
+```
+
+## 📚 Примеры плагинов
+### 1. Telegram Bot
+
+```typescript
 typescript
 const telegramPlugin = {
     name: 'telegram-notifier',
@@ -434,7 +487,11 @@ const telegramPlugin = {
         )
     }
 }
-2. IP Whitelist
+```
+
+### 2. IP Whitelist
+
+```typescript
 typescript
 const whitelistPlugin = {
     name: 'ip-whitelist',
@@ -466,7 +523,9 @@ const whitelistPlugin = {
         next()
     }
 }
-📞 Контакты
+```
+
+## 📞 Контакты
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
 Email	derector@devorbit.ru

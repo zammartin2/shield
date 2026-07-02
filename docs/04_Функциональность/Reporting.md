@@ -2,7 +2,7 @@
 
 ---
 
-**Версия:** 1.0.0  
+**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -44,17 +44,17 @@ interface ExecutiveReport {
         riskLevel: 'low' | 'medium' | 'high' | 'critical';
         incidents: number;
     };
-    
+
     // Тренды
     trends: {
         threats: Trend[];
         performance: Trend[];
         incidents: Trend[];
     };
-    
+
     // Рекомендации
     recommendations: string[];
-    
+
     // Бюджет и ресурсы
     resources: {
         saved: number;      // Сэкономлено (в часах)
@@ -62,8 +62,11 @@ interface ExecutiveReport {
         efficiency: number; // Эффективность защиты (%)
     };
 }
-Пример Executive Report
-json
+```
+
+### Пример Executive Report
+
+```json
 {
     "summary": {
         "totalThreats": 1567,
@@ -84,15 +87,18 @@ json
         "Усилить мониторинг API"
     ],
     "resources": {
-        "saved": 240,      // 240 часов сэкономлено
-        "prevented": 127,   // 127 атак предотвращено
-        "efficiency": 95    // 95% эффективность
+        "saved": 240,
+        "prevented": 127,
+        "efficiency": 95
     }
 }
-2. Security Report (Для команды безопасности)
-Цель: Детальный анализ угроз
+```
 
-typescript
+### 2. Security Report (Для команды безопасности)
+
+**Цель:** Детальный анализ угроз
+
+```typescript
 interface SecurityReport {
     // Обнаруженные угрозы
     threats: {
@@ -101,14 +107,14 @@ interface SecurityReport {
         bySource: SourceDistribution;
         byTime: TimeDistribution;
     };
-    
+
     // Заблокированные атаки
     blocks: {
         total: number;
         byRule: RuleDistribution;
         byIP: IPDistribution;
     };
-    
+
     // Уязвимости
     vulnerabilities: {
         found: number;
@@ -118,7 +124,7 @@ interface SecurityReport {
         low: number;
         patched: number;
     };
-    
+
     // Анализ
     analysis: {
         patterns: Pattern[];
@@ -126,10 +132,13 @@ interface SecurityReport {
         predictions: Prediction[];
     };
 }
-3. Technical Report (Для разработчиков)
-Цель: Технические детали
+```
 
-typescript
+### 3. Technical Report (Для разработчиков)
+
+**Цель:** Технические детали
+
+```typescript
 interface TechnicalReport {
     // Производительность
     performance: {
@@ -139,7 +148,7 @@ interface TechnicalReport {
         requestsPerSecond: number;
         errorRate: number;
     };
-    
+
     // Конфигурация
     config: {
         rules: Rule[];
@@ -147,21 +156,24 @@ interface TechnicalReport {
         csp: CSPConfig;
         rateLimits: RateLimitConfig[];
     };
-    
+
     // Логи
     logs: {
         access: AccessLog[];
         security: SecurityLog[];
         errors: ErrorLog[];
     };
-    
+
     // Рекомендации для разработчиков
     recommendations: DeveloperRecommendation[];
 }
-4. Compliance Report (Для аудита)
-Цель: Соответствие стандартам
+```
 
-typescript
+### 4. Compliance Report (Для аудита)
+
+**Цель:** Соответствие стандартам
+
+```typescript
 interface ComplianceReport {
     // Соответствие
     compliance: {
@@ -182,14 +194,14 @@ interface ComplianceReport {
             issues: string[];
         };
     };
-    
+
     // Аудит
     audit: {
         logs: AuditLog[];
         access: AccessRecord[];
         changes: ChangeRecord[];
     };
-    
+
     // Доказательства
     evidence: {
         policies: Policy[];
@@ -197,9 +209,15 @@ interface ComplianceReport {
         tests: TestResult[];
     };
 }
-🔧 Использование
-Базовая генерация
-typescript
+```
+
+---
+
+## 🔧 Использование
+
+### Базовая генерация
+
+```typescript
 const shield = new FABShield({
     reporting: {
         enabled: true
@@ -214,12 +232,15 @@ const report = await shield.reporting.generate({
 })
 
 console.log(report)
-Расширенная конфигурация
-typescript
+```
+
+### Расширенная конфигурация
+
+```typescript
 const shield = new FABShield({
     reporting: {
         enabled: true,
-        
+
         // Типы отчетов
         types: {
             executive: {
@@ -243,10 +264,10 @@ const shield = new FABShield({
                 recipients: ['audit@company.com']
             }
         },
-        
+
         // Форматы
         formats: ['pdf', 'html', 'json', 'csv'],
-        
+
         // Автоматическая отправка
         delivery: {
             email: {
@@ -268,7 +289,7 @@ const shield = new FABShield({
                 retention: 90 // дней
             }
         },
-        
+
         // Шаблоны
         templates: {
             executive: './templates/executive.hbs',
@@ -277,9 +298,15 @@ const shield = new FABShield({
         }
     }
 })
-📝 Генерация отчетов
-По запросу
-typescript
+```
+
+---
+
+## 📝 Генерация отчетов
+
+### По запросу
+
+```typescript
 // Генерация отчета за период
 const report = await shield.reporting.generate({
     type: 'security',
@@ -292,8 +319,11 @@ const report = await shield.reporting.generate({
 
 // Сохранение отчета
 await report.save('./reports/security-2026-06.pdf')
-Автоматическая генерация
-typescript
+```
+
+### Автоматическая генерация
+
+```typescript
 // Настройка автоматической генерации
 shield.reporting.schedule({
     type: 'executive',
@@ -317,9 +347,15 @@ shield.reporting.schedule({
     format: 'json',
     action: 'storage'
 })
-📊 Кастомизация отчетов
-Создание шаблона
-handlebars
+```
+
+---
+
+## 📊 Кастомизация отчетов
+
+### Создание шаблона
+
+```handlebars
 <!-- templates/executive.hbs -->
 <!DOCTYPE html>
 <html>
@@ -341,7 +377,7 @@ handlebars
         <p>Generated: {{generatedAt}}</p>
         <p>Period: {{period.from}} — {{period.to}}</p>
     </div>
-    
+
     <div class="metrics">
         <div class="metric">
             <div>Всего угроз</div>
@@ -360,7 +396,7 @@ handlebars
             <div class="value">{{summary.incidents}}</div>
         </div>
     </div>
-    
+
     <div class="trends">
         <h2>Тренды</h2>
         {{#each trends}}
@@ -372,8 +408,11 @@ handlebars
     </div>
 </body>
 </html>
-Добавление кастомных данных
-typescript
+```
+
+### Добавление кастомных данных
+
+```typescript
 // Добавление кастомных данных в отчет
 shield.reporting.registerDataProvider('custom', async () => {
     return {
@@ -387,9 +426,15 @@ const report = await shield.reporting.generate({
     type: 'executive',
     include: ['custom']
 })
-📤 Экспорт отчетов
-PDF
-typescript
+```
+
+---
+
+## 📤 Экспорт отчетов
+
+### PDF
+
+```typescript
 // Экспорт в PDF
 const pdf = await shield.reporting.exportPDF(report)
 fs.writeFileSync('report.pdf', pdf)
@@ -413,24 +458,39 @@ const pdfOptions = {
         fontSize: 8
     }
 }
-HTML
-typescript
+```
+
+### HTML
+
+```typescript
 // Экспорт в HTML
 const html = await shield.reporting.exportHTML(report)
 fs.writeFileSync('report.html', html)
-JSON
-typescript
+```
+
+### JSON
+
+```typescript
 // Экспорт в JSON
 const json = await shield.reporting.exportJSON(report)
 fs.writeFileSync('report.json', JSON.stringify(json, null, 2))
-CSV
-typescript
+```
+
+### CSV
+
+```typescript
 // Экспорт в CSV
 const csv = await shield.reporting.exportCSV(report)
 fs.writeFileSync('report.csv', csv)
-📊 Визуализация
-Графики и диаграммы
-typescript
+```
+
+---
+
+## 📊 Визуализация
+
+### Графики и диаграммы
+
+```typescript
 // Добавление графиков в отчет
 const report = await shield.reporting.generate({
     type: 'executive',
@@ -454,24 +514,33 @@ const report = await shield.reporting.generate({
         }
     ]
 })
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-Reporting — это:
+```
 
-📊 Прозрачность — видимость состояния безопасности
+---
 
-📈 Аналитика — понимание трендов
+## 📞 Контакты
 
-📋 Комплаенс — соответствие требованиям
+| | |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
-🎯 Решения — данные для управления
+---
 
-📤 Гибкость — разные форматы и шаблоны
+## 🏆 Итог
+
+**Reporting** — это:
+
+- 📊 Прозрачность — видимость состояния безопасности
+- 📈 Аналитика — понимание трендов
+- 📋 Комплаенс — соответствие требованиям
+- 🎯 Решения — данные для управления
+- 📤 Гибкость — разные форматы и шаблоны
 
 Принимайте решения на основе данных! 📊
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

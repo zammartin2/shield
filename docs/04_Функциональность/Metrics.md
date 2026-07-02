@@ -5,7 +5,7 @@
 
 ---
 
-**Версия:** 1.0.0  
+**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -26,13 +26,13 @@
 - какие правила и модули срабатывают чаще всего;
 - когда нужно реагировать на инцидент.
 
-Metrics превращает security-layer из “черного ящика” в наблюдаемую систему.
+Metrics превращает security-layer из «черного ящика» в наблюдаемую систему.
 
 ---
 
 ## 🎯 Что дают метрики
 
-## Ключевые преимущества
+### Ключевые преимущества
 
 | Преимущество | Описание |
 |:---|:---|
@@ -48,7 +48,7 @@ Metrics превращает security-layer из “черного ящика”
 
 ## 📊 Типы метрик
 
-## 1. Request Metrics
+### 1. Request Metrics
 
 **Request Metrics** показывают активность HTTP-запросов.
 
@@ -93,7 +93,7 @@ interface RequestMetrics {
 
 ---
 
-## 2. Security Metrics
+### 2. Security Metrics
 
 **Security Metrics** показывают события безопасности.
 
@@ -138,7 +138,7 @@ interface SecurityMetrics {
 
 ---
 
-## 3. Performance Metrics
+### 3. Performance Metrics
 
 **Performance Metrics** помогают понимать влияние FAB Shield и приложения на скорость работы.
 
@@ -177,7 +177,7 @@ interface PerformanceMetrics {
 
 ---
 
-## 4. AI Metrics
+### 4. AI Metrics
 
 **AI Metrics** показывают качество и производительность AI-анализа.
 
@@ -214,7 +214,7 @@ interface AIMetrics {
 
 ---
 
-## 5. Business Metrics
+### 5. Business Metrics
 
 **Business Metrics** — опциональные пользовательские метрики приложения.
 
@@ -246,7 +246,7 @@ interface BusinessMetrics {
 
 ## 🔧 Использование
 
-## Базовая конфигурация
+### Базовая конфигурация
 
 ```typescript
 import { FABShield } from '@fab-orbita/shield'
@@ -264,7 +264,7 @@ console.log(metrics)
 
 ---
 
-## Расширенная конфигурация
+### Расширенная конфигурация
 
 ```typescript
 import { FABShield } from '@fab-orbita/shield'
@@ -336,7 +336,7 @@ const shield = new FABShield({
 
 ## 📈 Доступ к метрикам
 
-## Получение метрик через API FAB Shield
+### Получение метрик через API FAB Shield
 
 ```typescript
 // Получить все метрики
@@ -361,7 +361,7 @@ const aggregated = shield.getMetricsAggregated({
 
 ---
 
-## Через Prometheus
+### Через Prometheus
 
 ```typescript
 import express from 'express'
@@ -386,7 +386,7 @@ app.get('/metrics', async (req, res) => {
 
 ---
 
-## Через JSON и CSV
+### Через JSON и CSV
 
 ```typescript
 import fs from 'fs'
@@ -404,7 +404,7 @@ fs.writeFileSync('metrics.csv', csvMetrics)
 
 ## 📊 Визуализация
 
-## Веб-дашборд
+### Веб-дашборд
 
 ```typescript
 const dashboard = shield.createDashboard({
@@ -449,7 +449,7 @@ app.get('/dashboard', (req, res) => {
 
 ---
 
-## Графики
+### Графики
 
 ```typescript
 const chart = shield.createChart({
@@ -471,7 +471,7 @@ const chartHTML = chart.renderHTML()
 
 ## 🚨 Алерты
 
-## Настройка алертов
+### Настройка алертов
 
 ```typescript
 import { FABShield } from '@fab-orbita/shield'
@@ -531,7 +531,7 @@ const shield = new FABShield({
 
 ---
 
-## Примеры alert rules
+### Примеры alert rules
 
 | Правило | Метрика | Условие | Действие |
 |:---|:---|:---|:---|
@@ -545,7 +545,7 @@ const shield = new FABShield({
 
 ## 📊 Примеры использования
 
-## 1. Мониторинг атак
+### 1. Мониторинг атак
 
 ```typescript
 setInterval(() => {
@@ -560,7 +560,7 @@ setInterval(() => {
 
 ---
 
-## 2. Оптимизация производительности
+### 2. Оптимизация производительности
 
 ```typescript
 const metrics = shield.getMetrics('performance')
@@ -573,7 +573,7 @@ if (metrics.processingTime.p95 > 500) {
 
 ---
 
-## 3. Анализ трендов
+### 3. Анализ трендов
 
 ```typescript
 const history = shield.getMetricsHistory({
@@ -592,7 +592,7 @@ console.log('📈 Тренды:', {
 
 ---
 
-## 4. Экспорт security summary
+### 4. Экспорт security summary
 
 ```typescript
 const securitySummary = shield.getMetricsAggregated({
@@ -612,7 +612,7 @@ console.log(securitySummary)
 
 ## 🧩 Storage backends
 
-## Memory
+### Memory
 
 ```typescript
 const shield = new FABShield({
@@ -635,7 +635,7 @@ const shield = new FABShield({
 
 ---
 
-## Redis
+### Redis
 
 ```typescript
 const shield = new FABShield({
@@ -658,7 +658,7 @@ const shield = new FABShield({
 
 ---
 
-## Database
+### Database
 
 ```typescript
 const shield = new FABShield({
@@ -713,7 +713,7 @@ const shield = new FABShield({
 
 ## 🧪 Отладка
 
-## Проверка включенных метрик
+### Проверка включенных метрик
 
 ```typescript
 const config = shield.getConfig()
@@ -723,7 +723,7 @@ console.log(config.metrics)
 
 ---
 
-## Сброс метрик
+### Сброс метрик
 
 ```typescript
 shield.resetMetrics()
@@ -731,7 +731,7 @@ shield.resetMetrics()
 
 ---
 
-## Проверка Prometheus export
+### Проверка Prometheus export
 
 ```bash
 curl http://localhost:3000/metrics
@@ -813,7 +813,6 @@ Metrics не защищает приложение сам по себе.
 ---
 
 <p align="center">
-
 **FAB Shield — прозрачная аналитика безопасности для Node.js-приложений.**
 
 Made with ❤️ by **Vladimir Fabrisius**
@@ -822,7 +821,6 @@ Made with ❤️ by **Vladimir Fabrisius**
 [npm](https://www.npmjs.com/package/@fab-orbita/shield) •
 [Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield) •
 [Telegram](https://t.me/fab_shield)
-
 </p>
 
 ---
