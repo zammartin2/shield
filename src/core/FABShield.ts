@@ -1,5 +1,5 @@
 // ============================================
-// FAB SHIELD — Главный класс (Полная версия)
+// FAB SHIELD — Главный класс (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 // ============================================
 
 import { ConfigManager } from './ConfigManager'
@@ -8,6 +8,7 @@ import { CSPModule } from '../modules/csp/CSPModule'
 import { AIModule } from '../modules/ai/AIModule'
 import { PluginManager } from '../modules/plugins/PluginManager'
 import { MetricsCollector } from '../modules/metrics/MetricsCollector'
+import { RateLimiter } from '../modules/rate-limit/RateLimiter'  // ← ДОБАВЛЕНО
 import { ShieldConfig, Plugin, Threat } from '../types'
 import { EventEmitter } from 'events'
 
@@ -21,7 +22,7 @@ export class FABShield extends EventEmitter {
   private startTime: number
   private active: boolean = true
   private version: string = '1.0.0'
-  private rateLimiter: any
+  private rateLimiter: RateLimiter | null = null  // ← ИЗМЕНЁН ТИП
   private logger: any
 
   constructor(config: Partial<ShieldConfig> = {}) {
@@ -36,7 +37,7 @@ export class FABShield extends EventEmitter {
     this.plugins = new PluginManager(this.config)
     this.metrics = new MetricsCollector()
     
-    this.setupRateLimiter()
+    this.setupRateLimiter()  // ← ИНИЦИАЛИЗАЦИЯ
     this.setupLogger()
     this.setupEventListeners()
     
@@ -58,6 +59,7 @@ export class FABShield extends EventEmitter {
       try {
         this.logger?.debug(`📝 ${req.method} ${req.path} [${requestId}]`)
 
+        // === RATE LIMITING (ИСПРАВЛЕНО) ===
         const rateLimitConfig = this.config.get().rateLimit
         if (rateLimitConfig?.enabled && this.rateLimiter) {
           const rateResult = await this.rateLimiter.check(req)
@@ -69,7 +71,7 @@ export class FABShield extends EventEmitter {
               retryAfter: rateResult.retryAfter,
               limit: rateResult.limit,
               remaining: 0,
-              reset: new Date(Date.now() + rateResult.windowMs).toISOString()
+              reset: rateResult.reset || new Date(Date.now() + rateResult.windowMs).toISOString()
             })
           }
         }
@@ -333,16 +335,17 @@ export class FABShield extends EventEmitter {
     return `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
   }
 
+  // ============================================
+  // 🔧 ИСПРАВЛЕНО: Реальный RateLimiter
+  // ============================================
   private setupRateLimiter(): void {
-    this.rateLimiter = {
-      check: async (_req: any) => {
-        const config = this.config.get().rateLimit
-        if (!config?.enabled) {
-          return { blocked: false }
-        }
-        const max = (config as any).default?.max || 100
-        return { blocked: false, limit: max }
-      }
+    const config = this.config.get()
+    if (config.rateLimit?.enabled) {
+      this.rateLimiter = new RateLimiter(this.config)
+      this.logger?.info('🚦 Rate Limiter initialized')
+    } else {
+      this.rateLimiter = null
+      this.logger?.info('🚦 Rate Limiter disabled')
     }
   }
 
@@ -410,6 +413,9 @@ export class FABShield extends EventEmitter {
     this.stop()
     this.removeAllListeners()
     this.metrics.reset()
+    if (this.rateLimiter) {
+      this.rateLimiter.resetAll()
+    }
     this.logger?.info('💀 FAB Shield destroyed')
   }
 }
