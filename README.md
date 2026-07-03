@@ -1,31 +1,52 @@
 # 🛡️ FAB Shield
 
-> Modern security framework for Node.js applications: security headers, CSP, rate limiting, attack detection, monitoring, metrics, and an extensible plugin system.
+<p align="center">
+  <strong>Modern security framework for Node.js applications</strong><br />
+  Security headers, CSP, rate limiting, attack detection, monitoring, metrics, and an extensible plugin system.
+</p>
 
-[![npm version](https://img.shields.io/npm/v/@fab-orbita/shield.svg)](https://www.npmjs.com/package/@fab-orbita/shield)
-[![npm downloads](https://img.shields.io/npm/dm/@fab-orbita/shield.svg)](https://www.npmjs.com/package/@fab-orbita/shield)
-[![build](https://img.shields.io/github/actions/workflow/status/zammartin2/shield/ci.yml?branch=main)](https://github.com/zammartin2/shield/actions)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-ready-blue.svg)](https://www.typescriptlang.org/)
-[![Coverage](https://img.shields.io/badge/coverage-89.97%25-brightgreen)](#project-status)
-[![Tests](https://img.shields.io/badge/tests-1119%20passed-brightgreen)](#testing)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@fab-orbita/shield">
+    <img src="https://img.shields.io/npm/v/@fab-orbita/shield.svg?style=for-the-badge&color=cb3837&logo=npm" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/@fab-orbita/shield">
+    <img src="https://img.shields.io/npm/dm/@fab-orbita/shield.svg?style=for-the-badge&color=cb3837&logo=npm" alt="npm downloads" />
+  </a>
+  <a href="https://github.com/zammartin2/shield/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/zammartin2/shield/ci.yml?branch=main&style=for-the-badge&logo=github" alt="build status" />
+  </a>
+  <a href="https://nodejs.org/">
+    <img src="https://img.shields.io/badge/Node.js-%3E%3D18.0-brightgreen?style=for-the-badge&logo=node.js" alt="Node.js >= 18" />
+  </a>
+  <a href="https://www.typescriptlang.org/">
+    <img src="https://img.shields.io/badge/TypeScript-ready-blue?style=for-the-badge&logo=typescript" alt="TypeScript ready" />
+  </a>
+  <a href="#testing">
+    <img src="https://img.shields.io/badge/tests-1119%20passed-brightgreen?style=for-the-badge&logo=jest" alt="tests" />
+  </a>
+  <a href="#project-status">
+    <img src="https://img.shields.io/badge/coverage-89.97%25-brightgreen?style=for-the-badge" alt="coverage" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License: MIT" />
+  </a>
+</p>
 
-**FAB Shield** protects **Express**, **Fastify**, **Koa**, **NestJS**, and modern Node.js applications.
-
-[GitHub](https://github.com/zammartin2/shield) •
-[npm](https://www.npmjs.com/package/@fab-orbita/shield) •
-[Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield) •
-[Telegram](https://t.me/fab_shield) •
-[Русская версия](docs/README.md)
+<p align="center">
+  <a href="https://github.com/zammartin2/shield">GitHub</a> ·
+  <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
+  <a href="https://fab.devorbit.ru/packages/@fab-orbita/shield">Fab Registry</a> ·
+  <a href="https://t.me/fab_shield">Telegram</a> ·
+  <a href="docs/README.md">Русская версия</a>
+</p>
 
 ---
 
 ## Table of Contents
 
-- [About the Project](#about-the-project)
-- [Core Idea](#core-idea)
-- [Features](#features)
+- [About](#about)
+- [Why FAB Shield](#why-fab-shield)
+- [Supported Package Managers](#supported-package-managers)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -37,32 +58,35 @@
 - [Plugin System](#plugin-system)
 - [Metrics and Monitoring](#metrics-and-monitoring)
 - [Architecture](#architecture)
+- [TypeScript](#typescript)
+- [Recommended Production Setup](#recommended-production-setup)
 - [Project Status](#project-status)
 - [Testing](#testing)
-- [Recommended Production Setup](#recommended-production-setup)
 - [What FAB Shield Does Not Replace](#what-fab-shield-does-not-replace)
 - [Roadmap](#roadmap)
+- [Changelog](#changelog)
 - [Contributing](#contributing)
 - [Community](#community)
 - [FAQ](#faq)
-- [License](#license)
+- [DEVORBIT LLC](#devorbit-llc)
 - [Author](#author)
+- [License](#license)
+- [Support the Project](#support-the-project)
 
 ---
 
-## About the Project
+## About
 
-**FAB Shield** is a security middleware framework for Node.js applications.
+**FAB Shield** is a security middleware framework for modern Node.js applications.
 
-It helps developers quickly add a unified protection layer without manually combining many separate packages for headers, CSP, rate limiting, request analysis, logging, metrics, and plugin-based extensions.
+It helps developers add a unified protection layer without manually combining many separate packages for security headers, CSP, rate limiting, request analysis, logging, metrics, and plugin-based extensions.
 
-FAB Shield is suitable for:
+FAB Shield can be used with:
 
 - REST APIs;
 - GraphQL APIs;
 - SaaS platforms;
 - enterprise services;
-- personal projects;
 - microservices;
 - admin panels;
 - public web applications;
@@ -70,14 +94,14 @@ FAB Shield is suitable for:
 
 ---
 
-## Core Idea
+## Why FAB Shield
 
 Security should be simple to connect, easy to configure, and flexible enough for production projects.
 
 Usually, a developer has to configure separate tools for:
 
 - security headers;
-- CSP;
+- Content Security Policy;
 - rate limiting;
 - XSS detection;
 - SQL Injection detection;
@@ -106,85 +130,14 @@ After connecting the middleware, the application receives an additional configur
 
 ---
 
-## Features
+## Supported Package Managers
 
-### Security Headers
-
-FAB Shield can automatically add modern HTTP security headers that help reduce common browser-level risks.
-
-Security directions include:
-
-- XSS risk reduction;
-- clickjacking protection;
-- MIME sniffing protection;
-- referrer policy control;
-- permissions policy control;
-- Content Security Policy;
-- HTTPS hardening;
-- cache control;
-- secure iframe behavior;
-- protection against unsafe sources.
-
-### Attack Detection
-
-FAB Shield can analyze incoming requests and detect suspicious patterns.
-
-The detection layer can be used to identify:
-
-- XSS payloads;
-- SQL Injection attempts;
-- NoSQL Injection attempts;
-- LDAP Injection attempts;
-- Path Traversal attempts;
-- Command Injection attempts;
-- suspicious User-Agent headers;
-- unusual URL parameters;
-- automated scanner behavior;
-- common attack payloads.
-
-### Rate Limiting
-
-The built-in rate limiter helps restrict the number of requests from a single client.
-
-This is useful for protection against:
-
-- brute force;
-- API spam;
-- credential stuffing;
-- simple DDoS-like traffic bursts;
-- excessive server load.
-
-### Plugin System
-
-FAB Shield supports plugins, allowing developers to extend the framework for custom security scenarios.
-
-Plugins can be used for:
-
-- logging;
-- auditing;
-- notifications;
-- WAF integrations;
-- geo blocking;
-- custom authorization;
-- IP checks;
-- Telegram, Slack, and Email integrations;
-- internal enterprise security workflows.
-
-### Metrics and Reports
-
-FAB Shield can collect and export security metrics.
-
-Supported directions include:
-
-- total requests;
-- blocked requests;
-- suspicious requests;
-- attack sources;
-- threat types;
-- rate limit events;
-- CSP events;
-- plugin events;
-- reports and alerts.
+| Package Manager | Command |
+|---|---|
+| [![npm](https://img.shields.io/badge/npm-cb3837?style=flat-square&logo=npm)](https://www.npmjs.com/package/@fab-orbita/shield) | `npm install @fab-orbita/shield` |
+| [![Yarn](https://img.shields.io/badge/yarn-2C8EBB?style=flat-square&logo=yarn)](https://yarnpkg.com/package/@fab-orbita/shield) | `yarn add @fab-orbita/shield` |
+| [![pnpm](https://img.shields.io/badge/pnpm-F69220?style=flat-square&logo=pnpm)](https://pnpm.io/) | `pnpm add @fab-orbita/shield` |
+| [![Fab Registry](https://img.shields.io/badge/Fab%20Registry-6C5CE7?style=flat-square&logo=dev.to)](https://fab.devorbit.ru/packages/@fab-orbita/shield) | `npm install @fab-orbita/shield --registry=https://fab.devorbit.ru` |
 
 ---
 
@@ -196,7 +149,7 @@ Supported directions include:
 npm install @fab-orbita/shield
 ```
 
-### yarn
+### Yarn
 
 ```bash
 yarn add @fab-orbita/shield
@@ -218,10 +171,10 @@ npm install @fab-orbita/shield --registry=https://fab.devorbit.ru
 
 | Component | Requirement |
 |---|---|
-| Node.js | 18+ |
+| Node.js | `18+` |
 | TypeScript | Supported |
 | Module format | ESM / CommonJS |
-| Package manager | npm, yarn, pnpm, Fab Registry |
+| Package managers | npm, Yarn, pnpm, Fab Registry |
 
 ---
 
@@ -240,7 +193,7 @@ app.use(shield.middleware());
 
 app.get("/", (req, res) => {
   res.json({
-    message: "FAB Shield protects this application"
+    message: "FAB Shield protects this application",
   });
 });
 
@@ -262,8 +215,8 @@ const shield = new FABShield({
   headers: true,
   rateLimit: true,
   ai: {
-    enabled: true
-  }
+    enabled: true,
+  },
 });
 ```
 
@@ -277,33 +230,31 @@ const shield = new FABShield({
     frameOptions: true,
     noSniff: true,
     referrerPolicy: true,
-    permissionsPolicy: true
+    permissionsPolicy: true,
   },
 
   ai: {
     enabled: true,
     anomalyDetection: true,
     threatPrediction: true,
-    sensitivity: "medium"
+    sensitivity: "medium",
   },
 
   rateLimit: {
     enabled: true,
     windowMs: 60_000,
-    max: 100
+    max: 100,
   },
 
   metrics: {
-    enabled: true
+    enabled: true,
   },
 
-  plugins: []
+  plugins: [],
 });
 ```
 
 ### Environment Variables
-
-Example `.env` configuration:
 
 ```env
 FAB_SHIELD_ENABLED=true
@@ -331,13 +282,13 @@ const shield = new FABShield({
   headers: true,
   ai: {
     enabled: true,
-    anomalyDetection: true
+    anomalyDetection: true,
   },
   rateLimit: {
     enabled: true,
     windowMs: 60_000,
-    max: 100
-  }
+    max: 100,
+  },
 });
 
 app.use(shield.middleware());
@@ -345,13 +296,13 @@ app.use(shield.middleware());
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    protected: true
+    protected: true,
   });
 });
 
 app.post("/api/users", (req, res) => {
   res.json({
-    created: true
+    created: true,
   });
 });
 
@@ -373,12 +324,12 @@ fastify.addHook("onRequest", async (request, reply) => {
 
 fastify.get("/", async () => {
   return {
-    message: "Protected by FAB Shield"
+    message: "Protected by FAB Shield",
   };
 });
 
 fastify.listen({
-  port: 3000
+  port: 3000,
 });
 ```
 
@@ -397,7 +348,7 @@ app.use(async (ctx, next) => {
 
 app.use(async (ctx) => {
   ctx.body = {
-    message: "Protected by FAB Shield"
+    message: "Protected by FAB Shield",
   };
 });
 
@@ -417,8 +368,8 @@ async function bootstrap() {
   const shield = new FABShield({
     headers: true,
     ai: {
-      enabled: true
-    }
+      enabled: true,
+    },
   });
 
   app.use(shield.middleware());
@@ -450,13 +401,21 @@ FAB Shield can manage a wide set of security headers.
 | `Pragma` | Legacy cache control compatibility |
 | `Expires` | Controls cache expiration |
 
+FAB Shield helps reduce risks related to:
+
+- XSS;
+- clickjacking;
+- MIME sniffing;
+- unsafe referrer leakage;
+- excessive browser feature access;
+- unsafe embedded content;
+- insecure source loading.
+
 ---
 
 ## Content Security Policy
 
-CSP is one of the strongest browser-level protections against XSS.
-
-Example configuration:
+Content Security Policy is one of the strongest browser-level protections against XSS.
 
 ```ts
 const shield = new FABShield({
@@ -468,9 +427,9 @@ const shield = new FABShield({
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
-      frameAncestors: ["'none'"]
-    }
-  }
+      frameAncestors: ["'none'"],
+    },
+  },
 });
 ```
 
@@ -482,8 +441,8 @@ Nonce support allows safe usage of inline scripts without fully disabling CSP.
 const shield = new FABShield({
   csp: {
     enabled: true,
-    nonce: true
-  }
+    nonce: true,
+  },
 });
 ```
 
@@ -491,7 +450,7 @@ const shield = new FABShield({
 
 ## Rate Limiting
 
-Strict rate limiting example:
+The built-in rate limiter helps restrict the number of requests from a single client.
 
 ```ts
 const shield = new FABShield({
@@ -499,8 +458,8 @@ const shield = new FABShield({
     enabled: true,
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: "Too many requests"
-  }
+    message: "Too many requests",
+  },
 });
 ```
 
@@ -513,9 +472,19 @@ Common use cases:
 - webhook endpoints;
 - admin routes.
 
+Rate limiting helps protect against:
+
+- brute force;
+- API spam;
+- credential stuffing;
+- excessive server load;
+- simple DDoS-like traffic bursts.
+
 ---
 
 ## Attack Detection
+
+FAB Shield can analyze incoming requests and detect suspicious patterns.
 
 ### Detection Coverage
 
@@ -528,26 +497,28 @@ Common use cases:
 | Path Traversal | Supported |
 | Command Injection | Supported |
 
-### XSS Example
+### Examples
+
+#### XSS
 
 ```http
 GET /search?q=<script>alert(1)</script>
 ```
 
-### SQL Injection Example
+#### SQL Injection
 
 ```http
 POST /login
 username=admin' OR '1'='1
 ```
 
-### Path Traversal Example
+#### Path Traversal
 
 ```http
 GET /files?path=../../etc/passwd
 ```
 
-### Bot Scan Example
+#### Bot Scan
 
 ```http
 GET /.env
@@ -555,9 +526,7 @@ GET /wp-admin
 GET /phpmyadmin
 ```
 
----
-
-## AI Protection
+### AI Protection
 
 AI Protection is an additional request analysis layer.
 
@@ -573,16 +542,14 @@ It can evaluate:
 - suspicious character sequences;
 - known attack payloads.
 
-Example:
-
 ```ts
 const shield = new FABShield({
   ai: {
     enabled: true,
     anomalyDetection: true,
     threatPrediction: true,
-    sensitivity: "medium"
-  }
+    sensitivity: "medium",
+  },
 });
 ```
 
@@ -609,15 +576,15 @@ const auditPlugin = {
   middleware(req, res, next) {
     console.log(`[AUDIT] ${req.method} ${req.url}`);
     next();
-  }
+  },
 };
 
 const shield = new FABShield({
-  plugins: [auditPlugin]
+  plugins: [auditPlugin],
 });
 ```
 
-### Official Plugin Ideas
+### Plugin Use Cases
 
 | Plugin | Purpose |
 |---|---|
@@ -636,9 +603,9 @@ const shield = new FABShield({
 
 ## Metrics and Monitoring
 
-FAB Shield can collect security events.
+FAB Shield can collect security events and export metrics for monitoring and analysis.
 
-Example event structure:
+### Example Event
 
 ```ts
 {
@@ -648,7 +615,7 @@ Example event structure:
   path: "/api/login",
   method: "POST",
   reason: "SQL Injection pattern detected",
-  timestamp: "2026-01-01T12:00:00.000Z"
+  timestamp: "2026-01-01T12:00:00.000Z",
 }
 ```
 
@@ -723,9 +690,7 @@ Example event structure:
 10. Response is hardened with protective headers
 ```
 
----
-
-## Comparison
+### Comparison
 
 | Feature | Helmet | FAB Shield | Paid WAF |
 |---|:---:|:---:|:---:|
@@ -752,14 +717,12 @@ import type { FABShieldOptions } from "@fab-orbita/shield";
 const config: FABShieldOptions = {
   headers: true,
   ai: {
-    enabled: true
-  }
+    enabled: true,
+  },
 };
 ```
 
----
-
-## Recommended Project Structure
+### Recommended Project Structure
 
 ```text
 project/
@@ -786,13 +749,13 @@ export const shield = new FABShield({
   headers: true,
   ai: {
     enabled: true,
-    anomalyDetection: true
+    anomalyDetection: true,
   },
   rateLimit: {
     enabled: true,
     windowMs: 60_000,
-    max: 100
-  }
+    max: 100,
+  },
 });
 ```
 
@@ -812,20 +775,86 @@ export default app;
 
 ---
 
-## When to Use FAB Shield
+## Recommended Production Setup
 
-FAB Shield is useful when you need to:
+```ts
+const shield = new FABShield({
+  headers: {
+    enabled: true,
+  },
 
-- quickly improve API security;
-- add security headers;
-- enable CSP;
-- limit request frequency;
-- protect login and registration endpoints;
-- add auditing;
-- track suspicious activity;
-- use a single security middleware;
-- extend security through plugins;
-- reduce the number of separate security dependencies.
+  csp: {
+    enabled: true,
+    nonce: true,
+  },
+
+  ai: {
+    enabled: true,
+    anomalyDetection: true,
+    threatPrediction: true,
+    sensitivity: "medium",
+  },
+
+  rateLimit: {
+    enabled: true,
+    windowMs: 60_000,
+    max: 120,
+  },
+
+  metrics: {
+    enabled: true,
+  },
+});
+```
+
+Before using FAB Shield in production, test the configuration in a staging environment and check that it does not block legitimate users or third-party integrations.
+
+---
+
+## Project Status
+
+| Metric | Value |
+|---|---:|
+| Current version | `1.3.0` |
+| Test suites | `31 / 31` passed |
+| Tests | `1119 / 1119` passed |
+| Test success rate | `100%` |
+| Code coverage | `89.97%` |
+| Target coverage for `1.3.0` | `90%` |
+| Known CVE | `0` |
+| Node.js | `18+` |
+
+The project is in active development. Version `1.3.0` focuses on testing, documentation, and coverage stabilization.
+
+---
+
+## Testing
+
+Current testing status for version `1.3.0`:
+
+| Indicator | Value |
+|---|---:|
+| Total test suites | `31` |
+| Passed test suites | `31` |
+| Total tests | `1119` |
+| Passed tests | `1119` |
+| Code coverage | `89.97%` |
+
+### Key Module Coverage
+
+| Module | Coverage |
+|---|---:|
+| `ResponseHandler.ts` | `100%` |
+| `logging.middleware.ts` | `100%` |
+| `RequestHandler.ts` | `100%` |
+| `PluginsModule.ts` | `100%` |
+| `crypto.ts` | `100%` |
+| `date.util.ts` | `100%` |
+| `logger.ts` | `100%` |
+| `MetricsModule.ts` | `100%` |
+| `MetricsCollector.ts` | `100%` |
+| `error.middleware.ts` | `86%` |
+| `FABShield.ts` | `68%` |
 
 ---
 
@@ -844,9 +873,7 @@ FAB Shield improves application security, but it does not replace:
 - database protection;
 - DevSecOps processes.
 
----
-
-## Security Recommendations
+### Security Recommendations
 
 For better protection, use FAB Shield together with:
 
@@ -864,114 +891,31 @@ For better protection, use FAB Shield together with:
 
 ---
 
-## Project Status
-
-| Metric | Value |
-|---|---:|
-| Current version | 1.3.0 |
-| Test suites | 31 / 31 passed |
-| Tests | 1119 / 1119 passed |
-| Test success rate | 100% |
-| Code coverage | 89.97% |
-| Target coverage for 1.3.0 | 90% |
-| Known CVE | 0 |
-| Node.js | 18+ |
-
-The project is in active development. Version **1.3.0** focuses on testing, documentation, and coverage stabilization.
-
----
-
-## Testing
-
-Current testing status for version **1.3.0**:
-
-| Indicator | Value |
-|---|---:|
-| Total test suites | 31 |
-| Passed test suites | 31 |
-| Total tests | 1119 |
-| Passed tests | 1119 |
-| Code coverage | 89.97% |
-
-### Key Module Coverage
-
-| Module | Coverage |
-|---|---:|
-| `ResponseHandler.ts` | 100% |
-| `logging.middleware.ts` | 100% |
-| `RequestHandler.ts` | 100% |
-| `PluginsModule.ts` | 100% |
-| `crypto.ts` | 100% |
-| `date.util.ts` | 100% |
-| `logger.ts` | 100% |
-| `MetricsModule.ts` | 100% |
-| `MetricsCollector.ts` | 100% |
-| `error.middleware.ts` | 86% |
-| `FABShield.ts` | 68% |
-
----
-
-## Recommended Production Setup
-
-```ts
-const shield = new FABShield({
-  headers: {
-    enabled: true
-  },
-
-  csp: {
-    enabled: true,
-    nonce: true
-  },
-
-  ai: {
-    enabled: true,
-    anomalyDetection: true,
-    threatPrediction: true,
-    sensitivity: "medium"
-  },
-
-  rateLimit: {
-    enabled: true,
-    windowMs: 60_000,
-    max: 120
-  },
-
-  metrics: {
-    enabled: true
-  }
-});
-```
-
-Before using FAB Shield in production, test the configuration in a staging environment and check that it does not block legitimate users or third-party integrations.
-
----
-
 ## Roadmap
 
-### 1.3.0 — Current Version ✅
+### `1.3.0` — Current Version ✅
 
 - README and CHANGELOG updated;
 - test and coverage data updated;
-- 89.97% code coverage reached;
-- 1119 tests pass successfully.
+- `89.97%` code coverage reached;
+- `1119` tests pass successfully.
 
-### 1.4.0 — Planned for 2026-07-20 🎯
+### `1.4.0` — Planned for 2026-07-20 🎯
 
-Goal: reach **95% code coverage**.
+Goal: reach `95%` code coverage.
 
 Planned work:
 
-- improve `FABShield.ts` coverage to 85%+;
-- improve `ContextManager.ts` coverage to 95%+;
-- improve `ConfigManager.ts` coverage to 95%+;
-- improve `ip.util.ts` coverage to 90%+;
-- improve `validator.ts` coverage to 95%+;
+- improve `FABShield.ts` coverage to `85%+`;
+- improve `ContextManager.ts` coverage to `95%+`;
+- improve `ConfigManager.ts` coverage to `95%+`;
+- improve `ip.util.ts` coverage to `90%+`;
+- improve `validator.ts` coverage to `95%+`;
 - add integration tests;
 - add performance tests;
 - add load tests.
 
-### 2.0.0 — Planned for 2026-12-01 🚀
+### `2.0.0` — Planned for 2026-12-01 🚀
 
 Large update:
 
@@ -986,16 +930,16 @@ Large update:
 
 ## Changelog
 
-The full release history is maintained in [`CHANGELOG.md`](CHANGELOG.md).
+The full release history is maintained in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ### Main Versions
 
 | Version | Date | Changes |
-|---|---|---|
-| 1.3.0 | 2026-07-03 | 89.97% coverage, 1119 tests |
-| 1.2.0 | 2026-07-03 | Comprehensive testing and coverage improvements |
-| 1.1.0 | 2026-07-02 | Basic testing |
-| 1.0.0 | 2026-07-01 | First stable release |
+|---|---:|---|
+| `1.3.0` | `2026-07-03` | `89.97%` coverage, `1119` tests |
+| `1.2.0` | `2026-07-03` | Comprehensive testing and coverage improvements |
+| `1.1.0` | `2026-07-02` | Basic testing |
+| `1.0.0` | `2026-07-01` | First stable release |
 
 ---
 
@@ -1041,13 +985,11 @@ git push origin feature/my-feature
 
 Then open a Pull Request on GitHub.
 
----
-
-## Report a Bug
+### Report a Bug
 
 If you find a bug, create an issue in the repository:
 
-[https://github.com/zammartin2/shield](https://github.com/zammartin2/shield)
+<https://github.com/zammartin2/shield>
 
 Please include:
 
@@ -1065,10 +1007,10 @@ Please include:
 
 | Platform | Link | Purpose |
 |---|---|---|
-| GitHub | [zammartin2/shield](https://github.com/zammartin2/shield) | Code, issues, pull requests |
-| npm | [@fab-orbita/shield](https://www.npmjs.com/package/@fab-orbita/shield) | npm package |
-| Fab Registry | [@fab-orbita/shield](https://fab.devorbit.ru/packages/@fab-orbita/shield) | Package in Fab Registry |
-| Telegram | [@fab_shield](https://t.me/fab_shield) | Discussions, questions, support |
+| GitHub | [`zammartin2/shield`](https://github.com/zammartin2/shield) | Code, issues, pull requests |
+| npm | [`@fab-orbita/shield`](https://www.npmjs.com/package/@fab-orbita/shield) | npm package |
+| Fab Registry | [`@fab-orbita/shield`](https://fab.devorbit.ru/packages/@fab-orbita/shield) | Package in Fab Registry |
+| Telegram | [`@fab_shield`](https://t.me/fab_shield) | Discussions, questions, support |
 
 ---
 
@@ -1097,8 +1039,8 @@ Yes.
 ```ts
 const shield = new FABShield({
   ai: {
-    enabled: false
-  }
+    enabled: false,
+  },
 });
 ```
 
@@ -1110,11 +1052,11 @@ Yes.
 const shield = new FABShield({
   headers: true,
   ai: {
-    enabled: false
+    enabled: false,
   },
   rateLimit: {
-    enabled: false
-  }
+    enabled: false,
+  },
 });
 ```
 
@@ -1145,8 +1087,6 @@ Focus areas:
 ---
 
 ## Author
-
-### Vladimir Fabrisius
 
 **Vladimir Fabrisius** is the author of FAB Shield and founder of DEVORBIT LLC.
 
@@ -1187,12 +1127,15 @@ Every star and every contribution helps the project grow.
 
 ---
 
-**FAB Shield — next-generation protection for Node.js applications.**
+<p align="center">
+  <strong>FAB Shield — next-generation protection for Node.js applications.</strong><br />
+  Made with ❤️ by Vladimir Fabrisius
+</p>
 
-Made with ❤️ by **Vladimir Fabrisius**
-
-[GitHub](https://github.com/zammartin2/shield) •
-[npm](https://www.npmjs.com/package/@fab-orbita/shield) •
-[Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield) •
-[Telegram](https://t.me/fab_shield) •
-[Русская версия](docs/README.md)
+<p align="center">
+  <a href="https://github.com/zammartin2/shield">GitHub</a> ·
+  <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
+  <a href="https://fab.devorbit.ru/packages/@fab-orbita/shield">Fab Registry</a> ·
+  <a href="https://t.me/fab_shield">Telegram</a> ·
+  <a href="docs/README.md">Русская версия</a>
+</p>

@@ -22,10 +22,6 @@ describe('HeadersModule', () => {
     jest.clearAllMocks();
   });
 
-  // ============================================
-  // КОНСТРУКТОР
-  // ============================================
-
   describe('constructor', () => {
     it('should create instance successfully', () => {
       expect(headersModule).toBeInstanceOf(HeadersModule);
@@ -35,10 +31,6 @@ describe('HeadersModule', () => {
       expect((headersModule as any).config).toBe(mockConfig);
     });
   });
-
-  // ============================================
-  // APPLY
-  // ============================================
 
   describe('apply', () => {
     it('should not set headers when disabled', async () => {
@@ -62,6 +54,7 @@ describe('HeadersModule', () => {
 
       await headersModule.apply({}, mockRes);
 
+      // Проверяем основные заголовки (без CSP, так как он теперь в CSPModule)
       expect(mockRes.setHeader).toHaveBeenCalledWith(
         'Strict-Transport-Security',
         'max-age=31536000; includeSubDomains; preload'
@@ -76,7 +69,7 @@ describe('HeadersModule', () => {
       expect(mockRes.setHeader).toHaveBeenCalledWith('Origin-Agent-Cluster', '?1');
       expect(mockRes.setHeader).toHaveBeenCalledWith('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
       expect(mockRes.setHeader).toHaveBeenCalledWith('Cross-Origin-Opener-Policy', 'same-origin');
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Security-Policy', expect.any(String));
+      // CSP не проверяем, так как он теперь в CSPModule
     });
 
     it('should set custom HSTS config', async () => {
@@ -240,75 +233,9 @@ describe('HeadersModule', () => {
 
       await headersModule.apply({}, mockRes);
 
-      // Должен обработать без ошибки
       expect(mockRes.setHeader).toHaveBeenCalled();
-    });
-
-    it('should handle missing CSP config', async () => {
-      mockConfig.getModule
-        .mockReturnValueOnce({ enabled: true })
-        .mockReturnValueOnce(null);
-
-      await headersModule.apply({}, mockRes);
-
-      expect(mockRes.setHeader).toHaveBeenCalled();
-    });
-
-    it('should handle CSP config with custom directives', async () => {
-      mockConfig.getModule
-        .mockReturnValueOnce({ enabled: true })
-        .mockReturnValueOnce({
-          enabled: true,
-          directives: {
-            'default-src': ["'self'", 'https:'],
-            'script-src': ["'self'"]
-          }
-        });
-
-      await headersModule.apply({}, mockRes);
-
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        'Content-Security-Policy',
-        expect.stringContaining("default-src 'self' https:")
-      );
-    });
-
-    it('should handle CSP config with trusted CDNs', async () => {
-      mockConfig.getModule
-        .mockReturnValueOnce({ enabled: true })
-        .mockReturnValueOnce({
-          enabled: true,
-          trustedCDNs: ['https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com']
-        });
-
-      await headersModule.apply({}, mockRes);
-
-      const cspCall = mockRes.setHeader.mock.calls.find(
-        call => call[0] === 'Content-Security-Policy'
-      );
-      expect(cspCall[1]).toContain('https://cdn.jsdelivr.net');
-    });
-
-    it('should handle CSP config with empty trustedCDNs', async () => {
-      mockConfig.getModule
-        .mockReturnValueOnce({ enabled: true })
-        .mockReturnValueOnce({
-          enabled: true,
-          trustedCDNs: []
-        });
-
-      await headersModule.apply({}, mockRes);
-
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        'Content-Security-Policy',
-        expect.any(String)
-      );
     });
   });
-
-  // ============================================
-  // GET ACTIVE HEADERS
-  // ============================================
 
   describe('getActiveHeaders', () => {
     it('should return empty object when disabled', () => {
@@ -343,7 +270,7 @@ describe('HeadersModule', () => {
       expect(result['Origin-Agent-Cluster']).toBe('?1');
       expect(result['Permissions-Policy']).toBe('geolocation=(), microphone=(), camera=()');
       expect(result['Cross-Origin-Opener-Policy']).toBe('same-origin');
-      expect(result['Content-Security-Policy']).toBe("default-src 'self'");
+      // CSP не проверяем, так как он теперь в CSPModule
     });
 
     it('should include custom headers', () => {
@@ -372,10 +299,6 @@ describe('HeadersModule', () => {
       expect(result).toHaveProperty('Strict-Transport-Security');
     });
   });
-
-  // ============================================
-  // ИНТЕГРАЦИОННЫЕ ТЕСТЫ
-  // ============================================
 
   describe('integration', () => {
     it('should apply all headers correctly', async () => {
@@ -410,7 +333,8 @@ describe('HeadersModule', () => {
       await headersModule.apply({}, mockRes);
       await headersModule.apply({}, mockRes);
 
-      expect(mockRes.setHeader).toHaveBeenCalledTimes(24);
+      // 11 заголовков * 2 вызова = 22
+      expect(mockRes.setHeader).toHaveBeenCalledTimes(22);
     });
   });
 });
