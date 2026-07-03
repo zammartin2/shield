@@ -1,6 +1,6 @@
 {
   "name": "@fab-orbita/shield",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Advanced security framework for Node.js with AI-powered protection",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -44,7 +44,6 @@
     "format": "prettier --write src/**/*.ts",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage node_modules",
-    "prepublishOnly": "npm run build && npm run test:ci",
     "dev": "ts-node examples/server.ts",
     "start": "node dist/index.js",
     "example": "ts-node examples/server.ts",

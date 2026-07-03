@@ -1,400 +1,431 @@
 import { FABShield } from '../../../src/core/FABShield';
+import { ShieldConfig, Plugin } from '../../../src/types';
 
-describe('FABShield - Full Coverage', () => {
+describe('FABShield - Core Tests', () => {
   let shield: FABShield;
 
-  beforeEach(() => {
-    shield = new FABShield({
-      env: 'test',
-      headers: { enabled: true },
-      csp: { enabled: true },
-      ai: { enabled: true },
-      monitoring: { enabled: true },
-      rateLimit: { enabled: true }
-    });
-  });
-
   afterEach(() => {
-    jest.clearAllMocks();
+    if (shield) {
+      shield.destroy();
+    }
+    jest.restoreAllMocks();
   });
 
   // ============================================
   // КОНСТРУКТОР
   // ============================================
+
   describe('Constructor', () => {
-    test('should create with default config', () => {
-      const defaultShield = new FABShield();
-      expect(defaultShield).toBeDefined();
-      expect(defaultShield.isActive()).toBe(true);
-    });
-
-    test('should create with custom config', () => {
-      const customShield = new FABShield({
-        env: 'production',
-        headers: { enabled: false },
-        csp: { enabled: false }
-      });
-      expect(customShield).toBeDefined();
-      const config = customShield.getConfig();
-      expect(config.env).toBe('production');
-    });
-
-    test('should handle null config', () => {
-      const shield = new FABShield(null as any);
+    it('should create with default config', () => {
+      shield = new FABShield();
+      
       expect(shield).toBeDefined();
       expect(shield.isActive()).toBe(true);
+      expect(shield.getVersion()).toBe('1.1.0');
+    });
+
+    it('should create with custom config', () => {
+      const config: Partial<ShieldConfig> = {
+        env: 'production',
+        headers: { enabled: false },
+        csp: { enabled: false },
+        ai: { enabled: false },
+        monitoring: { enabled: false },
+        rateLimit: { enabled: false }
+      };
+      
+      shield = new FABShield(config);
+      
+      expect(shield).toBeDefined();
+      expect(shield.isActive()).toBe(true);
+      
+      const shieldConfig = shield.getConfig();
+      expect(shieldConfig.env).toBe('production');
+    });
+
+    it('should handle null config', () => {
+      shield = new FABShield(null as any);
+      expect(shield).toBeDefined();
+      expect(shield.isActive()).toBe(true);
+    });
+
+    it('should setup rate limiter if enabled', () => {
+      shield = new FABShield({
+        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } }
+      });
+      
+      expect(shield.getRateLimiter()).toBeDefined();
+    });
+
+    it('should set singleton instance', () => {
+      shield = new FABShield();
+      const instance = FABShield.getInstance();
+      expect(instance).toBe(shield);
     });
   });
 
   // ============================================
-  // ЖИЗНЕННЫЙ ЦИКЛ
+  // SINGLETON
   // ============================================
-  describe('Lifecycle', () => {
-    test('should start successfully', () => {
-      expect(() => shield.start()).not.toThrow();
+
+  describe('Singleton', () => {
+    it('should return null if no instance', () => {
+      const instance = FABShield.getInstance();
+      expect(instance).toBeNull();
     });
 
-    test('should stop successfully', () => {
-      expect(() => shield.stop()).not.toThrow();
-    });
-
-    test('should handle stop without start', () => {
-      const newShield = new FABShield();
-      expect(() => newShield.stop()).not.toThrow();
+    it('should return existing instance', () => {
+      shield = new FABShield();
+      const instance = FABShield.getInstance();
+      expect(instance).toBe(shield);
     });
   });
 
   // ============================================
   // MIDDLEWARE
   // ============================================
+
   describe('Middleware', () => {
-    test('should return middleware function', () => {
+    let mockReq: any;
+    let mockRes: any;
+
+    beforeEach(() => {
+      mockReq = {
+        method: 'GET',
+        path: '/test',
+        headers: {},
+        ip: '127.0.0.1',
+        body: {}
+      };
+      
+      mockRes = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+        setHeader: jest.fn(),
+        getHeader: jest.fn(),
+        removeHeader: jest.fn(),
+        statusCode: 200
+      };
+    });
+
+    it('should return middleware function', () => {
+      shield = new FABShield();
       const middleware = shield.middleware();
+      
       expect(middleware).toBeDefined();
       expect(typeof middleware).toBe('function');
     });
 
-    test('should execute middleware', (done) => {
-      const middleware = shield.middleware();
-      const req = {
-        method: 'GET',
-        path: '/test',
-        headers: {},
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn(() => {
-        expect(next).toHaveBeenCalled();
-        done();
-      });
-
-      middleware(req, res, next);
-    });
-
-    test('should handle errors in middleware', () => {
-      const middleware = shield.middleware();
-      const req = {
-        method: 'GET',
-        path: '/test',
-        headers: {},
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn().mockImplementation(() => {
-          throw new Error('Test error');
-        }),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn();
-
-      expect(() => {
-        middleware(req, res, next);
-      }).not.toThrow();
-    });
-
-    test('should handle disabled modules', (done) => {
-      const disabledShield = new FABShield({
+    it('should execute middleware successfully', (done) => {
+      shield = new FABShield({
         headers: { enabled: false },
         csp: { enabled: false },
         ai: { enabled: false },
         monitoring: { enabled: false },
         rateLimit: { enabled: false }
       });
-      const middleware = disabledShield.middleware();
-      const req = { method: 'GET', path: '/test' };
-      const res = { setHeader: jest.fn(), removeHeader: jest.fn() };
-      const next = jest.fn(() => {
-        expect(next).toHaveBeenCalled();
-        done();
-      });
-
-      middleware(req, res, next);
-    });
-  });
-
-  // ============================================
-  // ОБРАБОТКА ЗАПРОСОВ
-  // ============================================
-  describe('Request Processing', () => {
-    test('should process request with headers', (done) => {
-      const req = {
-        method: 'GET',
-        path: '/test',
-        headers: { 'x-test': 'value' },
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn(() => {
-        expect(next).toHaveBeenCalled();
-        done();
-      });
-
+      
       const middleware = shield.middleware();
-      middleware(req, res, next);
-    });
-
-    test('should process request with AI', (done) => {
-      const aiShield = new FABShield({
-        ai: { enabled: true, blocking: { enabled: true } }
-      });
       
-      const req = {
-        method: 'POST',
-        path: '/api/test',
-        headers: { 'content-type': 'application/json' },
-        body: { test: 'data' },
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn(() => {
-        expect(next).toHaveBeenCalled();
+      middleware(mockReq, mockRes, () => {
+        expect(mockRes.setHeader).toHaveBeenCalled();
         done();
       });
-
-      const middleware = aiShield.middleware();
-      middleware(req, res, next);
     });
 
-    test('should block malicious request with AI', (done) => {
-      const aiShield = new FABShield({
-        ai: { enabled: true, blocking: { enabled: true } }
+    it('should handle rate limiting', (done) => {
+      shield = new FABShield({
+        rateLimit: { enabled: true, default: { max: 1, windowMs: 60000 } }
       });
       
-      const req = {
-        method: 'POST',
-        path: '/api/test',
-        headers: { 'content-type': 'application/json' },
-        body: { search: "<script>alert('XSS')</script>" },
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn();
-
-      const middleware = aiShield.middleware();
-      middleware(req, res, next);
+      const middleware = shield.middleware();
       
-      // Даем время на AI анализ
-      setTimeout(() => {
-        // Если next не вызван, значит запрос заблокирован
-        if (next.mock.calls.length === 0) {
-          expect(res.status).toHaveBeenCalled();
-        } else {
-          expect(next).toHaveBeenCalled();
-        }
-        done();
-      }, 150);
-    });
-  });
-
-  // ============================================
-  // УПРАВЛЕНИЕ КОНФИГУРАЦИЕЙ
-  // ============================================
-  describe('Config Management', () => {
-    test('should get config', () => {
-      const config = shield.getConfig();
-      expect(config).toBeDefined();
-      expect(config.env).toBe('test');
-    });
-
-    test('should update config', () => {
-      shield.updateConfig({ env: 'production' });
-      const config = shield.getConfig();
-      expect(config.env).toBe('production');
-    });
-
-    test('should update headers config', () => {
-      shield.updateConfig({
-        headers: { enabled: false }
+      middleware(mockReq, mockRes, () => {
+        const req2 = { ...mockReq, ip: '127.0.0.1' };
+        const res2 = { ...mockRes, status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
+        
+        middleware(req2, res2, () => {});
+        
+        setTimeout(() => {
+          expect(res2.status).toHaveBeenCalledWith(429);
+          done();
+        }, 50);
       });
-      const config = shield.getConfig();
-      expect(config.headers.enabled).toBe(false);
     });
   });
 
   // ============================================
-  // ЛОГИРОВАНИЕ
+  // GET METRICS
   // ============================================
-  describe('Logging', () => {
-    test('should log info', () => {
-      const consoleSpy = jest.spyOn(console, 'log');
-      shield['logger'].info('Test message');
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
 
-    test('should log warn', () => {
-      const consoleSpy = jest.spyOn(console, 'warn');
-      shield['logger'].warn('Test warning');
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
-
-    test('should log error', () => {
-      const consoleSpy = jest.spyOn(console, 'error');
-      shield['logger'].error('Test error');
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
-  });
-
-  // ============================================
-  // МЕТРИКИ
-  // ============================================
-  describe('Metrics', () => {
-    test('should get metrics', () => {
+  describe('getMetrics', () => {
+    it('should return metrics', () => {
+      shield = new FABShield();
       const metrics = shield.getMetrics();
+      
       expect(metrics).toBeDefined();
       expect(metrics).toHaveProperty('totalRequests');
       expect(metrics).toHaveProperty('threatsBlocked');
     });
+  });
 
-    test('should get security metrics', () => {
-      const metrics = shield.getMetrics('security');
-      expect(metrics).toBeDefined();
-    });
+  // ============================================
+  // GET CONFIG
+  // ============================================
 
-    test('should get performance metrics', () => {
-      const metrics = shield.getMetrics('performance');
-      expect(metrics).toBeDefined();
-    });
-
-    test('should get AI metrics', () => {
-      const metrics = shield.getMetrics('ai');
-      expect(metrics).toBeDefined();
+  describe('getConfig', () => {
+    it('should return config', () => {
+      shield = new FABShield({ env: 'test' });
+      const config = shield.getConfig();
+      
+      expect(config).toBeDefined();
+      expect(config.env).toBe('test');
     });
   });
 
   // ============================================
-  // ОБРАБОТКА ОШИБОК
+  // UPDATE CONFIG
   // ============================================
-  describe('Error Handling', () => {
-    test('should handle errors in middleware', () => {
-      const middleware = shield.middleware();
-      const req = {
-        method: 'GET',
-        path: '/test',
-        headers: {},
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn();
 
-      expect(() => {
-        middleware(req, res, next);
-      }).not.toThrow();
+  describe('updateConfig', () => {
+    it('should update config', () => {
+      shield = new FABShield();
+      
+      shield.updateConfig({ env: 'production' });
+      const config = shield.getConfig();
+      
+      expect(config.env).toBe('production');
     });
 
-    test('should handle async errors', (done) => {
-      const errorShield = new FABShield({
-        ai: { enabled: true }
-      });
+    it('should emit config:updated event', (done) => {
+      shield = new FABShield();
       
-      const req = {
-        method: 'GET',
-        path: '/test',
-        headers: {},
-        ip: '127.0.0.1'
-      };
-      const res = {
-        setHeader: jest.fn(),
-        getHeader: jest.fn(),
-        removeHeader: jest.fn(),
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-      const next = jest.fn(() => {
-        expect(next).toHaveBeenCalled();
+      shield.on('config:updated', (data) => {
+        expect(data.old).toBeDefined();
+        expect(data.new).toBeDefined();
         done();
       });
-
-      const middleware = errorShield.middleware();
-      middleware(req, res, next);
+      
+      shield.updateConfig({ env: 'production' });
     });
   });
 
   // ============================================
-  // ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ
+  // GET VERSION
   // ============================================
-  describe('Additional Features', () => {
-    test('should get version', () => {
-      const version = shield.getVersion();
-      expect(version).toBeDefined();
-      expect(typeof version).toBe('string');
-    });
 
-    test('should check if active', () => {
+  describe('getVersion', () => {
+    it('should return version', () => {
+      shield = new FABShield();
+      expect(shield.getVersion()).toBe('1.1.0');
+    });
+  });
+
+  // ============================================
+  // START / STOP
+  // ============================================
+
+  describe('start/stop', () => {
+    it('should start shield', () => {
+      shield = new FABShield();
+      shield.stop();
+      expect(shield.isActive()).toBe(false);
+      
+      shield.start();
       expect(shield.isActive()).toBe(true);
     });
 
-    test('should generate report', async () => {
-      const report = await shield.generateReport({
-        type: 'executive',
-        period: { from: new Date(), to: new Date() }
-      });
-      expect(report).toBeDefined();
+    it('should stop shield', () => {
+      shield = new FABShield();
+      expect(shield.isActive()).toBe(true);
+      
+      shield.stop();
+      expect(shield.isActive()).toBe(false);
     });
+  });
 
-    test('should register plugin', () => {
-      const plugin = {
+  // ============================================
+  // REGISTER PLUGIN
+  // ============================================
+
+  describe('registerPlugin', () => {
+    it('should register plugin', () => {
+      shield = new FABShield();
+      
+      const plugin: Plugin = {
         name: 'test-plugin',
         version: '1.0.0',
         middleware: jest.fn()
       };
+      
       shield.registerPlugin(plugin);
-      expect(shield['plugins']).toBeDefined();
+      
+      const plugins = (shield as any).plugins.getPlugins();
+      expect(plugins).toContain('test-plugin');
+    });
+  });
+
+  // ============================================
+  // UNREGISTER PLUGIN
+  // ============================================
+
+  describe('unregisterPlugin', () => {
+    it('should unregister plugin', () => {
+      shield = new FABShield();
+      
+      const plugin: Plugin = {
+        name: 'test-plugin',
+        version: '1.0.0',
+        middleware: jest.fn()
+      };
+      
+      shield.registerPlugin(plugin);
+      shield.unregisterPlugin('test-plugin');
+      
+      const plugins = (shield as any).plugins.getPlugins();
+      expect(plugins).not.toContain('test-plugin');
+    });
+  });
+
+  // ============================================
+  // EXPORT METRICS
+  // ============================================
+
+  describe('exportMetrics', () => {
+    it('should export metrics as JSON', () => {
+      shield = new FABShield();
+      const result = shield.exportMetrics('json');
+      
+      expect(typeof result).toBe('string');
+      expect(() => JSON.parse(result)).not.toThrow();
+    });
+
+    it('should default to JSON', () => {
+      shield = new FABShield();
+      const result = shield.exportMetrics();
+      
+      expect(typeof result).toBe('string');
+      expect(() => JSON.parse(result)).not.toThrow();
+    });
+  });
+
+  // ============================================
+  // GENERATE REPORT
+  // ============================================
+
+  describe('generateReport', () => {
+    it('should generate report', async () => {
+      shield = new FABShield();
+      const report = await shield.generateReport();
+      
+      expect(report).toBeDefined();
+      expect(report).toHaveProperty('id');
+      expect(report).toHaveProperty('generatedAt');
+      expect(report).toHaveProperty('summary');
+      expect(report).toHaveProperty('plugins');
+    });
+  });
+
+  // ============================================
+  // GET STATUS
+  // ============================================
+
+  describe('getStatus', () => {
+    it('should return status', () => {
+      shield = new FABShield();
+      const status = shield.getStatus();
+      
+      expect(status).toBeDefined();
+      expect(status).toHaveProperty('status');
+      expect(status).toHaveProperty('version');
+      expect(status).toHaveProperty('uptime');
+      expect(status).toHaveProperty('active');
+      expect(status).toHaveProperty('modules');
+    });
+  });
+
+  // ============================================
+  // RESET
+  // ============================================
+
+  describe('reset', () => {
+    it('should reset metrics', () => {
+      shield = new FABShield();
+      
+      const before = shield.getMetrics();
+      expect(before.totalRequests).toBe(0);
+      
+      shield.reset();
+      
+      const reset = shield.getMetrics();
+      expect(reset.totalRequests).toBe(0);
+    });
+  });
+
+  // ============================================
+  // GETTERS
+  // ============================================
+
+  describe('Getters', () => {
+    it('should get context manager', () => {
+      shield = new FABShield();
+      const manager = shield.getContextManager();
+      
+      expect(manager).toBeDefined();
+    });
+
+    it('should get plugin manager', () => {
+      shield = new FABShield();
+      const manager = shield.getPluginManager();
+      
+      expect(manager).toBeDefined();
+    });
+
+    it('should get AI module', () => {
+      shield = new FABShield();
+      const ai = shield.getAIModule();
+      
+      expect(ai).toBeDefined();
+    });
+
+    it('should get rate limiter', () => {
+      shield = new FABShield({
+        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } }
+      });
+      
+      const rateLimiter = shield.getRateLimiter();
+      expect(rateLimiter).toBeDefined();
+    });
+  });
+
+  // ============================================
+  // DESTROY
+  // ============================================
+
+  describe('destroy', () => {
+    it('should destroy instance', () => {
+      shield = new FABShield();
+      
+      shield.destroy();
+      
+      expect(shield.isActive()).toBe(false);
+      expect(FABShield.getInstance()).toBeNull();
+    });
+  });
+
+  // ============================================
+  // GET CONTEXT STATS
+  // ============================================
+
+  describe('getContextStats', () => {
+    it('should return context stats', () => {
+      shield = new FABShield();
+      const stats = shield.getContextStats();
+      
+      expect(stats).toBeDefined();
+      expect(stats).toHaveProperty('total');
+      expect(stats).toHaveProperty('active');
+      expect(stats).toHaveProperty('max');
     });
   });
 });

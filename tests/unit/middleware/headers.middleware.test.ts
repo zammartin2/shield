@@ -1,390 +1,638 @@
-import { loggingMiddleware } from '../../../src/middleware/logging.middleware';
+import { errorMiddleware } from '../../../src/middleware/headers.middleware';
 
-describe('Logging Middleware', () => {
-  let req: any;
-  let res: any;
-  let next: jest.Mock;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+describe('Headers Middleware (errorMiddleware)', () => {
+  let mockReq: any;
+  let mockRes: any;
+  let mockNext: jest.Mock;
+  let mockShield: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
-    req = {
-      method: 'GET',
+    mockReq = {
+      requestId: 'test-request-id',
+      id: 'test-id',
       path: '/test',
-      url: '/test',
+      method: 'GET',
       ip: '127.0.0.1',
-      id: 'test-request-id',
-      connection: { remoteAddress: '127.0.0.1' },
-      headers: { 'x-request-id': 'test-request-id' }
+      headers: {}
     };
 
-    res = {
-      statusCode: 200,
-      on: jest.fn((event, callback) => {
-        if (event === 'finish') {
-          res._finishCallback = callback;
-        }
-        return res;
-      }),
-      removeAllListeners: jest.fn(),
-      send: jest.fn(function(this: any, body: any) {
-        this._body = body;
-        // ✅ Вызываем finish после отправки
-        if (this._finishCallback) {
-          setTimeout(() => this._finishCallback(), 10);
-        }
-        return this;
-      }),
-      json: jest.fn(function(this: any, body: any) {
-        this._body = body;
-        // ✅ Вызываем finish после отправки
-        if (this._finishCallback) {
-          setTimeout(() => this._finishCallback(), 10);
-        }
-        return this;
-      }),
-      setHeader: jest.fn(),
-      getHeader: jest.fn(),
+    mockRes = {
       status: jest.fn().mockReturnThis(),
-      _finishCallback: null,
-      _body: null
+      json: jest.fn().mockReturnThis(),
+      send: jest.fn().mockReturnThis(),
+      setHeader: jest.fn().mockReturnThis(),
+      getHeader: jest.fn().mockReturnThis(),
+      removeHeader: jest.fn()
     };
 
-    next = jest.fn();
+    mockNext = jest.fn();
 
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    mockShield = {
+      metrics: {
+        recordError: jest.fn()
+      }
+    };
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   // ============================================
-  // БАЗОВЫЕ ТЕСТЫ
+  // ОБРАБОТКА РАЗНЫХ ТИПОВ ОШИБОК
   // ============================================
 
-  test('should call next', () => {
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
+  describe('error handling - different error types', () => {
+    it('should handle Error object', () => {
+      const error = new Error('Test error');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
 
-    expect(next).toHaveBeenCalled();
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
-  test('should log request info', () => {
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('📝')
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('test-request-id')
-    );
-  });
-
-  test('should handle response finish', (done) => {
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    // Вызываем finish callback
-    if (res._finishCallback) {
-      res._finishCallback();
-    }
-
-    setTimeout(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('✅')
-      );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('200')
-      );
-      done();
-    }, 50);
-  });
-
-  // ============================================
-  // ТЕСТЫ СТАТУСОВ
-  // ============================================
-
-  test('should log warnings for 4xx responses', (done) => {
-    res.statusCode = 404;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    if (res._finishCallback) {
-      res._finishCallback();
-    }
-
-    setTimeout(() => {
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️')
-      );
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('404')
-      );
-      done();
-    }, 50);
-  });
-
-  test('should log errors for 5xx responses', (done) => {
-    res.statusCode = 500;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    if (res._finishCallback) {
-      res._finishCallback();
-    }
-
-    setTimeout(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('❌')
-      );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('500')
-      );
-      done();
-    }, 50);
-  });
-
-  test('should log response body for 5xx errors', (done) => {
-    res.statusCode = 500;
-    const errorBody = { error: 'Internal server error' };
-    res._body = errorBody;
-
-    const middleware = loggingMiddleware({ logResponseBody: true });
-    middleware(req, res, next);
-
-    if (res._finishCallback) {
-      res._finishCallback();
-    }
-
-    setTimeout(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Response body:')
-      );
-      done();
-    }, 100);
-  }, 5000);
-
-  // ============================================
-  // ТЕСТЫ С РАЗНЫМИ УРОВНЯМИ
-  // ============================================
-
-  test('should log debug level', () => {
-    // ✅ Используем console.log для debug уровня
-    const middleware = loggingMiddleware({ level: 'debug' });
-    middleware(req, res, next);
-
-    // При debug уровне логируется запрос через console.log
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('📝')
-    );
-  });
-
-  test('should include duration in log for debug level', (done) => {
-    const middleware = loggingMiddleware({ level: 'debug' });
-    middleware(req, res, next);
-
-    if (res._finishCallback) {
-      res._finishCallback();
-    }
-
-    setTimeout(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ms')
-      );
-      done();
-    }, 50);
-  });
-
-  // ============================================
-  // ТЕСТЫ ОБРАБОТКИ ОШИБОК
-  // ============================================
-
-  test('should handle missing on method', () => {
-    const resWithoutOn = {
-      statusCode: 200,
-      send: jest.fn(),
-      json: jest.fn()
-    };
-    const middleware = loggingMiddleware();
-    middleware(req, resWithoutOn as any, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-  });
-
-  test('should handle missing request headers', () => {
-    req.headers = undefined;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    expect(next).toHaveBeenCalled();
-  });
-
-  test('should handle missing path', () => {
-    req.path = undefined;
-    req.url = undefined;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('/')
-    );
-  });
-
-  test('should handle missing ip', () => {
-    req.ip = undefined;
-    req.connection = undefined;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('unknown')
-    );
-  });
-
-  test('should generate requestId if not provided', () => {
-    req.id = undefined;
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    expect(req.id).toBeDefined();
-    expect(req.id).toMatch(/^req-\d+-[a-z0-9]+$/);
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining(req.id)
-    );
-  });
-
-  // ============================================
-  // ТЕСТЫ С ИНТЕРЦЕПЦИЕЙ ОТВЕТОВ
-  // ============================================
-
-  test('should intercept send method', (done) => {
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    const testBody = { data: 'test' };
-    res.send(testBody);
-
-    setTimeout(() => {
-      expect(res.send).toHaveBeenCalledWith(testBody);
-      expect(res._body).toBe(testBody);
-      done();
-    }, 50);
-  });
-
-  test('should intercept json method', (done) => {
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
-
-    const testBody = { data: 'test' };
-    res.json(testBody);
-
-    setTimeout(() => {
-      expect(res.json).toHaveBeenCalledWith(testBody);
-      expect(res._body).toBe(testBody);
-      done();
-    }, 50);
-  });
-
-  test('should handle multiple finish events without duplication', (done) => {
-    let finishCount = 0;
-    res.on = jest.fn((event, callback) => {
-      if (event === 'finish') {
-        finishCount++;
-        // ✅ Вызываем callback только один раз
-        if (finishCount === 1) {
-          callback();
-        }
-      }
-      return res;
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Test error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+      expect(mockNext).toHaveBeenCalled();
     });
 
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
+    it('should handle string error', () => {
+      const error = 'String error';
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
 
-    // Пытаемся вызвать finish несколько раз
-    if (res._finishCallback) {
-      res._finishCallback();
-      res._finishCallback(); // Второй вызов должен быть проигнорирован
-    }
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'String error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
 
-    setTimeout(() => {
-      const logCalls = consoleLogSpy.mock.calls.filter(
-        call => call[0]?.includes('✅')
-      );
-      expect(logCalls.length).toBe(1);
-      done();
-    }, 100);
-  }, 5000);
+    it('should handle null error', () => {
+      const middleware = errorMiddleware();
+      
+      middleware(null, mockReq, mockRes, mockNext);
 
-  // ============================================
-  // ТЕСТЫ С РАЗНЫМИ МЕТОДАМИ
-  // ============================================
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Internal server error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
 
-  test('should handle POST requests', () => {
-    req.method = 'POST';
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
+    it('should handle undefined error', () => {
+      const middleware = errorMiddleware();
+      
+      middleware(undefined, mockReq, mockRes, mockNext);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('POST')
-    );
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Internal server error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should handle object with error property', () => {
+      const error = { error: 'Custom error message' };
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Custom error message',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should handle object with message property', () => {
+      const error = { message: 'Message error' };
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Message error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should handle object with custom toString', () => {
+      const error = {
+        toString: () => 'Custom toString'
+      };
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: JSON.stringify({ toString: 'Custom toString' }),
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should handle number error', () => {
+      const error = 123;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: '123',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should handle boolean error', () => {
+      const error = true;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'true',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
   });
 
-  test('should handle PUT requests', () => {
-    req.method = 'PUT';
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
+  // ============================================
+  // СТАТУСЫ ОШИБОК
+  // ============================================
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('PUT')
-    );
-  });
+  describe('error status handling', () => {
+    it('should use error.status when present', () => {
+      const error = new Error('Bad request');
+      (error as any).status = 400;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
 
-  test('should handle DELETE requests', () => {
-    req.method = 'DELETE';
-    const middleware = loggingMiddleware();
-    middleware(req, res, next);
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+    });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('DELETE')
-    );
+    it('should use error.statusCode when present', () => {
+      const error = new Error('Not found');
+      (error as any).statusCode = 404;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+    });
+
+    it('should use default 500 when no status', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+    });
+
+    it('should prefer status over statusCode', () => {
+      const error = new Error('Conflict');
+      (error as any).status = 409;
+      (error as any).statusCode = 400;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(409);
+    });
   });
 
   // ============================================
-  // ТЕСТЫ С КАСТОМНЫМИ ОПЦИЯМИ
+  // REQUEST ID
   // ============================================
 
-  test('should create middleware with custom options', () => {
-    const middleware = loggingMiddleware({ level: 'debug' });
-    expect(middleware).toBeDefined();
-    expect(typeof middleware).toBe('function');
+  describe('request ID handling', () => {
+    it('should use requestId from req', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Test',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should use id from req if requestId not present', () => {
+      mockReq.requestId = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Test',
+        status: 500,
+        requestId: 'test-id',
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('should generate requestId if neither present', () => {
+      mockReq.requestId = undefined;
+      mockReq.id = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      const callArgs = mockRes.json.mock.calls[0][0];
+      expect(callArgs.requestId).toMatch(/^req-\d+-[a-z0-9]+$/);
+    });
   });
 
-  test('should use default options if none provided', () => {
-    const middleware = loggingMiddleware();
-    expect(middleware).toBeDefined();
-    expect(typeof middleware).toBe('function');
+  // ============================================
+  // SHIELD INTEGRATION
+  // ============================================
+
+  describe('shield integration', () => {
+    it('should record error in metrics when shield provided', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware(mockShield);
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockShield.metrics.recordError).toHaveBeenCalledWith(error);
+    });
+
+    it('should handle shield without metrics', () => {
+      const shieldWithoutMetrics = {};
+      const error = new Error('Test');
+      const middleware = errorMiddleware(shieldWithoutMetrics as any);
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+
+    it('should handle metrics.recordError throwing error', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      mockShield.metrics.recordError.mockImplementation(() => {
+        throw new Error('Metrics error');
+      });
+      
+      const error = new Error('Test');
+      const middleware = errorMiddleware(mockShield);
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(consoleWarnSpy).toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('should handle shield null', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware(null as any);
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
   });
 
   // ============================================
-  // ТЕСТЫ С createLoggingMiddleware
+  // HEADERS
   // ============================================
 
-  test('should create logging middleware with custom options', () => {
-    const { createLoggingMiddleware } = require('../../../src/middleware/logging.middleware');
-    const middleware = createLoggingMiddleware({ level: 'debug' });
-    expect(middleware).toBeDefined();
-    expect(typeof middleware).toBe('function');
+  describe('security headers', () => {
+    it('should set security headers', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
+      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
+      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Request-ID', 'test-request-id');
+      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Content-Security-Policy', "default-src 'self'");
+    });
+
+    it('should handle setHeader errors gracefully', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockRes.setHeader.mockImplementation(() => {
+        throw new Error('Header error');
+      });
+      
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+      
+      consoleSpy.mockRestore();
+    });
+  });
+
+  // ============================================
+  // DEVELOPMENT VS PRODUCTION
+  // ============================================
+
+  describe('development vs production', () => {
+    const originalEnv = process.env.NODE_ENV;
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should include stack trace in development', () => {
+      process.env.NODE_ENV = 'development';
+      const error = new Error('Dev error');
+      error.stack = 'Error stack trace';
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Dev error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String),
+        stack: 'Error stack trace'
+      });
+    });
+
+    it('should not include stack trace in production', () => {
+      process.env.NODE_ENV = 'production';
+      const error = new Error('Prod error');
+      error.stack = 'Error stack trace';
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      const callArgs = mockRes.json.mock.calls[0][0];
+      expect(callArgs.stack).toBeUndefined();
+    });
+
+    it('should include error details in development', () => {
+      process.env.NODE_ENV = 'development';
+      const error = new Error('Validation error');
+      (error as any).details = { field: 'email', reason: 'Invalid' };
+      // Убираем stack для чистоты теста
+      error.stack = undefined;
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Validation error',
+        status: 500,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String),
+        details: { field: 'email', reason: 'Invalid' }
+      });
+    });
+
+    it('should not include error details in production', () => {
+      process.env.NODE_ENV = 'production';
+      const error = new Error('Validation error');
+      (error as any).details = { field: 'email', reason: 'Invalid' };
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      const callArgs = mockRes.json.mock.calls[0][0];
+      expect(callArgs.details).toBeUndefined();
+    });
+  });
+
+  // ============================================
+  // RESPONSE HANDLING
+  // ============================================
+
+  describe('response handling', () => {
+    it('should handle json response error gracefully', () => {
+      mockRes.json.mockImplementation(() => {
+        throw new Error('JSON error');
+      });
+      
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+
+    it('should handle send fallback when json fails', () => {
+      mockRes.json.mockImplementation(() => {
+        throw new Error('JSON error');
+      });
+      mockRes.send.mockReturnThis();
+      
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.send).toHaveBeenCalledWith('Test');
+    });
+
+    it('should handle missing res.json', () => {
+      mockRes.json = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+
+    it('should handle missing res.status', () => {
+      mockRes.status = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+
+    it('should handle missing res.setHeader', () => {
+      mockRes.setHeader = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+  });
+
+  // ============================================
+  // NEXT FUNCTION
+  // ============================================
+
+  describe('next function', () => {
+    it('should call next after handling error', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should handle missing next', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, undefined);
+      }).not.toThrow();
+    });
+
+    it('should call next even if shield not provided', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================
+  // MISSING REQUEST DATA
+  // ============================================
+
+  describe('missing request data', () => {
+    it('should handle missing req.path', () => {
+      mockReq.path = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalled();
+    });
+
+    it('should handle missing req.method', () => {
+      mockReq.method = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalled();
+    });
+
+    it('should handle missing req.ip', () => {
+      mockReq.ip = undefined;
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalled();
+    });
+
+    it('should handle missing req entirely', () => {
+      const error = new Error('Test');
+      const middleware = errorMiddleware();
+      
+      // Передаем пустой объект вместо null
+      expect(() => {
+        middleware(error, {}, mockRes, mockNext);
+      }).not.toThrow();
+    });
+  });
+
+  // ============================================
+  // OBJECT WITH CIRCULAR REFERENCE
+  // ============================================
+
+  describe('circular reference handling', () => {
+    it('should handle circular reference in error object', () => {
+      const error: any = { name: 'Circular' };
+      error.self = error;
+      
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+
+    it('should handle error with circular reference and custom toString', () => {
+      const error: any = {
+        toString: () => 'Custom toString'
+      };
+      error.self = error;
+      
+      const middleware = errorMiddleware();
+      
+      expect(() => {
+        middleware(error, mockReq, mockRes, mockNext);
+      }).not.toThrow();
+    });
+  });
+
+  // ============================================
+  // INTEGRATION
+  // ============================================
+
+  describe('integration', () => {
+    it('should handle full error flow with shield', () => {
+      const error = new Error('Integration test');
+      (error as any).status = 403;
+      (error as any).details = { reason: 'Forbidden' };
+      error.stack = undefined; // Убираем stack для чистоты
+      process.env.NODE_ENV = 'development';
+      
+      const middleware = errorMiddleware(mockShield);
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      expect(mockShield.metrics.recordError).toHaveBeenCalledWith(error);
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.setHeader).toHaveBeenCalled();
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: 'Integration test',
+        status: 403,
+        requestId: 'test-request-id',
+        timestamp: expect.any(String),
+        details: { reason: 'Forbidden' }
+      });
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should handle error without requestId', () => {
+      mockReq.requestId = undefined;
+      mockReq.id = undefined;
+      
+      const error = new Error('No ID');
+      const middleware = errorMiddleware();
+      
+      middleware(error, mockReq, mockRes, mockNext);
+
+      const callArgs = mockRes.json.mock.calls[0][0];
+      expect(callArgs.requestId).toMatch(/^req-\d+-[a-z0-9]+$/);
+      expect(mockNext).toHaveBeenCalled();
+    });
   });
 });
