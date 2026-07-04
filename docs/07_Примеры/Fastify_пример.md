@@ -11,31 +11,43 @@
 
 ## 📋 Введение
 
-Этот пример показывает, как использовать FAB Shield с **Fastify** — высокопроизводительным веб-фреймворком для Node.js.
+Этот пример показывает, как использовать **FAB Shield** с **Fastify** — высокопроизводительным веб-фреймворком для Node.js.
+
+В примере используются:
+
+- ⚡ Fastify
+- 🛡️ FAB Shield plugin
+- 🔐 Security Headers
+- 📜 Content Security Policy
+- 🤖 AI-защита
+- 🚦 Rate Limiting
+- 📊 Метрики
+- 🧪 Тестовые API-маршруты
 
 ---
 
 ## 🏗️ Структура проекта
+
+```text
 fastify-example/
 ├── src/
-│ ├── index.ts # Основной файл
-│ ├── routes/
-│ │ ├── api.ts # API маршруты
-│ │ └── public.ts # Публичные маршруты
-│ └── plugins/
-│ └── shield.ts # FAB Shield плагин
-├── package.json # Зависимости
-├── tsconfig.json # TypeScript конфигурация
-├── .env.example # Переменные окружения
-└── README.md # Документация
-
-text
+│   ├── index.ts                 # Основной файл
+│   ├── routes/
+│   │   ├── api.ts               # API-маршруты
+│   │   └── public.ts            # Публичные маршруты
+│   └── plugins/
+│       └── shield.ts            # FAB Shield plugin
+├── package.json                 # Зависимости
+├── tsconfig.json                # TypeScript-конфигурация
+├── .env.example                 # Переменные окружения
+└── README.md                    # Документация
+```
 
 ---
 
 ## 📄 Файлы
 
-### 1. src/index.ts
+### 1. `src/index.ts`
 
 ```typescript
 import Fastify from 'fastify'
@@ -55,13 +67,15 @@ dotenv.config()
 const app = Fastify({
     logger: {
         level: process.env.LOG_LEVEL || 'info',
-        transport: process.env.NODE_ENV === 'development' ? {
-            target: 'pino-pretty',
-            options: {
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname'
+        transport: process.env.NODE_ENV === 'development'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                    translateTime: 'HH:MM:ss Z',
+                    ignore: 'pid,hostname'
+                }
             }
-        } : undefined
+            : undefined
     },
     trustProxy: true,
     bodyLimit: 10485760 // 10MB
@@ -73,7 +87,7 @@ const app = Fastify({
 
 const shield = new FABShield({
     env: process.env.NODE_ENV as any || 'development',
-    
+
     // Security-заголовки
     headers: {
         enabled: true,
@@ -83,7 +97,7 @@ const shield = new FABShield({
             preload: true
         }
     },
-    
+
     // Content Security Policy
     csp: {
         enabled: true,
@@ -95,20 +109,20 @@ const shield = new FABShield({
             'img-src': ["'self'", 'data:', 'https:']
         }
     },
-    
+
     // AI-защита
     ai: {
         enabled: true,
         anomalyDetection: true,
         threatPrediction: true
     },
-    
+
     // Мониторинг
     monitoring: {
         enabled: true,
         export: ['json']
     },
-    
+
     // Rate Limiting
     rateLimit: {
         enabled: true,
@@ -120,14 +134,14 @@ const shield = new FABShield({
 })
 
 // ============================================
-# FAB SHIELD ПЛАГИН ДЛЯ FASTIFY
+// FAB SHIELD ПЛАГИН ДЛЯ FASTIFY
 // ============================================
 
-// Регистрируем FAB Shield как Fastify плагин
+// Регистрируем FAB Shield как Fastify plugin
 app.register(shieldPlugin, { shield })
 
 // ============================================
-# МАРШРУТЫ
+// МАРШРУТЫ
 // ============================================
 
 // Регистрируем маршруты
@@ -155,15 +169,15 @@ app.get('/metrics', async (request, reply) => {
 })
 
 // ============================================
-# ОБРАБОТКА ОШИБОК
+// ОБРАБОТКА ОШИБОК
 // ============================================
 
 app.setErrorHandler((error, request, reply) => {
     app.log.error(error)
-    
+
     const status = error.statusCode || 500
     const message = error.message || 'Internal server error'
-    
+
     reply.status(status).send({
         error: message,
         status: status,
@@ -181,28 +195,29 @@ app.setNotFoundHandler((request, reply) => {
 })
 
 // ============================================
-# ЗАПУСК
+// ЗАПУСК
 // ============================================
 
 const start = async () => {
     try {
         const port = parseInt(process.env.PORT || '3000')
         const host = process.env.HOST || '0.0.0.0'
-        
+
         await app.listen({ port, host })
-        
+
         console.log('\n🚀 Server started successfully!')
         console.log(`📍 URL: http://localhost:${port}`)
         console.log(`🛡️ FAB Shield: ${shield.isActive() ? '✅ Active' : '❌ Inactive'}`)
         console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+
         console.log('\n📋 Available endpoints:')
         console.log(`  GET  /            - Home`)
         console.log(`  GET  /health      - Health check`)
         console.log(`  GET  /metrics     - Metrics`)
         console.log(`  GET  /api/data    - Protected API`)
         console.log(`  POST /api/auth    - Authentication`)
+
         console.log('\n✅ Ready to accept requests!\n')
-        
     } catch (err) {
         app.log.error(err)
         process.exit(1)
@@ -210,8 +225,13 @@ const start = async () => {
 }
 
 start()
-2. src/plugins/shield.ts
-typescript
+```
+
+---
+
+### 2. `src/plugins/shield.ts`
+
+```typescript
 import { FastifyPluginAsync } from 'fastify'
 import { FABShield } from '@fab-registry/shield'
 
@@ -221,21 +241,22 @@ interface ShieldPluginOptions {
 
 const shieldPlugin: FastifyPluginAsync<ShieldPluginOptions> = async (fastify, options) => {
     const { shield } = options
-    
+
     // Добавляем FAB Shield как middleware
     fastify.use(shield.middleware())
-    
-    // Декорируем fastify с shield
+
+    // Декорируем fastify экземпляром shield
     fastify.decorate('shield', shield)
-    
+
     // Добавляем метод для получения метрик
     fastify.decorate('getShieldMetrics', () => {
         return shield.getMetrics()
     })
-    
+
     // Добавляем хук для логирования угроз
     fastify.addHook('onResponse', async (request, reply) => {
         const metrics = shield.getMetrics()
+
         if (metrics.threatsBlocked > 0) {
             fastify.log.warn(`🚨 ${metrics.threatsBlocked} threats blocked`)
         }
@@ -251,8 +272,13 @@ declare module 'fastify' {
         getShieldMetrics(): any
     }
 }
-3. src/routes/public.ts
-typescript
+```
+
+---
+
+### 3. `src/routes/public.ts`
+
+```typescript
 import { FastifyPluginAsync } from 'fastify'
 
 const publicRoutes: FastifyPluginAsync = async (fastify) => {
@@ -285,8 +311,13 @@ const publicRoutes: FastifyPluginAsync = async (fastify) => {
 }
 
 export default publicRoutes
-4. src/routes/api.ts
-typescript
+```
+
+---
+
+### 4. `src/routes/api.ts`
+
+```typescript
 import { FastifyPluginAsync } from 'fastify'
 
 interface AuthBody {
@@ -318,14 +349,15 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         }
     }, async (request, reply) => {
         const { username, password } = request.body
-        
+
         if (!username || !password) {
             return reply.status(400).send({
                 error: 'Username and password required'
             })
         }
-        
-        // Простая проверка (в реальном проекте используйте JWT)
+
+        // Простая проверка.
+        // В реальном проекте используйте JWT, OAuth2 или другую безопасную схему.
         if (username === 'admin' && password === 'admin123') {
             return {
                 success: true,
@@ -337,13 +369,13 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
                 }
             }
         }
-        
+
         return reply.status(401).send({
             error: 'Invalid credentials'
         })
     })
 
-    // Аналитика (с AI защитой)
+    // Аналитика с AI-защитой
     fastify.get('/analytics', async (request, reply) => {
         // AI-защита автоматически анализирует этот запрос
         return {
@@ -357,8 +389,13 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
 }
 
 export default apiRoutes
-5. package.json
-json
+```
+
+---
+
+### 5. `package.json`
+
+```json
 {
     "name": "fastify-fab-shield-example",
     "version": "1.0.0",
@@ -381,8 +418,13 @@ json
         "ts-node": "^10.9.0"
     }
 }
-6. tsconfig.json
-json
+```
+
+---
+
+### 6. `tsconfig.json`
+
+```json
 {
     "compilerOptions": {
         "target": "ES2022",
@@ -402,8 +444,13 @@ json
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"]
 }
-7. .env.example
-bash
+```
+
+---
+
+### 7. `.env.example`
+
+```bash
 # Application
 NODE_ENV=development
 PORT=3000
@@ -417,9 +464,15 @@ SHIELD_MONITORING=true
 
 # Logging
 LOG_LEVEL=info
-🚀 Запуск
-1. Установка
-bash
+```
+
+---
+
+## 🚀 Запуск
+
+### 1. Установка
+
+```bash
 # Создаем проект
 mkdir fastify-example
 cd fastify-example
@@ -432,15 +485,20 @@ npm install @fab-registry/shield fastify dotenv
 npm install -D @types/node typescript ts-node
 
 # Создаем файлы
-mkdir src src/routes src/plugins
+mkdir -p src/routes src/plugins
 touch src/index.ts
 touch src/routes/api.ts
 touch src/routes/public.ts
 touch src/plugins/shield.ts
 touch tsconfig.json
 touch .env.example
-2. Запуск
-bash
+```
+
+---
+
+### 2. Запуск
+
+```bash
 # Режим разработки
 npm run dev
 
@@ -449,9 +507,15 @@ npm run build
 
 # Production
 npm start
-📊 Тестирование
-Тестовые запросы
-bash
+```
+
+---
+
+## 📊 Тестирование
+
+### Тестовые запросы
+
+```bash
 # Health check
 curl http://localhost:3000/health
 
@@ -471,11 +535,17 @@ curl http://localhost:3000/metrics
 
 # Проверка заголовков
 curl -I http://localhost:3000
-📊 Метрики производительности
-Сравнение с Express
-typescript
-// Fastify обычно быстрее Express
-// FAB Shield добавляет минимальную задержку (~2-5ms)
+```
+
+---
+
+## 📊 Метрики производительности
+
+### Сравнение с Express
+
+```typescript
+// Fastify обычно быстрее Express.
+// FAB Shield добавляет минимальную задержку примерно 2–5ms.
 
 const metrics = {
     // Без FAB Shield
@@ -483,30 +553,40 @@ const metrics = {
         requestsPerSecond: 10000,
         avgLatency: '2ms'
     },
+
     // С FAB Shield
     withShield: {
         requestsPerSecond: 9500,
         avgLatency: '5ms'
     }
 }
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-Fastify пример FAB Shield — это:
+```
 
-⚡ Высокая производительность — Fastify + FAB Shield
+---
 
-🔒 Полная защита — все security-заголовки
+## 📞 Контакты
 
-🤖 AI-защита — интеллектуальная безопасность
+| Поле | Значение |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
-🎯 Гибкость — настройка под ваши нужды
+---
 
-📊 Мониторинг — метрики и логи
+## 🏆 Итог
 
-Защитите свое Fastify приложение с FAB Shield! ⚡
+Fastify пример **FAB Shield** — это:
+
+- ⚡ **Высокая производительность** — Fastify + FAB Shield
+- 🔒 **Полная защита** — security-заголовки и CSP
+- 🤖 **AI-защита** — интеллектуальная безопасность
+- 🎯 **Гибкость** — настройка под ваши нужды
+- 📊 **Мониторинг** — метрики и логи
+
+**Защитите свое Fastify-приложение с FAB Shield! ⚡**
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

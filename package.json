@@ -1,6 +1,6 @@
 {
   "name": "@fab-orbita/shield",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Advanced security framework for Node.js with AI-powered protection",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -67,7 +67,6 @@
     }
   },
   "dependencies": {
-    "@fab-orbita/shield": "^1.2.0",
     "joi": "^17.11.0",
     "query-registry": "^4.3.0",
     "yarn": "^1.22.22"
@@ -99,22 +98,40 @@
   },
   "keywords": [
     "security",
-    "headers",
+    "nodejs-security",
+    "api-security",
+    "express-security",
+    "fastify-security",
+    "koa-security",
+    "security-headers",
+    "content-security-policy",
     "csp",
-    "ai",
-    "protection",
-    "express",
-    "fastify",
-    "koa",
+    "rate-limiting",
     "middleware",
     "waf",
     "firewall",
-    "xss",
-    "csrf",
+    "xss-protection",
+    "csrf-protection",
     "hsts",
+    "sql-injection",
+    "nosql-injection",
+    "path-traversal",
+    "command-injection",
+    "helmet-alternative",
+    "http-security",
+    "request-validation",
+    "threat-detection",
+    "ai-security",
+    "metrics",
+    "monitoring",
+    "express-middleware",
+    "nestjs-security",
+    "typescript-security",
+    "open-source-security",
     "fab",
     "shield",
-    "fab-orbita"
+    "fab-orbita",
+    "devorbit"
   ],
   "author": {
     "name": "Фабрициус Владимир Николаевич",
@@ -123,10 +140,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fab-orbita/shield.git"
+    "url": "git+https://github.com/zammartin2/shield.git"
   },
   "bugs": {
-    "url": "https://github.com/fab-orbita/shield/issues"
+    "url": "https://github.com/zammartin2/shield/issues"
   },
   "homepage": "https://fab.devorbit.ru",
   "engines": {

@@ -11,31 +11,46 @@
 
 ## 📋 Введение
 
-Этот пример показывает, как использовать FAB Shield с **Express.js**. Вы увидите, как легко защитить свое Express-приложение всего несколькими строками кода.
+Этот пример показывает, как использовать **FAB Shield** с **Express.js**.
+
+Вы увидите, как легко защитить Express-приложение всего несколькими строками кода.
+
+В примере используются:
+
+- 🚀 Express.js
+- 🛡️ FAB Shield middleware
+- 🔐 Security Headers
+- 📜 Content Security Policy
+- 🤖 AI-защита
+- 🚦 Rate Limiting
+- 📊 Метрики
+- 🧩 Кастомный middleware
+- 🧪 Тестовые API-маршруты
 
 ---
 
 ## 🏗️ Структура проекта
+
+```text
 express-example/
 ├── src/
-│ ├── index.ts # Основной файл
-│ ├── routes/
-│ │ ├── api.ts # API маршруты
-│ │ └── public.ts # Публичные маршруты
-│ └── middleware/
-│ └── custom.ts # Кастомные middleware
-├── package.json # Зависимости
-├── tsconfig.json # TypeScript конфигурация
-├── .env.example # Переменные окружения
-└── README.md # Документация
-
-text
+│   ├── index.ts                 # Основной файл
+│   ├── routes/
+│   │   ├── api.ts               # API-маршруты
+│   │   └── public.ts            # Публичные маршруты
+│   └── middleware/
+│       └── custom.ts            # Кастомные middleware
+├── package.json                 # Зависимости
+├── tsconfig.json                # TypeScript-конфигурация
+├── .env.example                 # Переменные окружения
+└── README.md                    # Документация
+```
 
 ---
 
 ## 📄 Файлы
 
-### 1. src/index.ts
+### 1. `src/index.ts`
 
 ```typescript
 import express from 'express'
@@ -57,7 +72,7 @@ const port = process.env.PORT || 3000
 
 const shield = new FABShield({
     env: process.env.NODE_ENV as any || 'development',
-    
+
     // Security-заголовки
     headers: {
         enabled: true,
@@ -71,7 +86,7 @@ const shield = new FABShield({
             'X-Custom-Header': 'FAB-Shield-Protected'
         }
     },
-    
+
     // Content Security Policy
     csp: {
         enabled: true,
@@ -86,7 +101,7 @@ const shield = new FABShield({
             'connect-src': ["'self'", 'https://api.example.com']
         }
     },
-    
+
     // AI-защита
     ai: {
         enabled: true,
@@ -98,13 +113,13 @@ const shield = new FABShield({
             ipReputation: true
         }
     },
-    
+
     // Мониторинг
     monitoring: {
         enabled: true,
         export: ['json']
     },
-    
+
     // Rate Limiting
     rateLimit: {
         enabled: true,
@@ -132,7 +147,7 @@ app.use(express.urlencoded({ extended: true }))
 // 2. Кастомный middleware
 app.use(customMiddleware)
 
-// 3. FAB Shield — подключаем защиту!
+// 3. FAB Shield — подключаем защиту
 app.use(shield.middleware())
 
 // 4. Логирование запросов
@@ -148,7 +163,7 @@ app.use((req, res, next) => {
 // Публичные маршруты
 app.use('/', publicRoutes)
 
-// API маршруты
+// API-маршруты
 app.use('/api', apiRoutes)
 
 // Health check
@@ -177,10 +192,10 @@ app.get('/metrics', (req, res) => {
 
 app.use((err: any, req: any, res: any, next: any) => {
     console.error('❌ Error:', err)
-    
+
     const status = err.status || 500
     const message = err.message || 'Internal server error'
-    
+
     res.status(status).json({
         error: message,
         status: status,
@@ -206,16 +221,23 @@ app.listen(port, () => {
     console.log(`📍 URL: http://localhost:${port}`)
     console.log(`🛡️ FAB Shield: ${shield.isActive() ? '✅ Active' : '❌ Inactive'}`)
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+
     console.log('\n📋 Available endpoints:')
     console.log(`  GET  /            - Home`)
     console.log(`  GET  /health      - Health check`)
     console.log(`  GET  /metrics     - Metrics`)
     console.log(`  GET  /api/data    - Protected API`)
     console.log(`  POST /api/auth    - Authentication`)
+
     console.log('\n✅ Ready to accept requests!\n')
 })
-2. src/routes/public.ts
-typescript
+```
+
+---
+
+### 2. `src/routes/public.ts`
+
+```typescript
 import { Router } from 'express'
 
 const router = Router()
@@ -248,8 +270,13 @@ router.get('/test', (req, res) => {
 })
 
 export default router
-3. src/routes/api.ts
-typescript
+```
+
+---
+
+### 3. `src/routes/api.ts`
+
+```typescript
 import { Router } from 'express'
 
 const router = Router()
@@ -266,14 +293,15 @@ router.get('/data', (req, res) => {
 // Аутентификация
 router.post('/auth', (req, res) => {
     const { username, password } = req.body
-    
+
     if (!username || !password) {
         return res.status(400).json({
             error: 'Username and password required'
         })
     }
-    
-    // Простая проверка (в реальном проекте используйте JWT)
+
+    // Простая проверка.
+    // В реальном проекте используйте JWT, OAuth2 или другую безопасную схему.
     if (username === 'admin' && password === 'admin123') {
         return res.json({
             success: true,
@@ -285,13 +313,13 @@ router.post('/auth', (req, res) => {
             }
         })
     }
-    
+
     res.status(401).json({
         error: 'Invalid credentials'
     })
 })
 
-// Аналитика (с AI защитой)
+// Аналитика с AI-защитой
 router.get('/analytics', (req, res) => {
     // AI-защита автоматически анализирует этот запрос
     res.json({
@@ -304,31 +332,41 @@ router.get('/analytics', (req, res) => {
 })
 
 export default router
-4. src/middleware/custom.ts
-typescript
+```
+
+---
+
+### 4. `src/middleware/custom.ts`
+
+```typescript
 import { Request, Response, NextFunction } from 'express'
 
 export const customMiddleware = (req: Request, res: Response, next: NextFunction) => {
     // Добавляем время начала
-    (req as any).startTime = Date.now()
-    
+    ;(req as any).startTime = Date.now()
+
     // Кастомная логика
     console.log('🔧 Custom middleware executed')
-    
+
     // Добавляем кастомные данные в запрос
-    (req as any).custom = {
+    ;(req as any).custom = {
         requestId: generateRequestId(),
         timestamp: new Date().toISOString()
     }
-    
+
     next()
 }
 
 function generateRequestId(): string {
     return `req-${Date.now()}-${Math.random().toString(36).substring(7)}`
 }
-5. package.json
-json
+```
+
+---
+
+### 5. `package.json`
+
+```json
 {
     "name": "express-fab-shield-example",
     "version": "1.0.0",
@@ -353,8 +391,13 @@ json
         "nodemon": "^3.0.0"
     }
 }
-6. tsconfig.json
-json
+```
+
+---
+
+### 6. `tsconfig.json`
+
+```json
 {
     "compilerOptions": {
         "target": "ES2022",
@@ -374,8 +417,13 @@ json
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"]
 }
-7. .env.example
-bash
+```
+
+---
+
+### 7. `.env.example`
+
+```bash
 # Application
 NODE_ENV=development
 PORT=3000
@@ -390,9 +438,15 @@ SHIELD_MONITORING=true
 HSTS_MAX_AGE=31536000
 HSTS_INCLUDE_SUBDOMAINS=true
 HSTS_PRELOAD=true
-🚀 Запуск
-1. Установка
-bash
+```
+
+---
+
+## 🚀 Запуск
+
+### 1. Установка
+
+```bash
 # Создаем проект
 mkdir express-example
 cd express-example
@@ -405,15 +459,20 @@ npm install @fab-registry/shield express dotenv
 npm install -D @types/express @types/node typescript ts-node nodemon
 
 # Создаем файлы
-mkdir src
+mkdir -p src/routes src/middleware
 touch src/index.ts
 touch src/routes/api.ts
 touch src/routes/public.ts
 touch src/middleware/custom.ts
 touch tsconfig.json
 touch .env.example
-2. Запуск
-bash
+```
+
+---
+
+### 2. Запуск
+
+```bash
 # Режим разработки
 npm run dev
 
@@ -422,9 +481,15 @@ npm run build
 
 # Production
 npm start
-📊 Тестирование
-Тестовые запросы
-bash
+```
+
+---
+
+## 📊 Тестирование
+
+### Тестовые запросы
+
+```bash
 # Health check
 curl http://localhost:3000/health
 
@@ -444,8 +509,13 @@ curl http://localhost:3000/metrics
 
 # Проверка заголовков
 curl -I http://localhost:3000
-Ожидаемые заголовки
-http
+```
+
+---
+
+### Ожидаемые заголовки
+
+```http
 Content-Security-Policy: ...
 Strict-Transport-Security: max-age=31536000
 X-Frame-Options: SAMEORIGIN
@@ -453,24 +523,33 @@ X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin
 X-Custom-Header: FAB-Shield-Protected
 X-Security-Level: high
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-Express пример FAB Shield — это:
+```
 
-🚀 Простая интеграция — несколько строк кода
+---
 
-🔒 Полная защита — все security-заголовки
+## 📞 Контакты
 
-🤖 AI-защита — интеллектуальная безопасность
+| Поле | Значение |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
-📊 Мониторинг — метрики и логи
+---
 
-🎯 Гибкость — настройка под ваши нужды
+## 🏆 Итог
 
-Защитите свое Express приложение с FAB Shield! 🚀
+Express пример **FAB Shield** — это:
+
+- 🚀 **Простая интеграция** — несколько строк кода
+- 🔒 **Полная защита** — security-заголовки и CSP
+- 🤖 **AI-защита** — интеллектуальная безопасность
+- 📊 **Мониторинг** — метрики и логи
+- 🎯 **Гибкость** — настройка под ваши нужды
+
+**Защитите свое Express-приложение с FAB Shield! 🚀**
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

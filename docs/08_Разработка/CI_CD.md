@@ -11,95 +11,108 @@
 
 ## 📋 Введение
 
-**CI/CD (Continuous Integration / Continuous Deployment)** — это практика автоматизации сборки, тестирования и развертывания кода. В этом документе описаны настройки CI/CD для FAB Shield.
+**CI/CD (Continuous Integration / Continuous Deployment)** — это практика автоматизации сборки, тестирования и развертывания кода.
+
+В этом документе описаны настройки CI/CD для **FAB Shield**:
+
+- 🔄 Автоматическая проверка кода
+- 🧪 Запуск тестов
+- 🛡️ Сканирование безопасности
+- 📦 Сборка артефактов
+- 🐳 Сборка Docker-образов
+- 🚀 Деплой в окружения
+- 📊 Health-check и мониторинг
 
 ---
 
 ## 🏗️ Архитектура CI/CD
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ CI/CD Pipeline │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 1. CODE PUSH │ │
-│ │ • Git push │ │
-│ │ • Pull Request │ │
-│ │ • Manual trigger │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 2. CI (Continuous Integration) │ │
-│ │ • Install dependencies │ │
-│ │ • Lint │ │
-│ │ • Type checking │ │
-│ │ • Unit tests │ │
-│ │ • Build │ │
-│ │ • Security scan │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 3. CD (Continuous Deployment) │ │
-│ │ • Build Docker image │ │
-│ │ • Push to registry │ │
-│ │ • Deploy to environment │ │
-│ │ • Smoke tests │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 4. MONITORING │ │
-│ │ • Health checks │ │
-│ │ • Metrics │ │
-│ │ • Alerts │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │
-└─────────────────────────────────────────────────────────────────────────────┘
 
-text
+### CI/CD Pipeline
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CI/CD Pipeline                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                           1. CODE PUSH                              │   │
+│  │  • Git push                                                         │   │
+│  │  • Pull Request                                                     │   │
+│  │  • Manual trigger                                                   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    2. CI Continuous Integration                      │   │
+│  │  • Install dependencies                                             │   │
+│  │  • Lint                                                             │   │
+│  │  • Type checking                                                    │   │
+│  │  • Unit tests                                                       │   │
+│  │  • Build                                                            │   │
+│  │  • Security scan                                                    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    3. CD Continuous Deployment                       │   │
+│  │  • Build Docker image                                               │   │
+│  │  • Push to registry                                                 │   │
+│  │  • Deploy to environment                                            │   │
+│  │  • Smoke tests                                                      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                           4. MONITORING                             │   │
+│  │  • Health checks                                                    │   │
+│  │  • Metrics                                                          │   │
+│  │  • Alerts                                                           │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 📄 GitHub Actions
 
-### .github/workflows/ci.yml
+### `.github/workflows/ci.yml`
 
 ```yaml
 name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Type check
         run: npm run type-check
-      
+
       - name: Run tests
         run: npm run test:ci
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -110,38 +123,38 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
-      
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
-      
+
       - name: Build Docker image
         run: |
           docker build -t fab-shield:${{ github.sha }} .
           docker tag fab-shield:${{ github.sha }} fab-shield:latest
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
       - name: Push Docker image
         run: |
           docker push fab-shield:${{ github.sha }}
           docker push fab-shield:latest
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -151,42 +164,47 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run Snyk Security Scan
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
-      
+
       - name: Run npm audit
         run: npm audit --audit-level=high
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: fab-shield:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
+          format: sarif
+          output: trivy-results.sarif
+
       - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-results.sarif'
-.github/workflows/deploy.yml
-yaml
+          sarif_file: trivy-results.sarif
+```
+
+---
+
+### `.github/workflows/deploy.yml`
+
+```yaml
 name: Deploy
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy'
+        description: Environment to deploy
         required: true
-        default: 'staging'
+        default: staging
         type: choice
         options:
           - staging
@@ -195,34 +213,34 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     environment: ${{ github.event.inputs.environment }}
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
-      
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
-      
+
       - name: Deploy to ${{ github.event.inputs.environment }}
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          ARGS: '-rlgoDzvc -i'
-          SOURCE: 'dist/'
+          ARGS: -rlgoDzvc -i
+          SOURCE: dist/
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.DEPLOY_PATH }}
-      
+
       - name: Restart application
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -232,15 +250,20 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             pm2 restart fab-shield
-      
+
       - name: Smoke tests
-        run: |
-          npm run test:smoke
+        run: npm run test:smoke
         env:
           DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
-📄 GitLab CI
-.gitlab-ci.yml
-yaml
+```
+
+---
+
+## 📄 GitLab CI
+
+### `.gitlab-ci.yml`
+
+```yaml
 # .gitlab-ci.yml
 
 stages:
@@ -318,7 +341,8 @@ deploy-staging:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+    - |
+      ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
         cd /var/www/fab-shield &&
         docker pull $REGISTRY:$CI_COMMIT_SHA &&
         docker-compose down &&
@@ -340,7 +364,8 @@ deploy-production:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+    - |
+      ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
         cd /var/www/fab-shield &&
         docker pull $REGISTRY:$CI_COMMIT_SHA &&
         docker-compose down &&
@@ -352,43 +377,49 @@ deploy-production:
   only:
     - main
   when: manual
-📄 Jenkins Pipeline
-Jenkinsfile
-groovy
+```
+
+---
+
+## 📄 Jenkins Pipeline
+
+### `Jenkinsfile`
+
+```groovy
 pipeline {
     agent any
-    
+
     environment {
         NODE_VERSION = '18'
         REGISTRY = 'docker.io/fab-registry'
         IMAGE = "${REGISTRY}/shield"
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        
+
         stage('Install') {
             steps {
                 sh 'npm ci'
             }
         }
-        
+
         stage('Lint') {
             steps {
                 sh 'npm run lint'
             }
         }
-        
+
         stage('Type Check') {
             steps {
                 sh 'npm run type-check'
             }
         }
-        
+
         stage('Test') {
             steps {
                 sh 'npm run test:ci'
@@ -404,13 +435,13 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Security Scan') {
             steps {
                 sh 'npm run security-scan'
             }
         }
-        
+
         stage('Build') {
             when {
                 branch 'main'
@@ -420,7 +451,7 @@ pipeline {
                 sh 'docker tag ${IMAGE}:${GIT_COMMIT} ${IMAGE}:latest'
             }
         }
-        
+
         stage('Push') {
             when {
                 branch 'main'
@@ -432,7 +463,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploy to Staging') {
             when {
                 branch 'develop'
@@ -448,7 +479,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Deploy to Production') {
             when {
                 branch 'main'
@@ -469,20 +500,22 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
         }
+
         success {
-            emailext (
+            emailext(
                 subject: "✅ Build Success: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
                 body: "The build was successful.",
                 to: 'devops@company.com'
             )
         }
+
         failure {
-            emailext (
+            emailext(
                 subject: "❌ Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
                 body: "The build failed. Check the logs.",
                 to: 'devops@company.com'
@@ -490,9 +523,15 @@ pipeline {
         }
     }
 }
-🚀 Автоматизация релизов
-scripts/release.sh
-bash
+```
+
+---
+
+## 🚀 Автоматизация релизов
+
+### `scripts/release.sh`
+
+```bash
 #!/bin/bash
 
 # Release script
@@ -532,9 +571,15 @@ git push origin main
 git push origin "v$VERSION"
 
 echo "✅ Release $VERSION complete!"
-📊 Мониторинг деплоя
-health-check.js
-javascript
+```
+
+---
+
+## 📊 Мониторинг деплоя
+
+### `scripts/health-check.js`
+
+```javascript
 // scripts/health-check.js
 
 const axios = require('axios')
@@ -544,20 +589,20 @@ async function healthCheck() {
     const url = process.env.DEPLOY_URL || 'https://fab.devorbit.ru'
     const timeout = parseInt(process.env.HEALTH_TIMEOUT || '30000')
     const startTime = Date.now()
-    
+
     try {
         const response = await axios.get(`${url}/health`, {
             timeout: timeout
         })
-        
+
         if (response.status === 200 && response.data.status === 'ok') {
             const duration = Date.now() - startTime
             console.log(`✅ Health check passed (${duration}ms)`)
             return true
-        } else {
-            console.error('❌ Health check failed:', response.data)
-            return false
         }
+
+        console.error('❌ Health check failed:', response.data)
+        return false
     } catch (error) {
         console.error('❌ Health check error:', error.message)
         return false
@@ -566,44 +611,56 @@ async function healthCheck() {
 
 async function runHealthCheck() {
     console.log('🔍 Running health check...')
-    
+
     const isHealthy = await healthCheck()
-    
+
     if (!isHealthy) {
         console.error('❌ Health check failed, rolling back...')
+
         exec('npm run rollback', (error, stdout, stderr) => {
             if (error) {
                 console.error('❌ Rollback failed:', error)
                 process.exit(1)
             }
+
             console.log('🔄 Rollback successful')
         })
+
         process.exit(1)
     }
-    
+
     console.log('✅ Health check passed')
     process.exit(0)
 }
 
 runHealthCheck()
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-CI/CD для FAB Shield — это:
+```
 
-🔄 Автоматизация — сборка, тесты, деплой
+---
 
-✅ Качество — проверка кода на всех этапах
+## 📞 Контакты
 
-🛡️ Безопасность — сканирование уязвимостей
+| Поле | Значение |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Email** | legal@devorbit.ru |
+| **Реестр** | fab.devorbit.ru |
 
-🚀 Быстрота — быстрые релизы
+---
 
-📊 Мониторинг — отслеживание состояния
+## 🏆 Итог
 
-Автоматизируйте развертывание FAB Shield! 🔄
+CI/CD для **FAB Shield** — это:
+
+- 🔄 **Автоматизация** — сборка, тесты, деплой
+- ✅ **Качество** — проверка кода на всех этапах
+- 🛡️ **Безопасность** — сканирование уязвимостей
+- 🚀 **Быстрота** — быстрые релизы
+- 📊 **Мониторинг** — отслеживание состояния
+
+**Автоматизируйте развертывание FAB Shield! 🔄**
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

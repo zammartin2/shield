@@ -11,32 +11,50 @@
 
 ## 📋 Введение
 
-Этот пример показывает, как использовать FAB Shield в Docker-контейнере. Мы создадим полностью работающее приложение с защитой, которое можно запустить одной командой.
+Этот пример показывает, как использовать **FAB Shield** в Docker-контейнере.
+
+Мы создадим полностью работающее приложение с защитой, которое можно запустить одной командой через Docker или Docker Compose.
+
+В примере используются:
+
+- 🐳 Docker
+- 🧩 Docker Compose
+- 🚀 Express.js
+- 🛡️ FAB Shield
+- 📊 Health Check
+- 📈 Prometheus
+- 📉 Grafana
+- 🧠 Redis для rate limiting
+- 🔧 Настройка через `.env`
 
 ---
 
 ## 🏗️ Структура проекта
+
+```text
 docker-example/
 ├── src/
-│ └── index.ts # Основной код приложения
-├── Dockerfile # Docker образ
-├── docker-compose.yml # Docker Compose
-├── package.json # Зависимости
-├── tsconfig.json # TypeScript конфигурация
-├── .env.example # Переменные окружения
-└── README.md # Документация
-
-text
+│   └── index.ts                 # Основной код приложения
+├── Dockerfile                   # Docker-образ
+├── docker-compose.yml           # Docker Compose
+├── package.json                 # Зависимости
+├── tsconfig.json                # TypeScript-конфигурация
+├── .env.example                 # Переменные окружения
+└── README.md                    # Документация
+```
 
 ---
 
 ## 📄 Файлы
 
-### 1. src/index.ts
+### 1. `src/index.ts`
 
 ```typescript
 import express from 'express'
+import dotenv from 'dotenv'
 import { FABShield } from '@fab-registry/shield'
+
+dotenv.config()
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -44,7 +62,7 @@ const port = process.env.PORT || 3000
 // Создаем экземпляр FAB Shield
 const shield = new FABShield({
     env: process.env.NODE_ENV as any || 'development',
-    
+
     // Настройки безопасности из переменных окружения
     headers: {
         enabled: process.env.SHIELD_HEADERS !== 'false',
@@ -54,7 +72,7 @@ const shield = new FABShield({
             preload: process.env.HSTS_PRELOAD === 'true'
         }
     },
-    
+
     csp: {
         enabled: process.env.SHIELD_CSP !== 'false',
         dynamic: true,
@@ -63,13 +81,13 @@ const shield = new FABShield({
             'https://cdnjs.cloudflare.com'
         ]
     },
-    
+
     ai: {
         enabled: process.env.SHIELD_AI === 'true',
         anomalyDetection: true,
         threatPrediction: true
     },
-    
+
     monitoring: {
         enabled: process.env.SHIELD_MONITORING !== 'false',
         export: ['json']
@@ -116,6 +134,7 @@ app.get('/api/data', (req, res) => {
 // Обработка ошибок
 app.use((err: any, req: any, res: any, next: any) => {
     console.error('Error:', err)
+
     res.status(500).json({
         error: 'Internal server error',
         message: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -129,8 +148,13 @@ app.listen(port, () => {
     console.log(`🔒 Protection: ${shield.isActive() ? 'Active' : 'Inactive'}`)
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
 })
-2. package.json
-json
+```
+
+---
+
+### 2. `package.json`
+
+```json
 {
     "name": "fab-shield-docker-example",
     "version": "1.0.0",
@@ -155,8 +179,13 @@ json
         "ts-node": "^10.9.0"
     }
 }
-3. tsconfig.json
-json
+```
+
+---
+
+### 3. `tsconfig.json`
+
+```json
 {
     "compilerOptions": {
         "target": "ES2022",
@@ -176,8 +205,13 @@ json
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"]
 }
-4. Dockerfile
-dockerfile
+```
+
+---
+
+### 4. `Dockerfile`
+
+```dockerfile
 # ============================================
 # BUILD STAGE
 # ============================================
@@ -188,14 +222,17 @@ WORKDIR /app
 # Копируем package файлы
 COPY package*.json ./
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
+# Устанавливаем все зависимости, включая devDependencies для сборки TypeScript
+RUN npm ci
 
 # Копируем исходники
 COPY . .
 
 # Собираем TypeScript
 RUN npm run build
+
+# Удаляем devDependencies после сборки
+RUN npm prune --omit=dev
 
 # ============================================
 # PRODUCTION STAGE
@@ -209,9 +246,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
-# Копируем .env файл (если есть)
-COPY .env .env.production
-
 # Устанавливаем переменные окружения
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -221,12 +255,17 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD node -e "require('http').get('http://localhost:3000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"
 
-# Запускаем
+# Запускаем приложение
 CMD ["node", "dist/index.js"]
-5. docker-compose.yml
-yaml
+```
+
+---
+
+### 5. `docker-compose.yml`
+
+```yaml
 version: '3.8'
 
 services:
@@ -252,7 +291,7 @@ services:
       - ./logs:/app/logs
       - ./metrics:/app/metrics
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -321,8 +360,13 @@ volumes:
   redis_data:
   grafana_data:
   prometheus_data:
-6. .env.example
-bash
+```
+
+---
+
+### 6. `.env.example`
+
+```bash
 # Application
 NODE_ENV=production
 PORT=3000
@@ -338,19 +382,24 @@ HSTS_MAX_AGE=31536000
 HSTS_INCLUDE_SUBDOMAINS=true
 HSTS_PRELOAD=true
 
-# Rate Limiting (если используется)
+# Rate Limiting
 RATE_LIMIT_WINDOW=60000
 RATE_LIMIT_MAX=100
 
-# Redis (если используется)
+# Redis
 REDIS_URL=redis://redis:6379
 REDIS_PASSWORD=
 
 # Logging
 LOG_LEVEL=info
 LOG_FORMAT=json
-7. README.md
-markdown
+```
+
+---
+
+### 7. `README.md`
+
+````markdown
 # 🐳 FAB Shield Docker Example
 
 ## 🚀 Быстрый старт
@@ -368,19 +417,23 @@ docker-compose up -d
 
 # Проверяем
 curl http://localhost:3000
-📊 Мониторинг
-Приложение: http://localhost:3000
+```
 
-Метрики: http://localhost:3000/metrics
+## 📊 Мониторинг
 
-Health: http://localhost:3000/health
+| Сервис | URL |
+|:---|:---|
+| **Приложение** | http://localhost:3000 |
+| **Метрики** | http://localhost:3000/metrics |
+| **Health** | http://localhost:3000/health |
+| **Grafana** | http://localhost:3001 |
+| **Prometheus** | http://localhost:9090 |
 
-Grafana: http://localhost:3001 (admin/admin)
+> Данные для входа в Grafana по умолчанию: `admin / admin`.
 
-Prometheus: http://localhost:9090
+## 🛠️ Команды
 
-🛠️ Команды
-bash
+```bash
 # Сборка
 docker-compose build
 
@@ -395,10 +448,12 @@ docker-compose down
 
 # Остановка с удалением томов
 docker-compose down -v
-📝 Лицензия
-MIT
+```
 
-text
+## 📝 Лицензия
+
+MIT
+````
 
 ---
 
@@ -411,15 +466,23 @@ text
 mkdir docker-example
 cd docker-example
 
-# Создаем файлы (копируем содержимое выше)
-nano src/index.ts
-nano package.json
-nano tsconfig.json
-nano Dockerfile
-nano docker-compose.yml
-nano .env.example
-2. Установка
-bash
+# Создаем папки
+mkdir -p src logs metrics
+
+# Создаем файлы
+touch src/index.ts
+touch package.json
+touch tsconfig.json
+touch Dockerfile
+touch docker-compose.yml
+touch .env.example
+```
+
+---
+
+### 2. Установка локально
+
+```bash
 # Устанавливаем зависимости
 npm install
 
@@ -428,47 +491,82 @@ npm run build
 
 # Проверяем
 npm start
-3. Запуск в Docker
-bash
+```
+
+---
+
+### 3. Запуск в Docker
+
+```bash
 # Сборка образа
 docker build -t fab-shield-example .
 
-# Запуск
+# Запуск контейнера
 docker run -p 3000:3000 fab-shield-example
 
 # Или через Docker Compose
 docker-compose up -d
-📊 Мониторинг
-Health Check
-bash
+```
+
+---
+
+## 📊 Мониторинг
+
+### Health Check
+
+```bash
 curl http://localhost:3000/health
-Метрики
-bash
+```
+
+---
+
+### Метрики
+
+```bash
 curl http://localhost:3000/metrics
-API
-bash
+```
+
+---
+
+### API
+
+```bash
 curl http://localhost:3000/api/data
-Логи
-bash
+```
+
+---
+
+### Логи
+
+```bash
 docker-compose logs -f app
-📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-Docker пример FAB Shield — это:
+```
 
-🐳 Готовое решение — разворачивается одной командой
+---
 
-🔒 Защита из коробки — все security-заголовки включены
+## 📞 Контакты
 
-📊 Мониторинг — Grafana + Prometheus
+| Поле | Значение |
+|:---|:---|
+| **Автор** | Фабрициус Владимир Николаевич |
+| **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
+| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
-🔧 Гибкость — настройка через .env
+---
 
-🚀 Простота — минимальная конфигурация
+## 🏆 Итог
 
-Развертывайте FAB Shield в Docker легко! 🐳
+Docker пример **FAB Shield** — это:
+
+- 🐳 **Готовое решение** — разворачивается одной командой
+- 🔒 **Защита из коробки** — security-заголовки включены
+- 📊 **Мониторинг** — Grafana + Prometheus
+- 🔧 **Гибкость** — настройка через `.env`
+- 🚀 **Простота** — минимальная конфигурация
+
+**Развертывайте FAB Shield в Docker легко! 🐳**
+
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

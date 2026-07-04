@@ -37,7 +37,7 @@
   <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
   <a href="https://fab.devorbit.ru/packages/@fab-orbita/shield">Fab Registry</a> ·
   <a href="https://t.me/fab_shield">Telegram</a> ·
-  <a href="docs/README.md">Русская версия</a>
+  <a href="README.ru.md">Русская версия</a>
 </p>
 
 ---
@@ -1137,5 +1137,5 @@ Every star and every contribution helps the project grow.
   <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
   <a href="https://fab.devorbit.ru/packages/@fab-orbita/shield">Fab Registry</a> ·
   <a href="https://t.me/fab_shield">Telegram</a> ·
-  <a href="docs/README.md">Русская версия</a>
+  <a href="README.ru.md">Русская версия</a>
 </p>
