@@ -1,6 +1,6 @@
 {
   "name": "@fab-orbita/shield",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Advanced security framework for Node.js with AI-powered protection",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
