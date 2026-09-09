@@ -8,6 +8,7 @@ import { deepMerge, getByPath, setByPath, deleteByPath, hasByPath } from '../uti
 import { EventEmitter } from 'events'
 import fs from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 
 // 🔒 БЕЗОПАСНЫЙ ПАРСЕР - только JSON
 export class ConfigManager extends EventEmitter {
@@ -409,7 +410,6 @@ export class ConfigManager extends EventEmitter {
    */
   private updateChecksum(): void {
     try {
-      const crypto = require('crypto')
       const content = JSON.stringify(this.config)
       this.configChecksum = crypto
         .createHash('sha256')
@@ -427,7 +427,6 @@ export class ConfigManager extends EventEmitter {
     if (!this.configChecksum) return true
     
     try {
-      const crypto = require('crypto')
       const content = JSON.stringify(this.config)
       const checksum = crypto
         .createHash('sha256')

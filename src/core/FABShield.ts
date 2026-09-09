@@ -417,7 +417,7 @@ export class FABShield extends EventEmitter {
           return Promise.resolve()
         },
         clear: () => {
-          ;(req as any).__shield_store = new Map()
+          (req as any).__shield_store = new Map()
           return Promise.resolve()
         },
         getAll: () => {
