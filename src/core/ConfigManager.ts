@@ -18,7 +18,7 @@ export class ConfigManager extends EventEmitter {
   private fileWatcher?: fs.FSWatcher | { close(): void }
   private readonly validLogLevels = ['debug', 'info', 'warn', 'error', 'fatal'] as const
   private readonly validEnvironments = ['development', 'production', 'test'] as const
-  private readonly ALLOWED_EXTENSIONS = ['.json', '.json5'] as const
+  private readonly ALLOWED_EXTENSIONS = ['.json'] as const
   private configChecksum?: string
   private readonly MAX_CONFIG_SIZE = 10 * 1024 * 1024 // 10MB
   private isWatching = false
@@ -207,31 +207,8 @@ export class ConfigManager extends EventEmitter {
         }
       }
 
-      // JSON5 поддержка (опционально)
-      if (ext === '.json5') {
-        try {
-          this.assertSafeConfigText(content)
-          const json5 = require('json5')
-          const parsed = json5.parse(content)
-          this.assertSafeConfigValue(parsed, 'config')
-          return parsed
-        } catch (error) {
-          if (error instanceof SyntaxError) {
-            throw new Error(`⛔ Security: Invalid JSON5 in config file: ${error.message}`)
-          }
-
-          if (error instanceof Error) {
-            throw error.message.startsWith('⛔ Security:')
-              ? error
-              : new Error(`⛔ Security: Invalid JSON5 in config file: ${error.message}`)
-          }
-
-          throw new Error('⛔ Security: Invalid JSON5 in config file: Unknown error')
-        }
-      }
-
       // Никогда не доходим сюда из-за валидации, но на всякий случай
-      throw new Error(`⛔ Security: Unsupported config format: ${ext}`)
+      throw new Error(`⛔ Security: Unsupported config format: ${ext}. Use .json`)
     } catch (error) {
       console.error(`❌ Failed to load config from ${filePath}:`, error)
       throw error
@@ -478,49 +455,19 @@ export class ConfigManager extends EventEmitter {
       
       this.validateConfigFile(this.configPath)
       
-      // Используем chokidar если доступен, иначе fs.watch
-      try {
-        // Пытаемся использовать chokidar для более надежного отслеживания
-        const chokidar = require('chokidar')
-        const chokidarWatcher = chokidar.watch(this.configPath, {
-          persistent: true,
-          ignoreInitial: true,
-          awaitWriteFinish: {
-            stabilityThreshold: 100,
-            pollInterval: 100
-          }
-        })
-        
-        chokidarWatcher.on('change', (path: string) => {
+      // Используем fs.watch (Node.js built-in)
+      const watcher = fs.watch(this.configPath, (event) => {
+        if (event === 'change') {
           this.handleConfigChange()
-        })
-        
-        chokidarWatcher.on('error', (error: Error) => {
-          console.error(`❌ Chokidar error:`, error)
-        })
-        
-        // Сохраняем ссылку для очистки
-        this.fileWatcher = {
-          close: () => chokidarWatcher.close()
         }
-        
-        this.isWatching = true
-        return
-      } catch {
-        // Если chokidar не доступен, используем fs.watch
-        const watcher = fs.watch(this.configPath, (event) => {
-          if (event === 'change') {
-            this.handleConfigChange()
-          }
-        })
-        
-        watcher.on('error', (error) => {
-          console.error(`❌ fs.watch error:`, error)
-        })
-        
-        this.fileWatcher = watcher
-        this.isWatching = true
-      }
+      })
+      
+      watcher.on('error', (error) => {
+        console.error(`❌ fs.watch error:`, error)
+      })
+      
+      this.fileWatcher = watcher
+      this.isWatching = true
     } catch (error) {
       console.warn(`⚠️ Failed to watch config file:`, error)
     }

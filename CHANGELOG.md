@@ -7,6 +7,38 @@
 
 ---
 
+## [1.3.7] - 2026-07-15
+
+### 📦 Зависимости
+
+- **Полностью удалены все runtime-зависимости** (`dependencies: {}`)
+  - Удалён `joi` ^17.11.0 — не использовался в исходном коде, тянул 5 транзитивных пакетов (`@hapi/hoek`, `@hapi/topo`, `@sideway/address`, `@sideway/formula`, `@sideway/pinpoint`)
+  - Удалён `query-registry` ^4.3.0 — не использовался в исходном коде, тянул 6 транзитивных пакетов (`query-string`, `quick-lru`, `url-join`, `validate-npm-package-name`, `zod-package-json`, `zod`)
+  - Удалён динамический `require('json5')` из `ConfigManager` — поддержка `.json5` конфигов заменена на только `.json`
+  - Удалён динамический `require('chokidar')` из `ConfigManager` — file watching переведён на встроенный `fs.watch`
+  - Итого: **с ~15 пакетов до 0** в production runtime
+- Удалены лишние lock-файлы: `yarn.lock`, `pnpm-lock.yaml` (проект использует npm)
+- Синхронизирован `fab.json` с `package.json` — dependencies обнулены, исправлен скрипт `test`
+
+### 🔧 Изменено
+
+- `ConfigManager.ts` — убрана поддержка `.json5` расширения, только `.json`
+- `ConfigManager.ts` — упрощён `watchFile()`, используется только `fs.watch` (Node.js built-in)
+- `tsconfig.json` — включены `declarationMap` и `sourceMap`, `outDir` исправлен на `./dist/cjs`
+
+### 🧪 Тестирование
+
+- **1228 тестов успешно пройдено** ✅ (32 test suites)
+- Type-check (`tsc --noEmit`) — 0 ошибок
+- Build (CJS + ESM + types) — успешен
+
+### ✅ Итог
+
+**Пакет `@fab-orbita/shield@1.3.7` не имеет ни одной runtime-зависимости.**  
+Runtime использует только встроенные модули Node.js (`fs`, `path`, `crypto`, `events`). Все инструменты разработки (TypeScript, Jest, ESLint и т.д.) остались в `devDependencies`.
+
+---
+
 ## [1.3.6] - 2026-07-13
 
 ### 🛡️ Security
