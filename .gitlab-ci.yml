@@ -1,0 +1,48 @@
+stages:
+  - lint
+  - typecheck
+  - test
+  - build
+
+# Каждый job обязан задавать image: дефолтный образ раннера lab.devorbit.ru —
+# registry.gitlab.com/hadzhioglu/padavan-ng, в нём нет рабочего node/npm.
+.npm:
+  image: node:22
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules
+
+lint:
+  extends: .npm
+  stage: lint
+  script:
+    - npm ci
+    - npm run lint
+
+typecheck:
+  extends: .npm
+  stage: typecheck
+  script:
+    - npm ci
+    - npm run type-check
+
+test:
+  extends: .npm
+  stage: test
+  script:
+    - npm ci
+    # --coverage включает coverageThreshold из jest.config.js — это и есть гейт
+    - npm run test:ci
+
+build:
+  extends: .npm
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
