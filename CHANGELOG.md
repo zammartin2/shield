@@ -7,6 +7,81 @@
 
 ---
 
+## [1.4.0] - 2026-10-03
+
+### 🚀 Добавлено
+
+- **CI/CD в локальном GitLab** — добавлен `.gitlab-ci.yml` со стадиями `lint → typecheck → test → build`;
+  каждый job задаёт `image: node:22` (образ по умолчанию у раннера — другой). `npm ci` кэшируется по
+  `package-lock.json`.
+- **README переработаны с нуля** — `README.md` (English) и `README.ru.md` (Русский) теперь зеркальны по
+  структуре: одинаковый набор разделов, все примеры кода сверены с реальным публичным API,
+  все цифры — фактические.
+
+### 🔧 Изменено
+
+- Сборка переведена с `rollup.config.js` на `rollup.config.mjs` (Rollup 4); удалена корневая заглушка `index.js`.
+- Переработано ядро `src/core/FABShield.ts` (singleton изолирован, добавлен `destroy()`).
+- `scripts/release.sh` переписан: обновляет `package.json`, `package-lock.json`, `fab.json` **и `SHIELD_VERSION`**
+  (раньше версия в `src` расходилась с `package.json` и уронила бы тесты `getVersion()`), прогоняет все гейты
+  и пушит **только** в локальный GitLab — в GitHub никогда.
+- `package.json`: `build:watch` указывает на существующий `rollup.config.mjs`; удалён скрипт
+  `test:integration` (директории `tests/integration` не существует).
+- `.gitignore`: `types/` → `/types/` (раньше правило гасило **новые** файлы в `src/types/`), добавлены
+  `!package-lock.json` и `*.bak`.
+- `fab.json`: исправлено имя автора (битая UTF-8-кодировка), URL репозитория, добавлен `README.ru.md`
+  в `files`, удалён несуществующий экспорт `./plugins/*`.
+
+### 🐛 Исправлено
+
+- Убраны **7 источников нестабильных тестов**: реальные `setTimeout`/`done` в `logging.middleware`,
+  висячий таймер в `metrics-collector`, `await sleep(...)` в rate-limit, небезопасный патч `Date.now`,
+  утечки `process.env.NODE_ENV` в `ConfigManager`/`headers.middleware`, wall-clock-проверки в e2e.
+- `headers.middleware.ts` — удалён недостижимый fallback `String(err) || 'Internal server error'`.
+
+### 🧹 Очищено
+
+- Удалены отладочные `console.log` (`AIEngine`, `PluginManager`) и TODO-заглушки в `logger`:
+  транспорты `file`/`remote` теперь безопасно игнорируются вместо записи `[FILE]`/`[REMOTE]` в консоль.
+- Удалены мусорные тесты `validator-simple`, `validator-complete`, `validator-fixed` и артефакт
+  `unit-audit-clean.txt` (покрытие не изменилось), а также `audit-report.json` и `tsconfig.build.json.bak`.
+
+### 🧪 Тестирование
+
+- **1405 тестов, 35 suites** (было 1230) — добавлено 176 тестов на непокрытые ветки.
+- Покрытие **99.55% statements / 96.71% branches / 99.75% functions / 99.7% lines**
+  (было 92.29 / 85.91 / 96.12 / 92.54).
+- Пороги `jest.config.js` подняты с **70 → 98 / 94 / 99 / 98** — CI реально останавливает регрессии.
+- `src/core/ConfigManager.ts` и `src/middleware/headers.middleware.ts` доведены до **100%**
+  по всем четырём метрикам.
+
+### 📦 Зависимости
+
+- Без изменений: **0 runtime-зависимостей** сохраняется.
+
+### ✅ Итог
+
+**`@fab-orbita/shield@1.4.0`** — стабильный набор тестов без флаков, покрытие ~99.5%, зеркальные
+README на двух языках и обязательный CI перед каждым принятием изменений.
+
+---
+
+## [1.3.8] - 2026-09-09
+
+### 🛡️ Безопасность
+
+- Закрыты все уязвимости `npm audit` (коммит `b91c3b2`).
+
+### 🔧 Изменено
+
+- Обновлена конфигурация проекта и зависимости (`34ea45b`).
+
+### 🐛 Исправлено
+
+- Исправлены 6 ошибок ESLint: `no-var-requires`, `no-unused-vars`, `no-extra-semi` (`9aa4b13`).
+
+---
+
 ## [1.3.7] - 2026-07-15
 
 ### 📦 Зависимости
@@ -264,32 +339,9 @@ Runtime использует только встроенные модули Node
 
 ---
 
-## [1.4.0] - Планируется на 2026-07-20
+## Планируемые релизы
 
-### 🎯 Цель: достижение 95% покрытия кода
-
-**Планируемые улучшения:**
-
-- Довести `FABShield.ts` до 85%+ покрытия
-- Довести `ConfigManager.ts` до 95%+ покрытия
-- Улучшить `ip.util.ts` до 90%+ покрытия
-- Улучшить `validator.ts` до 95%+ покрытия
-- Добавить интеграционные тесты для всех модулей
-- Добавить performance-тесты
-- Добавить load-тесты
-
-**Ожидаемые метрики:**
-
-| Показатель | Цель |
-|---|---|
-| **Statements** | 95%+ |
-| **Branches** | 90%+ |
-| **Functions** | 90%+ |
-| **Lines** | 95%+ |
-
----
-
-## [2.0.0] - Планируется на 2026-12-01
+### [2.0.0] — ожидается
 
 ### 🚀 Крупное обновление
 
@@ -339,7 +391,7 @@ Runtime использует только встроенные модули Node
 
 ## Ссылки
 
-- [GitHub Releases](https://github.com/fab-orbita/shield/releases)
+- [Релизы в GitLab](https://lab.devorbit.ru/root/fab-shield/-/releases)
 - [npm Package](https://www.npmjs.com/package/@fab-orbita/shield)
 - [Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield)
 - [Socket.dev Security Report](https://socket.dev/npm/package/@fab-orbita/shield)
