@@ -58,7 +58,7 @@ export const errorMiddleware = (shield?: FABShield) => {
       errorStack = err.stack
       errorDetails = err.details
     } else {
-      errorMessage = String(err) || 'Internal server error'
+      errorMessage = String(err)
       errorStack = undefined
     }
 
