@@ -18,7 +18,7 @@ import { EventEmitter } from 'events'
  * Kept as a constant because reading it at runtime breaks under ESM bundling
  * (no __dirname) and can be stripped by rollup.
  */
-const SHIELD_VERSION = '1.3.8'
+const SHIELD_VERSION = '1.4.0'
 
 export class FABShield extends EventEmitter {
   private config: ConfigManager
