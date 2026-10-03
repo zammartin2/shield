@@ -1,4 +1,4 @@
-# ⚡ Rate Limiting — Умное ограничение запросов
+# 🛡️ Security Headers — Безопасные HTTP-заголовки
 
 ---
 

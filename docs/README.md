@@ -1,6 +1,6 @@
 # 🛡️ FAB Shield — современный security-фреймворк для Node.js
 
-**[Документация](https://github.com/zammartin2/shield) | [Примеры](https://github.com/zammartin2/shield/tree/main/examples) | [Сообщество](https://t.me/fab_shield)**
+**[Документация](https://lab.devorbit.ru/root/fab-shield) | [Примеры](https://lab.devorbit.ru/root/fab-shield/-/tree/main/examples) | [Сообщество](https://t.me/fab_shield)**
 
 ---
 
@@ -8,10 +8,9 @@
 [![npm version](https://img.shields.io/npm/v/@fab-orbita/shield.svg)](https://www.npmjs.com/package/@fab-orbita/shield)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/tests-1225%20passed-brightgreen?logo=jest)](https://github.com/zammartin2/shield/actions)
-[![Coverage](https://img.shields.io/badge/coverage-90.94%25-brightgreen)](https://github.com/zammartin2/shield/actions)
-[![Security](https://img.shields.io/badge/security-audited-brightgreen?logo=security)](https://github.com/zammartin2/shield/security)
-[![GitHub stars](https://img.shields.io/github/stars/zammartin2/shield)](https://github.com/zammartin2/shield/stargazers)
+[![Tests](https://img.shields.io/badge/tests-1405%20passed-brightgreen?logo=jest)](https://lab.devorbit.ru/root/fab-shield)
+[![Coverage](https://img.shields.io/badge/coverage-99.55%25-brightgreen)](https://lab.devorbit.ru/root/fab-shield)
+[![Security](https://img.shields.io/badge/security-audited-brightgreen?logo=security)](./SECURITY.md)
 [![Downloads](https://img.shields.io/npm/dm/@fab-orbita/shield.svg)](https://www.npmjs.com/package/@fab-orbita/shield)
 ---
 
@@ -82,7 +81,7 @@ const shield = new FABShield({
 | 🛡️ Динамический CSP | Адаптивная защита с nonce |
 | 📈 Отчеты | Генерация отчетов о безопасности |
 | 🎯 Гибкость | Поддержка Express, Fastify, Koa |
-| 📚 Полная документация | 58 файлов документации на русском языке |
+| 📚 Полная документация | 64 файла документации на русском языке |
 
 ---
 
@@ -171,7 +170,7 @@ const shield = new FABShield({
 - Рекомендации
 - FAQ по безопасности
 - Баг-баунти программа
-- **Аудит безопасности v1.3.6** ✅
+- **Аудит безопасности** ✅
 
 ### 📁 Сообщество
 
@@ -199,10 +198,10 @@ const shield = new FABShield({
 
 | Метрика | Значение |
 |---|---:|
-| Актуальная версия | `1.3.6` |
-| Тесты | `1225 / 1225` пройдено |
-| Test Suites | `31 / 31` пройдено |
-| Code coverage | `90.94%` |
+| Актуальная версия | `1.4.0` |
+| Тесты | `1405 / 1405` пройдено |
+| Test Suites | `35 / 35` пройдено |
+| Code coverage | `99.55%` |
 | Известные CVE | `0` |
 | Node.js | `18+` |
 
@@ -216,7 +215,7 @@ const shield = new FABShield({
 |---|---:|
 | `npm audit` | `0` уязвимостей |
 | `eval()` / `new Function()` | Не обнаружено |
-| Внешние сетевые вызовы | Только легитимные |
+| Внешние сетевые вызовы | Отсутствуют (0 runtime-зависимостей) |
 | Postinstall-скрипты | Отсутствуют |
 
 ### Закрыты ложные срабатывания
@@ -272,7 +271,7 @@ const shield = new FABShield({
 
 | Платформа | Ссылка | Назначение |
 |---|---|---|
-| GitHub | [zammartin2/shield](https://github.com/zammartin2/shield) | Код, Issues, Pull Requests |
+| GitLab | [root/fab-shield](https://lab.devorbit.ru/root/fab-shield) | Код, Issues, Pull Requests |
 | Telegram | [@fab_shield](https://t.me/fab_shield) | Обсуждения и помощь |
 | Email | [derector@devorbit.ru](mailto:derector@devorbit.ru) | Официальные контакты |
 
@@ -326,14 +325,16 @@ Copyright (c) 2026 ООО «Деворбит» (DEVORBIT LLC)
 
 ## 🏆 Итог
 
-**FAB Shield v1.3.6** — это:
-[![Version](https://img.shields.io/badge/version-1.3.6-blue)](https://github.com/zammartin2/shield/releases) 
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://lab.devorbit.ru/root/fab-shield/-/releases)
+
+**FAB Shield v1.4.0** — это:
+
 - 🛡️ современный security-фреймворк для Node.js;
 - 🤖 AI-защита от XSS и SQL-инъекций;
 - 🔌 система плагинов для расширения;
 - 📊 метрики и мониторинг в реальном времени;
 - 🔒 25+ security-заголовков из коробки;
-- ✅ 1225 тестов, 90.94% покрытия кода;
+- ✅ 1405 тестов, 99.55% покрытия кода;
 - 🛡️ аудит безопасности пройден — 0 уязвимостей;
 - 🆓 бесплатный Open Source-проект под лицензией MIT;
 - 📚 полная документация на русском языке.

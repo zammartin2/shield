@@ -2,8 +2,8 @@
 
 ---
 
-**Версия:** 1.0.0  
-**Дата:** 2026-07-01  
+**Версия:** 1.1.0  
+**Дата:** 2026-10-03  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
 
@@ -13,14 +13,28 @@
 
 **CI/CD (Continuous Integration / Continuous Deployment)** — это практика автоматизации сборки, тестирования и развертывания кода.
 
-В этом документе описаны настройки CI/CD для **FAB Shield**:
+### ⚙️ Фактический CI
+
+Для **FAB Shield** используется **один** пайплайн — `.gitlab-ci.yml` в саморазмещённом GitLab
+(`lab.devorbit.ru`). Он обязателен: без зелёного прогона изменения не принимаются.
+
+| Стадия | Команда | Назначение |
+|---|---|---|
+| `lint` | `npm ci && npm run lint` | ESLint, 0 ошибок |
+| `typecheck` | `npm ci && npm run type-check` | `tsc --noEmit` |
+| `test` | `npm ci && npm run test:ci` | Jest + покрытие (пороги 98/94/99/98) |
+| `build` | `npm ci && npm run build` | CJS + ESM + `.d.ts` в `dist/` |
+
+Каждый job явно задаёт `image: node:22` — образ по умолчанию у раннера другой и в нём нет `node`.
+Разделы **GitHub Actions** и **Jenkins** ниже приведены справочно и **не используются**.
+
+В этом документе описаны:
 
 - 🔄 Автоматическая проверка кода
 - 🧪 Запуск тестов
 - 🛡️ Сканирование безопасности
 - 📦 Сборка артефактов
 - 🐳 Сборка Docker-образов
-- 🚀 Деплой в окружения
 - 📊 Health-check и мониторинг
 
 ---
@@ -71,7 +85,7 @@
 
 ---
 
-## 📄 GitHub Actions
+## 📄 GitHub Actions (справочно, не используется)
 
 ### `.github/workflows/ci.yml`
 
@@ -263,125 +277,62 @@ jobs:
 
 ### `.gitlab-ci.yml`
 
-```yaml
-# .gitlab-ci.yml
+Фактический конфиг из корня репозитория:
 
+```yaml
 stages:
+  - lint
+  - typecheck
   - test
   - build
-  - deploy
 
-variables:
-  NODE_VERSION: '18'
-  REGISTRY: registry.gitlab.com/fab-registry/shield
+# Каждый job обязан задавать image: дефолтный образ раннера lab.devorbit.ru —
+# registry.gitlab.com/hadzhioglu/padavan-ng, в нём нет рабочего node/npm.
+.npm:
+  image: node:22
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules
 
-cache:
-  paths:
-    - node_modules/
+lint:
+  extends: .npm
+  stage: lint
+  script:
+    - npm ci
+    - npm run lint
 
-# ============================================
-# TEST
-# ============================================
+typecheck:
+  extends: .npm
+  stage: typecheck
+  script:
+    - npm ci
+    - npm run type-check
 
 test:
+  extends: .npm
   stage: test
-  image: node:$NODE_VERSION-alpine
-  before_script:
-    - npm ci
   script:
-    - npm run lint
-    - npm run type-check
+    - npm ci
+    # --coverage включает coverageThreshold из jest.config.js — это и есть гейт
     - npm run test:ci
-  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
-
-security-scan:
-  stage: test
-  image: node:$NODE_VERSION-alpine
-  before_script:
-    - npm ci
-  script:
-    - npm run security-scan
-  allow_failure: true
-
-# ============================================
-# BUILD
-# ============================================
 
 build:
+  extends: .npm
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t $REGISTRY:$CI_COMMIT_SHA .
-    - docker tag $REGISTRY:$CI_COMMIT_SHA $REGISTRY:latest
-    - docker push $REGISTRY:$CI_COMMIT_SHA
-    - docker push $REGISTRY:latest
-  only:
-    - main
-
-# ============================================
-# DEPLOY
-# ============================================
-
-deploy-staging:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-  script:
-    - |
-      ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
-        cd /var/www/fab-shield &&
-        docker pull $REGISTRY:$CI_COMMIT_SHA &&
-        docker-compose down &&
-        docker-compose up -d
-      "
-  environment:
-    name: staging
-    url: https://staging.fab.devorbit.ru
-  only:
-    - develop
-
-deploy-production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-  script:
-    - |
-      ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
-        cd /var/www/fab-shield &&
-        docker pull $REGISTRY:$CI_COMMIT_SHA &&
-        docker-compose down &&
-        docker-compose up -d
-      "
-  environment:
-    name: production
-    url: https://fab.devorbit.ru
-  only:
-    - main
-  when: manual
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
 ```
 
 ---
 
-## 📄 Jenkins Pipeline
+## 📄 Jenkins Pipeline (справочно, не используется)
 
 ### `Jenkinsfile`
 
@@ -533,43 +484,39 @@ pipeline {
 
 ```bash
 #!/bin/bash
+# Релиз FAB Shield.
+# ВАЖНО: пуш идёт ТОЛЬКО в локальный GitLab (remote `lab`), в GitHub — никогда.
+set -euo pipefail
 
-# Release script
-set -e
-
-VERSION=$1
-
+VERSION=${1:-}
 if [ -z "$VERSION" ]; then
-    echo "Usage: ./scripts/release.sh <version>"
-    echo "Example: ./scripts/release.sh 1.0.0"
-    exit 1
+  echo "Usage: ./scripts/release.sh <version>"
+  exit 1
 fi
+
+cd "$(dirname "$0")/.."
 
 echo "📦 Releasing version $VERSION"
 
-# Update version in package.json
-npm version $VERSION --no-git-tag-version
+# package.json + package-lock.json (root version)
+npm version "$VERSION" --no-git-tag-version
 
-# Update CHANGELOG.md
-node scripts/update-changelog.js
+# fab.json npm version не трогает
+sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" fab.json
 
-# Build
+# SHIELD_VERSION иначе разойдётся с package.json и уронит тесты getVersion()
+sed -i "s/const SHIELD_VERSION = '[^']*'/const SHIELD_VERSION = '$VERSION'/" src/core/FABShield.ts
+
+npm run lint
+npm run type-check
+npm run test:coverage
 npm run build
 
-# Run tests
-npm test
-
-# Commit
-git add package.json CHANGELOG.md
+git add package.json package-lock.json fab.json src/core/FABShield.ts CHANGELOG.md
 git commit -m "Release $VERSION"
-
-# Tag
 git tag -a "v$VERSION" -m "Release $VERSION"
-
-# Push
-git push origin main
-git push origin "v$VERSION"
-
+git push lab main
+git push lab "v$VERSION"
 echo "✅ Release $VERSION complete!"
 ```
 

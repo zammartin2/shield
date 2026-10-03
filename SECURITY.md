@@ -13,9 +13,9 @@
 
 | Поле | Значение |
 |---|---|
-| Версия политики | `1.3.6` |
-| Актуально для | FAB Shield `1.3.6` |
-| Дата обновления | 2026-07-03 |
+| Версия политики | `1.4.0` |
+| Актуально для | FAB Shield `1.4.0` |
+| Дата обновления | 2026-10-03 |
 | Автор | Фабрициус Владимир Николаевич |
 | Компания | ООО «Деворбит» (DEVORBIT LLC) |
 | Основной контакт | `derector@devorbit.ru` |
@@ -81,8 +81,8 @@ derector@devorbit.ru
 |---|---|
 | Email | `derector@devorbit.ru` |
 | Telegram | [@fab_shield_security](https://t.me/fab_shield_security) |
-| GitHub Security | [Security Advisories](https://github.com/zammartin2/shield/security/advisories/new) |
-| Repository | [zammartin2/shield](https://github.com/zammartin2/shield) |
+| GitLab Security | [Security Advisories](https://lab.devorbit.ru/root/fab-shield/-/security/advisories) |
+| Repository | [root/fab-shield](https://lab.devorbit.ru/root/fab-shield) |
 
 Если PGP-ключ будет опубликован отдельно, ссылка на него будет добавлена в этот документ.
 
@@ -109,9 +109,9 @@ derector@devorbit.ru
 
 | Версия | Статус | Поддержка |
 |---|---|---|
-| `1.3.6` | ✅ Актуальная | Полная поддержка |
-| `1.2.x` | ⚠️ Предыдущая | Критические исправления |
-| `1.1.x` и ниже | ❌ Устаревшие | Не поддерживаются |
+| `1.4.0` | ✅ Актуальная | Полная поддержка |
+| `1.3.x` | ⚠️ Предыдущая | Критические исправления |
+| `1.2.x` и ниже | ❌ Устаревшие | Не поддерживаются |
 
 Рекомендуется всегда использовать последнюю доступную версию FAB Shield.
 
@@ -309,7 +309,7 @@ npm install @fab-orbita/shield@latest
 ```json
 {
   "dependencies": {
-    "@fab-orbita/shield": "^1.3.0"
+    "@fab-orbita/shield": "^1.4.0"
   }
 }
 ```
@@ -375,7 +375,7 @@ FAB Shield помогает усилить безопасность Node.js-пр
 | Компания | ООО «Деворбит» (DEVORBIT LLC) |
 | Email | `derector@devorbit.ru` |
 | Telegram | [@fab_shield_security](https://t.me/fab_shield) |
-| GitHub | [zammartin2/shield](https://github.com/zammartin2/shield) |
+| Repository | [root/fab-shield](https://lab.devorbit.ru/root/fab-shield) |
 | Fab Registry | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | Сайт | [devorbit.ru](https://devorbit.ru) |
 
@@ -385,6 +385,7 @@ FAB Shield помогает усилить безопасность Node.js-пр
 
 | Версия | Дата | Изменения |
 |---|---|---|
+| `1.4.0` | 2026-10-03 | Актуализация под FAB Shield 1.4.0, исправлены ссылки на репозиторий и таблица поддерживаемых версий |
 | `1.3.0` | 2026-07-03 | Актуализация под FAB Shield 1.3.x, исправление структуры и поддерживаемых версий |
 | `1.0.0` | 2026-07-01 | Первая версия политики безопасности |
 
