@@ -239,6 +239,37 @@ describe('ConfigManager - Branch Coverage', () => {
         configManager = new ConfigManager({}, { configPath: '/path/to/config.json' });
       }).toThrow('Invalid JSON in config file');
     });
+
+    it('should reject a non-json extension that slips past validation', () => {
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.readFileSync.mockReturnValue('{"name":"x"}');
+      // validateConfigFile видит .json, сам loadFromFile — уже нет (защита в глубину)
+      let extCalls = 0;
+      (path.extname as jest.Mock).mockImplementation(() => (++extCalls === 1 ? '.json' : '.yaml'));
+
+      expect(() => {
+        configManager = new ConfigManager({}, { configPath: '/path/to/config.json' });
+      }).toThrow('Unsupported config format');
+    });
+
+    it('should stringify a non-Error value thrown while reading the config', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockFs.existsSync.mockReturnValue(true);
+      const raw = { code: 'EWEIRD', payload: 1 };
+      mockFs.readFileSync.mockImplementation(() => {
+        throw raw;
+      });
+
+      let thrown: unknown;
+      try {
+        configManager = new ConfigManager({}, { configPath: '/path/to/config.json' });
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toEqual(raw);
+      expect(errorSpy).toHaveBeenCalled();
+    });
   });
 
   describe('saveToFile and sanitizeConfig', () => {
@@ -415,9 +446,25 @@ describe('ConfigManager - Branch Coverage', () => {
         'Dangerous key "constructor" detected in config at newConfig'
       );
     });
+
+    it('should no-op when the checked value is null or undefined', () => {
+      configManager = new ConfigManager();
+      // без второго аргумента — заодно покрываем default-параметр location
+      expect(() =>
+        (configManager as any).assertSafeConfigValue(null)
+      ).not.toThrow();
+      expect(() =>
+        (configManager as any).assertSafeConfigValue(undefined)
+      ).not.toThrow();
+    });
   });
 
   describe('watch and reload', () => {
+    it('should ignore change events when there is no config path', () => {
+      configManager = new ConfigManager();
+      expect(() => (configManager as any).handleConfigChange()).not.toThrow();
+    });
+
     it('should warn and not create a watcher when the file is missing', () => {
       configManager = new ConfigManager();
       mockFs.existsSync.mockReturnValue(false);
