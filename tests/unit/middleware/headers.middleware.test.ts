@@ -593,6 +593,52 @@ describe('Headers Middleware (errorMiddleware)', () => {
   });
 
   // ============================================
+  // DEGENERATE ERRORS
+  // ============================================
+
+  describe('degenerate error shapes', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should fall back when an Error carries an empty message', () => {
+      jest.spyOn(console, 'error').mockImplementation();
+      const middleware = errorMiddleware();
+
+      middleware(new Error(''), mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Internal server error' })
+      );
+    });
+
+    it('should stringify an object that has no toString method', () => {
+      jest.spyOn(console, 'error').mockImplementation();
+      const middleware = errorMiddleware();
+      const err = Object.assign(Object.create(null), { code: 'EWEIRD' });
+
+      middleware(err, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: '{"code":"EWEIRD"}' })
+      );
+    });
+
+    it('should fall back when an unstringifiable object has no toString method', () => {
+      jest.spyOn(console, 'error').mockImplementation();
+      const middleware = errorMiddleware();
+      const err = Object.create(null);
+      err.self = err;
+
+      middleware(err, mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Internal server error' })
+      );
+    });
+  });
+
+  // ============================================
   // INTEGRATION
   // ============================================
 
