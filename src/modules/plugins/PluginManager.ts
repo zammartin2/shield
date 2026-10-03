@@ -139,7 +139,6 @@ export class PluginManager extends EventEmitter {
     }
     status.enabled = true
     this.emit('plugin:enabled', { name })
-    console.log(`✅ Plugin enabled: ${name}`)
   }
 
   disable(name: string): void {
@@ -149,7 +148,6 @@ export class PluginManager extends EventEmitter {
     }
     status.enabled = false
     this.emit('plugin:disabled', { name })
-    console.log(`⛔ Plugin disabled: ${name}`)
   }
 
   getStatus(name: string): { enabled: boolean; lastRun: Date; errors: number } | undefined {

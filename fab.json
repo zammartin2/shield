@@ -10,16 +10,12 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./plugins/*": {
-      "import": "./dist/plugins/*.mjs",
-      "require": "./dist/plugins/*.js",
-      "types": "./dist/plugins/*.d.ts"
     }
   },
   "files": [
     "dist",
     "README.md",
+    "README.ru.md",
     "LICENSE",
     "CHANGELOG.md",
     "SECURITY.md"
@@ -105,16 +101,16 @@
     "fab-orbita"
   ],
   "author": {
-    "name": "��������� �������� ����������",
+    "name": "Фабрициус Владимир Николаевич",
     "email": "derector@devorbit.ru"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fab-orbita/shield.git"
+    "url": "git+ssh://git@lab.devorbit.ru:52984/root/fab-shield.git"
   },
   "bugs": {
-    "url": "https://github.com/fab-orbita/shield/issues"
+    "url": "https://lab.devorbit.ru/root/fab-shield/-/issues"
   },
   "homepage": "https://fab.devorbit.ru",
   "engines": {

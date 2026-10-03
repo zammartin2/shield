@@ -140,19 +140,15 @@ export class Logger {
   /**
    * Отправка в файл
    */
-  private sendToFile(_level: string, entry: any): void {
-    // TODO: Реализовать запись в файл
-    // Для простоты используем консоль
-    console.log(`[FILE]`, entry)
+  private sendToFile(_level: string, _entry: any): void {
+    // Транспорт объявлен в LoggingConfig, но не реализован — вызов игнорируется
   }
 
   /**
    * Отправка на удаленный сервер
    */
-  private sendToRemote(_level: string, entry: any): void {
-    // TODO: Реализовать отправку на удаленный сервер
-    // Для простоты используем консоль
-    console.log(`[REMOTE]`, entry)
+  private sendToRemote(_level: string, _entry: any): void {
+    // Транспорт объявлен в LoggingConfig, но не реализован — вызов игнорируется
   }
 
   /**

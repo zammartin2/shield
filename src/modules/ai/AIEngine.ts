@@ -548,11 +548,6 @@ export class AIEngine {
     // === 9. РЕКОМЕНДАЦИИ ===
     result.recommendations = this.generateRecommendations(result.threats);
 
-    // === 10. ЛОГИРОВАНИЕ ===
-    if (result.isThreat) {
-      console.log(`🔍 [AI] Threat detected: ${result.threats.map(t => t.type).join(', ')}`);
-    }
-
     return result;
   }
 

@@ -340,10 +340,10 @@ describe('Logger', () => {
   // ============================================
 
   describe('sendToFile', () => {
-    it('should send to file transport', () => {
-      (logger as any).sendToFile('info', { test: 'data' });
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith('[FILE]', { test: 'data' });
+    it('should ignore the unimplemented file transport', () => {
+      expect(() => (logger as any).sendToFile('info', { test: 'data' })).not.toThrow();
+
+      expect(consoleLogSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -352,10 +352,10 @@ describe('Logger', () => {
   // ============================================
 
   describe('sendToRemote', () => {
-    it('should send to remote transport', () => {
-      (logger as any).sendToRemote('info', { test: 'data' });
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith('[REMOTE]', { test: 'data' });
+    it('should ignore the unimplemented remote transport', () => {
+      expect(() => (logger as any).sendToRemote('info', { test: 'data' })).not.toThrow();
+
+      expect(consoleLogSpy).not.toHaveBeenCalled();
     });
   });
 

@@ -137,10 +137,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zammartin2/shield.git"
+    "url": "git+ssh://git@lab.devorbit.ru:52984/root/fab-shield.git"
   },
   "bugs": {
-    "url": "https://github.com/zammartin2/shield/issues"
+    "url": "https://lab.devorbit.ru/root/fab-shield/-/issues"
   },
   "homepage": "https://fab.devorbit.ru",
   "engines": {
