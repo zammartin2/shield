@@ -7,30 +7,26 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./plugins/*": {
-      "import": "./dist/plugins/*.mjs",
-      "require": "./dist/plugins/*.js",
-      "types": "./dist/plugins/*.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "files": [
     "dist",
     "README.md",
+    "README.ru.md",
     "LICENSE",
     "CHANGELOG.md",
     "SECURITY.md"
   ],
+  "sideEffects": false,
   "scripts": {
-    "build": "npm run build:clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build": "npm run build:clean && npm run build:rollup && npm run build:types",
     "build:clean": "rimraf dist",
-    "build:cjs": "tsc -p tsconfig.build.json",
-    "build:esm": "tsc -p tsconfig.module.json",
-    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
-    "build:watch": "tsc -p tsconfig.build.json --watch",
+    "build:rollup": "rollup -c rollup.config.mjs",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
+    "build:watch": "rollup -c rollup.config.js -w",
     "build:analyze": "npm run build && source-map-explorer dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -44,6 +40,7 @@
     "format": "prettier --write src/**/*.ts",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage node_modules",
+    "prepublishOnly": "npm run build && npm test",
     "dev": "ts-node examples/server.ts",
     "start": "node dist/index.js",
     "example": "ts-node examples/server.ts",
@@ -67,6 +64,10 @@
     }
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/express": "^4.17.25",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.19.43",
@@ -83,14 +84,15 @@
     "prettier": "^3.1.1",
     "redis": "^6.1.0",
     "rimraf": "^5.0.5",
+    "rollup": "^4.9.6",
     "source-map-explorer": "^2.5.3",
     "supertest": "^6.3.4",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
     "typescript": "^5.3.3",
     "uuid": "^14.0.1",
-    "winston": "^3.19.0",
-    "yarn": "^1.22.22"
+    "winston": "^3.19.0"
   },
   "keywords": [
     "security",
@@ -148,8 +150,5 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  },
-  "allowScripts": {
-    "yarn@1.22.22": true
   }
 }

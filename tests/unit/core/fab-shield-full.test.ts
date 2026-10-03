@@ -1,5 +1,6 @@
 import { FABShield } from '../../../src/core/FABShield';
 import { ShieldConfig, Plugin } from '../../../src/types';
+import pkg from '../../../package.json';
 
 describe('FABShield - Core Tests', () => {
   let shield: FABShield;
@@ -12,16 +13,16 @@ describe('FABShield - Core Tests', () => {
   });
 
   // ============================================
-  // КОНСТРУКТОР
+  // CONSTRUCTOR
   // ============================================
 
   describe('Constructor', () => {
     it('should create with default config', () => {
       shield = new FABShield();
-      
+
       expect(shield).toBeDefined();
       expect(shield.isActive()).toBe(true);
-      expect(shield.getVersion()).toBe('1.1.0');
+      expect(shield.getVersion()).toBe(pkg.version);
     });
 
     it('should create with custom config', () => {
@@ -31,14 +32,14 @@ describe('FABShield - Core Tests', () => {
         csp: { enabled: false },
         ai: { enabled: false },
         monitoring: { enabled: false },
-        rateLimit: { enabled: false }
+        rateLimit: { enabled: false },
       };
-      
+
       shield = new FABShield(config);
-      
+
       expect(shield).toBeDefined();
       expect(shield.isActive()).toBe(true);
-      
+
       const shieldConfig = shield.getConfig();
       expect(shieldConfig.env).toBe('production');
     });
@@ -51,9 +52,9 @@ describe('FABShield - Core Tests', () => {
 
     it('should setup rate limiter if enabled', () => {
       shield = new FABShield({
-        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } }
+        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } },
       });
-      
+
       expect(shield.getRateLimiter()).toBeDefined();
     });
 
@@ -70,6 +71,8 @@ describe('FABShield - Core Tests', () => {
 
   describe('Singleton', () => {
     it('should return null if no instance', () => {
+      // Ensure clean state — another test may have left one alive
+      FABShield.getInstance()?.destroy();
       const instance = FABShield.getInstance();
       expect(instance).toBeNull();
     });
@@ -95,23 +98,24 @@ describe('FABShield - Core Tests', () => {
         path: '/test',
         headers: {},
         ip: '127.0.0.1',
-        body: {}
+        body: {},
       };
-      
+
       mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn().mockReturnThis(),
         setHeader: jest.fn(),
         getHeader: jest.fn(),
         removeHeader: jest.fn(),
-        statusCode: 200
+        statusCode: 200,
+        headersSent: false,
       };
     });
 
     it('should return middleware function', () => {
       shield = new FABShield();
       const middleware = shield.middleware();
-      
+
       expect(middleware).toBeDefined();
       expect(typeof middleware).toBe('function');
     });
@@ -122,11 +126,11 @@ describe('FABShield - Core Tests', () => {
         csp: { enabled: false },
         ai: { enabled: false },
         monitoring: { enabled: false },
-        rateLimit: { enabled: false }
+        rateLimit: { enabled: false },
       });
-      
+
       const middleware = shield.middleware();
-      
+
       middleware(mockReq, mockRes, () => {
         expect(mockRes.setHeader).toHaveBeenCalled();
         done();
@@ -135,17 +139,22 @@ describe('FABShield - Core Tests', () => {
 
     it('should handle rate limiting', (done) => {
       shield = new FABShield({
-        rateLimit: { enabled: true, default: { max: 1, windowMs: 60000 } }
+        rateLimit: { enabled: true, default: { max: 1, windowMs: 60000 } },
       });
-      
+
       const middleware = shield.middleware();
-      
+
       middleware(mockReq, mockRes, () => {
         const req2 = { ...mockReq, ip: '127.0.0.1' };
-        const res2 = { ...mockRes, status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
-        
+        const res2 = {
+          ...mockRes,
+          status: jest.fn().mockReturnThis(),
+          json: jest.fn().mockReturnThis(),
+          headersSent: false,
+        };
+
         middleware(req2, res2, () => {});
-        
+
         setTimeout(() => {
           expect(res2.status).toHaveBeenCalledWith(429);
           done();
@@ -162,7 +171,7 @@ describe('FABShield - Core Tests', () => {
     it('should return metrics', () => {
       shield = new FABShield();
       const metrics = shield.getMetrics();
-      
+
       expect(metrics).toBeDefined();
       expect(metrics).toHaveProperty('totalRequests');
       expect(metrics).toHaveProperty('threatsBlocked');
@@ -177,7 +186,7 @@ describe('FABShield - Core Tests', () => {
     it('should return config', () => {
       shield = new FABShield({ env: 'test' });
       const config = shield.getConfig();
-      
+
       expect(config).toBeDefined();
       expect(config.env).toBe('test');
     });
@@ -190,22 +199,22 @@ describe('FABShield - Core Tests', () => {
   describe('updateConfig', () => {
     it('should update config', () => {
       shield = new FABShield();
-      
+
       shield.updateConfig({ env: 'production' });
       const config = shield.getConfig();
-      
+
       expect(config.env).toBe('production');
     });
 
     it('should emit config:updated event', (done) => {
       shield = new FABShield();
-      
+
       shield.on('config:updated', (data) => {
         expect(data.old).toBeDefined();
         expect(data.new).toBeDefined();
         done();
       });
-      
+
       shield.updateConfig({ env: 'production' });
     });
   });
@@ -215,9 +224,9 @@ describe('FABShield - Core Tests', () => {
   // ============================================
 
   describe('getVersion', () => {
-    it('should return version', () => {
+    it('should return version matching package.json', () => {
       shield = new FABShield();
-      expect(shield.getVersion()).toBe('1.1.0');
+      expect(shield.getVersion()).toBe(pkg.version);
     });
   });
 
@@ -230,7 +239,7 @@ describe('FABShield - Core Tests', () => {
       shield = new FABShield();
       shield.stop();
       expect(shield.isActive()).toBe(false);
-      
+
       shield.start();
       expect(shield.isActive()).toBe(true);
     });
@@ -238,7 +247,7 @@ describe('FABShield - Core Tests', () => {
     it('should stop shield', () => {
       shield = new FABShield();
       expect(shield.isActive()).toBe(true);
-      
+
       shield.stop();
       expect(shield.isActive()).toBe(false);
     });
@@ -251,15 +260,15 @@ describe('FABShield - Core Tests', () => {
   describe('registerPlugin', () => {
     it('should register plugin', () => {
       shield = new FABShield();
-      
+
       const plugin: Plugin = {
         name: 'test-plugin',
         version: '1.0.0',
-        middleware: jest.fn()
+        middleware: jest.fn(),
       };
-      
+
       shield.registerPlugin(plugin);
-      
+
       const plugins = (shield as any).plugins.getPlugins();
       expect(plugins).toContain('test-plugin');
     });
@@ -272,16 +281,16 @@ describe('FABShield - Core Tests', () => {
   describe('unregisterPlugin', () => {
     it('should unregister plugin', () => {
       shield = new FABShield();
-      
+
       const plugin: Plugin = {
         name: 'test-plugin',
         version: '1.0.0',
-        middleware: jest.fn()
+        middleware: jest.fn(),
       };
-      
+
       shield.registerPlugin(plugin);
       shield.unregisterPlugin('test-plugin');
-      
+
       const plugins = (shield as any).plugins.getPlugins();
       expect(plugins).not.toContain('test-plugin');
     });
@@ -295,7 +304,7 @@ describe('FABShield - Core Tests', () => {
     it('should export metrics as JSON', () => {
       shield = new FABShield();
       const result = shield.exportMetrics('json');
-      
+
       expect(typeof result).toBe('string');
       expect(() => JSON.parse(result)).not.toThrow();
     });
@@ -303,7 +312,7 @@ describe('FABShield - Core Tests', () => {
     it('should default to JSON', () => {
       shield = new FABShield();
       const result = shield.exportMetrics();
-      
+
       expect(typeof result).toBe('string');
       expect(() => JSON.parse(result)).not.toThrow();
     });
@@ -317,7 +326,7 @@ describe('FABShield - Core Tests', () => {
     it('should generate report', async () => {
       shield = new FABShield();
       const report = await shield.generateReport();
-      
+
       expect(report).toBeDefined();
       expect(report).toHaveProperty('id');
       expect(report).toHaveProperty('generatedAt');
@@ -334,10 +343,10 @@ describe('FABShield - Core Tests', () => {
     it('should return status', () => {
       shield = new FABShield();
       const status = shield.getStatus();
-      
+
       expect(status).toBeDefined();
       expect(status).toHaveProperty('status');
-      expect(status).toHaveProperty('version');
+      expect(status).toHaveProperty('version', pkg.version);
       expect(status).toHaveProperty('uptime');
       expect(status).toHaveProperty('active');
       expect(status).toHaveProperty('modules');
@@ -351,12 +360,12 @@ describe('FABShield - Core Tests', () => {
   describe('reset', () => {
     it('should reset metrics', () => {
       shield = new FABShield();
-      
+
       const before = shield.getMetrics();
       expect(before.totalRequests).toBe(0);
-      
+
       shield.reset();
-      
+
       const reset = shield.getMetrics();
       expect(reset.totalRequests).toBe(0);
     });
@@ -370,31 +379,47 @@ describe('FABShield - Core Tests', () => {
     it('should get context manager', () => {
       shield = new FABShield();
       const manager = shield.getContextManager();
-      
+
       expect(manager).toBeDefined();
     });
 
     it('should get plugin manager', () => {
       shield = new FABShield();
       const manager = shield.getPluginManager();
-      
+
       expect(manager).toBeDefined();
     });
 
     it('should get AI module', () => {
       shield = new FABShield();
       const ai = shield.getAIModule();
-      
+
       expect(ai).toBeDefined();
     });
 
     it('should get rate limiter', () => {
       shield = new FABShield({
-        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } }
+        rateLimit: { enabled: true, default: { max: 100, windowMs: 60000 } },
       });
-      
+
       const rateLimiter = shield.getRateLimiter();
       expect(rateLimiter).toBeDefined();
+    });
+
+    // new in 1.3.8
+    it('should get headers module', () => {
+      shield = new FABShield();
+      const headers = shield.getHeadersModule();
+      expect(headers).toBeDefined();
+      expect(typeof headers.apply).toBe('function');
+    });
+
+    // new in 1.3.8
+    it('should get CSP module', () => {
+      shield = new FABShield();
+      const csp = shield.getCSPModule();
+      expect(csp).toBeDefined();
+      expect(typeof csp.apply).toBe('function');
     });
   });
 
@@ -405,9 +430,9 @@ describe('FABShield - Core Tests', () => {
   describe('destroy', () => {
     it('should destroy instance', () => {
       shield = new FABShield();
-      
+
       shield.destroy();
-      
+
       expect(shield.isActive()).toBe(false);
       expect(FABShield.getInstance()).toBeNull();
     });
@@ -421,7 +446,7 @@ describe('FABShield - Core Tests', () => {
     it('should return context stats', () => {
       shield = new FABShield();
       const stats = shield.getContextStats();
-      
+
       expect(stats).toBeDefined();
       expect(stats).toHaveProperty('total');
       expect(stats).toHaveProperty('active');
