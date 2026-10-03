@@ -82,7 +82,7 @@ describe('Logging Middleware', () => {
     );
   });
 
-  test('should handle response finish', (done) => {
+  test('should handle response finish', () => {
     const middleware = loggingMiddleware();
     middleware(req, res, next);
 
@@ -90,22 +90,19 @@ describe('Logging Middleware', () => {
       res._finishCallback();
     }
 
-    setTimeout(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('✅')
-      );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('200')
-      );
-      done();
-    }, 50);
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('✅')
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('200')
+    );
   });
 
   // ============================================
   // ТЕСТЫ СТАТУСОВ
   // ============================================
 
-  test('should log warnings for 4xx responses', (done) => {
+  test('should log warnings for 4xx responses', () => {
     res.statusCode = 404;
     const middleware = loggingMiddleware();
     middleware(req, res, next);
@@ -114,18 +111,15 @@ describe('Logging Middleware', () => {
       res._finishCallback();
     }
 
-    setTimeout(() => {
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️')
-      );
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('404')
-      );
-      done();
-    }, 50);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('⚠️')
+    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('404')
+    );
   });
 
-  test('should log errors for 5xx responses', (done) => {
+  test('should log errors for 5xx responses', () => {
     res.statusCode = 500;
     const middleware = loggingMiddleware();
     middleware(req, res, next);
@@ -134,15 +128,12 @@ describe('Logging Middleware', () => {
       res._finishCallback();
     }
 
-    setTimeout(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('❌')
-      );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('500')
-      );
-      done();
-    }, 50);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('❌')
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('500')
+    );
   });
 
   test('should log response body for 5xx errors', () => {
@@ -174,19 +165,16 @@ describe('Logging Middleware', () => {
   // ТЕСТЫ С РАЗНЫМИ УРОВНЯМИ
   // ============================================
 
-  test('should log debug level', (done) => {
+  test('should log debug level', () => {
     const middleware = loggingMiddleware({ level: 'debug' });
     middleware(req, res, next);
 
-    setTimeout(() => {
-      expect(consoleDebugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('🔍')
-      );
-      done();
-    }, 50);
+    expect(consoleDebugSpy).toHaveBeenCalledWith(
+      expect.stringContaining('🔍')
+    );
   });
 
-  test('should include duration in log for debug level', (done) => {
+  test('should include duration in log for debug level', () => {
     const middleware = loggingMiddleware({ level: 'debug' });
     middleware(req, res, next);
 
@@ -194,15 +182,12 @@ describe('Logging Middleware', () => {
       res._finishCallback();
     }
 
-    setTimeout(() => {
-      expect(consoleDebugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('📤')
-      );
-      expect(consoleDebugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ms')
-      );
-      done();
-    }, 50);
+    expect(consoleDebugSpy).toHaveBeenCalledWith(
+      expect.stringContaining('📤')
+    );
+    expect(consoleDebugSpy).toHaveBeenCalledWith(
+      expect.stringContaining('ms')
+    );
   });
 
   // ============================================
@@ -297,7 +282,7 @@ describe('Logging Middleware', () => {
     expect(res._body).toBe(testBody);
   });
 
-  test('should handle multiple finish events without duplication', (done) => {
+  test('should handle multiple finish events without duplication', () => {
     const middleware = loggingMiddleware();
     middleware(req, res, next);
 
@@ -307,13 +292,10 @@ describe('Logging Middleware', () => {
       res._finishCallback();
     }
 
-    setTimeout(() => {
-      const logCalls = consoleLogSpy.mock.calls.filter(
-        call => call[0]?.includes('✅')
-      );
-      expect(logCalls.length).toBe(1);
-      done();
-    }, 50);
+    const logCalls = consoleLogSpy.mock.calls.filter(
+      call => call[0]?.includes('✅')
+    );
+    expect(logCalls.length).toBe(1);
   });
 
   // ============================================

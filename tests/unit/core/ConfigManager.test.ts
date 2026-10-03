@@ -11,11 +11,12 @@ import path from 'path';
 describe('ConfigManager', () => {
   let configManager: ConfigManager;
   let mockFs: jest.Mocked<typeof fs>;
+  const prevNodeEnv = process.env.NODE_ENV;
 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    
+    process.env.NODE_ENV = 'test';
     mockFs = fs as jest.Mocked<typeof fs>;
     mockFs.existsSync.mockReturnValue(false);
     mockFs.readFileSync.mockReturnValue(JSON.stringify({}));
@@ -45,6 +46,15 @@ describe('ConfigManager', () => {
       configManager.destroy();
     }
     jest.restoreAllMocks();
+    // env-переменные не должны протекать в соседние тесты
+    process.env.NODE_ENV = prevNodeEnv;
+    for (const key of [
+      'SHIELD_ENABLED', 'SHIELD_NAME', 'SHIELD_HEADERS', 'SHIELD_CSP',
+      'SHIELD_AI', 'SHIELD_MONITORING', 'RATE_LIMIT_MAX',
+      'RATE_LIMIT_WINDOW', 'RATE_LIMIT_ENABLED', 'LOG_LEVEL', 'LOG_FORMAT'
+    ]) {
+      delete process.env[key];
+    }
   });
 
   describe('constructor', () => {

@@ -58,13 +58,15 @@ describe('RateLimiter - Additional Coverage', () => {
       
       const originalNow = Date.now;
       Date.now = jest.fn(() => originalNow() + 70000);
-      
-      const result = await rateLimiter.check(req);
-      expect(result.blocked).toBe(false);
-      expect(result.remaining).toBe(99);
-      expect(store.get(key).resetTime).toBeGreaterThan(originalResetTime);
-      
-      Date.now = originalNow;
+      try {
+        const result = await rateLimiter.check(req);
+        expect(result.blocked).toBe(false);
+        expect(result.remaining).toBe(99);
+        expect(store.get(key).resetTime).toBeGreaterThan(originalResetTime);
+      } finally {
+        // иначе падение ассерта оставит Date.now замоканным для остальных тестов
+        Date.now = originalNow;
+      }
     });
 
     it('should handle concurrent requests correctly', async () => {

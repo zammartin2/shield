@@ -321,19 +321,19 @@ describe('MetricsCollector', () => {
       expect(metrics.byStatus).toEqual({});
     });
 
-    it('should reset startTime', () => {
+    it('should reset startTime', async () => {
       const oldMetrics = collector.getMetrics();
       const oldUptime = oldMetrics.uptime;
-      
-      // Ждем немного чтобы изменилось время
-      setTimeout(() => {
-        collector.reset();
-        
-        const newMetrics = collector.getMetrics();
-        // newMetrics.uptime должно быть меньше чем было, так как reset сбросил startTime
-        // Но uptime считается от startTime, поэтому после reset он будет меньше
-        expect(newMetrics.uptime).toBeLessThanOrEqual(oldUptime + 50);
-      }, 10);
+
+      // Ждем немного чтобы изменилось время (иначе reset() успевает
+      // выполниться в следующем тесте и валит его)
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      collector.reset();
+
+      const newMetrics = collector.getMetrics();
+      // uptime считается от startTime, поэтому после reset он будет меньше
+      expect(newMetrics.uptime).toBeLessThanOrEqual(oldUptime + 50);
     });
   });
 

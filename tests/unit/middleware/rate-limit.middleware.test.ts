@@ -153,26 +153,36 @@ describe('Rate Limit Middleware', () => {
     expect(next).toHaveBeenCalled()
   })
 
-  test('should reset rate limit after window expires', async () => {
+  test('should reset rate limit after window expires', () => {
     const middleware = rateLimitMiddleware({ max: 1, windowMs: 100 })
-    
+
     // ✅ Первый запрос
     middleware(req, res, next)
     expect(next).toHaveBeenCalledTimes(1)
-    
-    // ✅ Ждем истечения окна
-    await new Promise(resolve => setTimeout(resolve, 150))
-    
-    // ✅ Второй запрос с новым IP - должен пройти
-    const next2 = jest.fn()
-    const res2 = {
+
+    // ✅ Второй запрос в том же окне - блокируется (лимит 1)
+    const resBlocked = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
       setHeader: jest.fn().mockReturnThis()
     }
-    
-    const reqNew = { ...req, ip: '127.0.0.3' }
-    middleware(reqNew, res2, next2)
-    expect(next2).toHaveBeenCalled()
-  }, 10000)
+    const nextBlocked = jest.fn()
+    middleware(req, resBlocked, nextBlocked)
+    expect(nextBlocked).not.toHaveBeenCalled()
+    expect(resBlocked.status).toHaveBeenCalledWith(429)
+
+    // ✅ «Истекаем» окно детерминированно: middleware сверяется только с Date.now()
+    const base = Date.now()
+    jest.spyOn(Date, 'now').mockReturnValue(base + 150)
+
+    // ✅ Третий запрос - окно истекло, счетчик сброшен, запрос проходит
+    const nextAfter = jest.fn()
+    const resAfter = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      setHeader: jest.fn().mockReturnThis()
+    }
+    middleware(req, resAfter, nextAfter)
+    expect(nextAfter).toHaveBeenCalled()
+  })
 })

@@ -597,6 +597,12 @@ describe('Headers Middleware (errorMiddleware)', () => {
   // ============================================
 
   describe('integration', () => {
+    const originalEnv = process.env.NODE_ENV;
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
     it('should handle full error flow with shield', () => {
       const error = new Error('Integration test');
       (error as any).status = 403;
