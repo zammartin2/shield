@@ -42,6 +42,7 @@ temp/
 
 # Package manager lock files
 package-lock.json
+!package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
@@ -62,7 +63,7 @@ dist/
 lib/
 esm/
 cjs/
-types/
+/types/
 
 # Jest
 **/__tests__/
