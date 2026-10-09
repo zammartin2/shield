@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -23,28 +22,35 @@ FAB Shield полностью написан на TypeScript и предоста
 // Основной класс
 class FABShield {
     constructor(config?: ShieldConfig)
-    
+
     middleware(): MiddlewareFunction
+    protect(req: any, res: any): Promise<void>
+    koa(ctx: any, next: any): Promise<void>
+
     getMetrics(): Metrics
-    getSecurityMetrics(): SecurityMetrics
-    getPerformanceMetrics(): PerformanceMetrics
-    getAIMetrics(): AIMetrics
-    getBusinessMetrics(): BusinessMetrics
-    
-    generateReport(options?: ReportOptions): Promise<Report>
-    generateMetricsReport(options?: ReportOptions): Promise<MetricsReport>
-    
+    exportMetrics(format: 'json' | 'prometheus' | 'csv'): string
+    generateReport(options?: { period?: { from: string; to: string } }): Promise<Report>
+    getStatus(): SystemStatus
+
     registerPlugin(plugin: Plugin): void
-    
+    unregisterPlugin(name: string): void
+
     getConfig(): ShieldConfig
     updateConfig(config: Partial<ShieldConfig>): void
-    
+
+    start(): void
+    stop(): void
+    reset(): void
+    destroy(): void
+
     getVersion(): string
     isActive(): boolean
-    getStatus(): SystemStatus
 }
-ShieldConfig
-typescript
+```
+
+### ShieldConfig
+
+```typescript
 interface ShieldConfig {
     // Основные настройки
     enabled?: boolean
@@ -63,7 +69,7 @@ interface ShieldConfig {
     
     // Система
     plugins?: Plugin[]
-    rules?: Rule[]
+    rules?: any[] // принимается, но в текущей версии не обрабатывается
     logging?: LoggingConfig
     cache?: CacheConfig
     performance?: PerformanceConfig
@@ -72,9 +78,13 @@ interface ShieldConfig {
     integrations?: IntegrationConfig
     webhooks?: WebhookConfig[]
 }
-🔒 Security Types
-HeaderConfig
-typescript
+```
+
+## 🔒 Security Types
+
+### HeaderConfig
+
+```typescript
 interface HeaderConfig {
     enabled?: boolean
     disabled?: string[]
@@ -108,8 +118,11 @@ interface XFrameConfig {
     action?: 'DENY' | 'SAMEORIGIN' | 'ALLOW-FROM'
     allowedOrigins?: string[]
 }
-CSPConfig
-typescript
+```
+
+### CSPConfig
+
+```typescript
 interface CSPConfig {
     enabled?: boolean
     dynamic?: boolean
@@ -156,9 +169,13 @@ interface CSPDirectives {
     'trusted-types'?: string[]
     [key: string]: string[] | undefined
 }
-🤖 AI Types
-AIConfig
-typescript
+```
+
+## 🤖 AI Types
+
+### AIConfig
+
+```typescript
 interface AIConfig {
     enabled?: boolean
     
@@ -206,78 +223,65 @@ interface AIModulesConfig {
 }
 
 interface AnalysisResult {
+    // результат AIModule.analyze()
+    threats: Array<{
+        type: string
+        severity: string
+        confidence: number
+        details: { pattern: string; location: string }
+    }>
     isThreat: boolean
     threatScore: number
     confidence: number
-    anomalies: Anomaly[]
-    predictions: ThreatPrediction[]
     analysis: {
-        userBehavior: UserBehaviorAnalysis
-        contentAnalysis: ContentAnalysis
-        patternAnalysis: PatternAnalysis
+        userBehavior: { riskScore: number }
+        contentAnalysis: {
+            hasSQL: boolean
+            hasXSS: boolean
+            hasPathTraversal: boolean
+            hasCommandInjection: boolean
+            hasNoSQL: boolean
+            hasLDAP: boolean
+        }
+        patternAnalysis: { score: number; matchedPatterns: string[] }
     }
-    recommendations: Recommendation[]
-    suggestedAction: 'block' | 'warn' | 'log' | 'allow'
-    analysisTime: number
-    modelUsed: string[]
-    timestamp: Date
+    recommendations: string[]
 }
-📊 Metrics Types
-Metrics
-typescript
+```
+
+## 📊 Metrics Types
+
+### Metrics
+
+```typescript
 interface Metrics {
     // Запросы
     totalRequests: number
-    requestsPerSecond: number
-    byMethod: Record<string, number>
-    byStatus: Record<string, number>
-    byPath: Record<string, number>
-    byIP: Record<string, number>
-    
-    // Безопасность
-    threatsDetected: number
-    threatsBlocked: number
-    byType: Record<string, number>
-    bySeverity: Record<string, number>
-    bySource: Record<string, number>
-    
-    // Производительность
     avgResponseTime: number
     p95ResponseTime: number
     p99ResponseTime: number
-    maxResponseTime: number
-    minResponseTime: number
-    memoryUsage: MemoryUsage
-    cpuUsage: number
-    
-    // AI
-    aiAnalyses: number
-    aiAccuracy: number
-    aiFalsePositives: number
-    aiFalseNegatives: number
-    
-    // Rate Limiting
-    blockedByRateLimit: number
-    activeRateLimits: number
-    
+    errors: number
+
+    // Безопасность
+    threatsBlocked: number
+    threats: Array<Record<string, any>>
+    threatTypes: string[]
+    threatStats: Record<string, number>
+    byPath: Record<string, number>
+    byMethod: Record<string, number>
+    byStatus: Record<string, number>
+
     // Система
     uptime: number
-    activeConnections: number
-    version: string
-    environment: string
     timestamp: Date
 }
+```
 
-interface MemoryUsage {
-    heapUsed: number
-    heapTotal: number
-    external: number
-    rss: number
-    arrayBuffers: number
-}
-🔌 Plugin Types
-Plugin
-typescript
+## 🔌 Plugin Types
+
+### Plugin
+
+```typescript
 interface Plugin {
     // Метаданные
     name: string
@@ -340,9 +344,13 @@ interface PluginResult {
     headers?: Record<string, string>
     data?: any
 }
-🚨 Threat Types
-Threat
-typescript
+```
+
+## 🚨 Threat Types
+
+### Threat
+
+```typescript
 type ThreatType = 
     | 'xss'
     | 'sql_injection'
@@ -396,9 +404,13 @@ interface DetectionResult {
     score: number
     details: Record<string, any>
 }
-📈 Report Types
-Report
-typescript
+```
+
+## 📈 Report Types
+
+### Report
+
+```typescript
 type ReportType = 'executive' | 'security' | 'technical' | 'compliance'
 type ReportFormat = 'json' | 'pdf' | 'html' | 'csv'
 
@@ -451,9 +463,13 @@ interface Trend {
     description: string
     data: Array<{ timestamp: Date; value: number }>
 }
-⚙️ Utility Types
-Common Types
-typescript
+```
+
+## ⚙️ Utility Types
+
+### Common Types
+
+```typescript
 // Middleware
 type MiddlewareFunction = (
     req: Request, 
@@ -500,9 +516,13 @@ interface Logger {
     fatal(message: string, data?: any): void
     child(metadata: Record<string, any>): Logger
 }
-🔧 Integration Types
-Integration
-typescript
+```
+
+## 🔧 Integration Types
+
+### Integration
+
+```typescript
 interface IntegrationConfig {
     prometheus?: PrometheusConfig
     grafana?: GrafanaConfig
@@ -535,12 +555,17 @@ interface WebhookConfig {
     retryCount?: number
     retryDelay?: number
 }
-📞 Контакты
+```
+
+## 📞 Контакты
+
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
-🏆 Итог
+
+## 🏆 Итог
+
 TypeScript Types — это:
 
 📘 Полная типизация — безопасность типов

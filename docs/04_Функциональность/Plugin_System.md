@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -120,7 +119,6 @@ const customSecurityPlugin = {
 ### Расширенный плагин с API
 
 ```typescript
-typescript
 import express from 'express'
 
 const advancedPlugin = {
@@ -164,7 +162,6 @@ const advancedPlugin = {
 ### 1. WAF Integration
 
 ```typescript
-typescript
 // Плагин для интеграции с WAF
 const wafPlugin = {
     name: 'waf-integration',
@@ -193,7 +190,6 @@ const wafPlugin = {
 ### 2. Geo Blocking
 
 ```typescript
-typescript
 // Плагин для гео-блокировки
 const geoPlugin = {
     name: 'geo-blocking',
@@ -225,7 +221,6 @@ const geoPlugin = {
 ### 3. Rate Limiting
 
 ```typescript
-typescript
 // Плагин для умного rate limiting
 const rateLimitPlugin = {
     name: 'smart-rate-limit',
@@ -264,7 +259,6 @@ const rateLimitPlugin = {
 ### 4. Audit Logger
 
 ```typescript
-typescript
 // Плагин для аудит-логирования
 const auditPlugin = {
     name: 'audit-logger',
@@ -303,7 +297,6 @@ const auditPlugin = {
 ### Подключение плагинов
 
 ```typescript
-typescript
 const shield = new FABShield({
     plugins: [
         // Официальные плагины
@@ -322,24 +315,22 @@ const shield = new FABShield({
 ### Управление плагинами
 
 ```typescript
-typescript
+const manager = shield.getPluginManager()
+
 // Получить список плагинов
-const plugins = shield.plugins.getList()
+const plugins = manager.getPlugins()
 console.log(`✅ Загружено плагинов: ${plugins.length}`)
 
-// Включить/выключить плагин
-await shield.plugins.enable('waf-integration')
-await shield.plugins.disable('geo-blocking')
+// Включить/выключить плагин (методы синхронные)
+manager.enable('waf-integration')
+manager.disable('geo-blocking')
 
-// Обновить плагин
-await shield.plugins.update('rate-limit', {
-    config: {
-        defaultLimit: 200
-    }
-})
+// «Горячего» update конфигурации нет — перерегистрация:
+manager.unregister('rate-limit')
+manager.register(rateLimitPlugin)
 
 // Удалить плагин
-await shield.plugins.remove('audit-logger')
+manager.unregister('audit-logger')
 ```
 
 ## 📦 Создание плагинов
@@ -371,7 +362,7 @@ json
     "author": "DEVORBIT LLC",
     "license": "MIT",
     "peerDependencies": {
-        "@fab-registry/shield": "^1.0.0"
+        "@fab-orbita/shield": "^1.0.0"
     }
 }
 ```
@@ -380,34 +371,27 @@ json
 ### Метрики плагинов
 
 ```typescript
-typescript
-const metrics = shield.plugins.getMetrics()
+const metrics = shield.getPluginManager().getMetrics()
 console.log({
-    totalPlugins: metrics.total,
-    activePlugins: metrics.active,
-    performance: {
-        totalExecutionTime: metrics.totalExecutionTime,
-        averageTime: metrics.averageTime,
-        slowest: metrics.slowestPlugin
-    },
-    errors: {
-        total: metrics.errors.total,
-        byPlugin: metrics.errors.byPlugin
-    }
+    total: metrics.total,
+    active: metrics.active,
+    disabled: metrics.disabled,
+    errors: metrics.errors,
+    plugins: metrics.plugins // { [name]: { enabled, errors, lastRun } }
 })
 ```
 
 ### Логирование плагинов
 
 ```typescript
-typescript
-// Логирование работы плагинов
-shield.plugins.on('plugin:error', (plugin, error) => {
-    console.error(`❌ Ошибка в плагине ${plugin.name}:`, error)
+// Ошибки плагинов — на менеджере плагинов (payload: { plugin, error })
+shield.getPluginManager().on('plugin:error', ({ plugin, error }) => {
+    console.error(`❌ Ошибка в плагине ${plugin}:`, error)
 })
 
-shield.plugins.on('plugin:success', (plugin, result) => {
-    console.log(`✅ Плагин ${plugin.name} выполнен`)
+// События самого Shield — подписка через shield.on()
+shield.on('plugin:registered', ({ name, version }) => {
+    console.log(`✅ Плагин ${name} зарегистрирован (v${version})`)
 })
 ```
 
@@ -415,7 +399,6 @@ shield.plugins.on('plugin:success', (plugin, result) => {
 ### Ограничения
 
 ```typescript
-typescript
 // Настройка ограничений для плагинов
 const shield = new FABShield({
     plugins: {
@@ -443,7 +426,6 @@ const shield = new FABShield({
 ### Валидация плагинов
 
 ```typescript
-typescript
 // Валидация плагина перед загрузкой
 function validatePlugin(plugin) {
     const required = ['name', 'version', 'middleware']
@@ -465,7 +447,6 @@ function validatePlugin(plugin) {
 ### 1. Telegram Bot
 
 ```typescript
-typescript
 const telegramPlugin = {
     name: 'telegram-notifier',
     version: '1.0.0',
@@ -492,7 +473,6 @@ const telegramPlugin = {
 ### 2. IP Whitelist
 
 ```typescript
-typescript
 const whitelistPlugin = {
     name: 'ip-whitelist',
     version: '1.0.0',
@@ -528,7 +508,7 @@ const whitelistPlugin = {
 ## 📞 Контакты
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
 🏆 Итог
 Plugin System — это:

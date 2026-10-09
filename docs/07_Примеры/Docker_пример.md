@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -52,7 +51,7 @@ docker-example/
 ```typescript
 import express from 'express'
 import dotenv from 'dotenv'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 dotenv.config()
 
@@ -168,7 +167,7 @@ app.listen(port, () => {
         "docker:run": "docker run -p 3000:3000 fab-shield-example"
     },
     "dependencies": {
-        "@fab-registry/shield": "^1.0.0",
+        "@fab-orbita/shield": "^1.0.0",
         "express": "^4.18.2",
         "dotenv": "^16.3.1"
     },
@@ -406,8 +405,8 @@ LOG_FORMAT=json
 
 ```bash
 # Клонируем
-git clone https://github.com/fab-registry/shield-docker-example
-cd shield-docker-example
+git clone https://github.com/zammartin2/shield
+cd shield
 
 # Копируем .env
 cp .env.example .env
@@ -550,7 +549,7 @@ docker-compose logs -f app
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---

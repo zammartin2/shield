@@ -5,7 +5,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -253,6 +252,8 @@ const shield = new FABShield({
 
 ## Расширенная конфигурация
 
+## Расширенная конфигурация
+
 ```typescript
 import { FABShield } from '@fab-orbita/shield'
 
@@ -261,33 +262,26 @@ const shield = new FABShield({
     enabled: true,
 
     modules: {
-      anomaly: {
-        enabled: true,
-        sensitivity: 0.7,
-        learningRate: 0.1,
-        historySize: 1000
-      },
+      xssProtection: true,
+      sqlInjectionProtection: true,
+      userAgentAnalysis: true,
+      ipReputation: true,
+      behavioralAnalysis: true,
+      contentAnalysis: true
+    },
 
-      threat: {
-        enabled: true,
-        predictionWindow: 3600,
-        confidenceThreshold: 0.8
-      },
+    thresholds: {
+      anomalyThreshold: 0.7,
+      threatThreshold: 0.8,
+      trustThreshold: 0.3
+    },
 
-      behavior: {
-        enabled: true,
-        maxHistory: 100,
-        decayTime: 86400,
-        baselinePeriod: 7
-      },
-
-      content: {
-        enabled: true,
-        checkSQL: true,
-        checkXSS: true,
-        checkMalware: true,
-        maxSize: 100000
-      }
+    learning: {
+      enabled: true,
+      mode: 'continuous',
+      interval: 3600,
+      sampleSize: 1000,
+      feedbackEnabled: true
     }
   }
 })
@@ -310,9 +304,6 @@ const shield = new FABShield({
       enabled: false
     },
 
-    actions: {
-      defaultAction: 'log'
-    }
   },
 
   logging: {
@@ -333,29 +324,35 @@ const shield = new FABShield({
 
 ```typescript
 interface AIAnalysisResult {
+  // Найденные угрозы
+  threats: Array<{
+    type: string            // 'XSS' | 'SQL Injection' | 'Path Traversal' | ...
+    severity: string        // 'low' | 'medium' | 'high' | 'critical'
+    confidence: number
+    details: { pattern: string; location: string }
+  }>
+
   // Основные оценки
   isThreat: boolean
   threatScore: number
   confidence: number
 
-  // Детали
-  anomalies: Anomaly[]
-  predictions: ThreatPrediction[]
-
+  // Детали анализа
   analysis: {
-    userBehavior: UserBehaviorAnalysis
-    contentAnalysis: ContentAnalysis
-    patternAnalysis: PatternAnalysis
+    userBehavior: { riskScore: number }
+    contentAnalysis: {
+      hasSQL: boolean
+      hasXSS: boolean
+      hasPathTraversal: boolean
+      hasCommandInjection: boolean
+      hasNoSQL: boolean
+      hasLDAP: boolean
+    }
+    patternAnalysis: { score: number; matchedPatterns: string[] }
   }
 
   // Рекомендации
-  recommendations: Recommendation[]
-  suggestedAction: 'block' | 'challenge' | 'warn' | 'log' | 'allow'
-
-  // Метаданные
-  analysisTime: number
-  modelUsed: string[]
-  timestamp: Date
+  recommendations: string[]
 }
 ```
 
@@ -365,29 +362,39 @@ interface AIAnalysisResult {
 
 ```json
 {
+  "threats": [
+    {
+      "type": "SQL Injection",
+      "severity": "critical",
+      "confidence": 0.9,
+      "details": {
+        "pattern": "/union.+select/i",
+        "location": "query"
+      }
+    }
+  ],
   "isThreat": true,
-  "threatScore": 0.92,
-  "confidence": 0.95,
-  "anomalies": [
-    {
-      "type": "UNUSUAL_PATTERN",
-      "description": "Необычная последовательность запросов",
-      "severity": "high"
+  "threatScore": 0.9,
+  "confidence": 0.9,
+  "analysis": {
+    "userBehavior": { "riskScore": 0.2 },
+    "contentAnalysis": {
+      "hasSQL": true,
+      "hasXSS": false,
+      "hasPathTraversal": false,
+      "hasCommandInjection": false,
+      "hasNoSQL": false,
+      "hasLDAP": false
+    },
+    "patternAnalysis": {
+      "score": 0.9,
+      "matchedPatterns": ["SQL Injection"]
     }
-  ],
-  "predictions": [
-    {
-      "type": "SQL_INJECTION",
-      "probability": 0.85,
-      "timeline": "immediate"
-    }
-  ],
+  },
   "recommendations": [
-    "Заблокировать IP на 24 часа",
-    "Усилить валидацию параметров",
-    "Отправить уведомление администратору"
-  ],
-  "suggestedAction": "block"
+    "Проверить параметры запроса",
+    "Усилить валидацию на стороне приложения"
+  ]
 }
 ```
 
@@ -452,85 +459,64 @@ const shield = new FABShield({
 
 ## Ручное обучение
 
+При `ai.learning.enabled` обучение идёт автоматически (`mode: 'continuous'`);
+ручной запуск — `train()` из `getAIModule()`:
+
 ```typescript
-// Добавление примера в обучающую выборку
-shield.ai.addTrainingExample({
-  data: requestData,
-  label: 'normal',
-  metadata: {
-    source: 'manual',
-    confidence: 1.0
-  }
-})
+const ai = shield.getAIModule()
 
-// Запуск обучения
-await shield.ai.train()
+// Обучение на накопленных данных (опционально — своя выборка: ai.train(data))
+await ai.train()
 
-// Сохранение модели
-await shield.ai.saveModel('production')
+// Состояние моделей после обучения
+console.log(ai.getMetrics())
+// { status: 'active', models: ['xss', 'sql_injection', 'anomaly'], accuracy: 0.95, analyses: 0 }
 ```
 
 ---
 
 ## 🧪 Валидация модели
 
-Перед включением блокировки модель нужно проверять на тестовых данных.
+Перед включением блокировки модель нужно проверять на тестовых данных —
+для этого есть тот же `analyze()`: он доступен напрямую, минуя middleware.
 
 ```typescript
-const validation = await shield.ai.validate({
-  dataset: './security-dataset.json',
-  metrics: ['precision', 'recall', 'f1']
-})
+const ai = shield.getAIModule()
 
-console.log(validation)
+// Прогон тестового запроса (middleware не участвует)
+const result = await ai.analyze(testRequest)
+
+console.log(result.isThreat, result.threatScore, result.confidence)
+console.log(ai.getMetrics())
 ```
 
 ---
 
 ## 📊 Мониторинг AI
 
-## Метрики AI
+### Основные метрики
 
 ```typescript
-const metrics = shield.ai.getMetrics()
+const aiMetrics = shield.getAIModule().getMetrics()
 
-console.log({
-  // Производительность
-  avgAnalysisTime: metrics.avgAnalysisTime,
-  requestsAnalyzed: metrics.requestsAnalyzed,
-  peakLoad: metrics.peakLoad,
-
-  // Качество анализа
-  accuracy: metrics.accuracy,
-  falsePositives: metrics.falsePositives,
-  falseNegatives: metrics.falseNegatives,
-
-  // Обнаружения
-  threatsFound: metrics.threatsFound,
-  anomaliesDetected: metrics.anomaliesDetected,
-
-  // Модели
-  modelsLoaded: metrics.modelsLoaded,
-  lastTraining: metrics.lastTraining
-})
+console.log(aiMetrics)
+// {
+//   status: 'active',
+//   models: ['xss', 'sql_injection', 'anomaly'],
+//   accuracy: 0.95,
+//   analyses: 0
+// }
 ```
-
----
-
-## Основные метрики
 
 | Метрика | Назначение |
 |:---|:---|
-| `avgAnalysisTime` | Среднее время анализа |
-| `requestsAnalyzed` | Количество проанализированных запросов |
-| `peakLoad` | Пиковая нагрузка |
-| `accuracy` | Оценка качества на размеченных данных |
-| `falsePositives` | Ложные срабатывания |
-| `falseNegatives` | Пропущенные угрозы |
-| `threatsFound` | Найденные угрозы |
-| `anomaliesDetected` | Найденные аномалии |
-| `modelsLoaded` | Загруженные модели |
-| `lastTraining` | Время последнего обучения |
+| `status` | Статус AI-модуля |
+| `models` | Подключённые модели |
+| `accuracy` | Заявленная точность моделей |
+| `analyses` | Количество выполненных анализов |
+
+**Примечание:** общие метрики запросов и угроз — `shield.getMetrics()`
+(14 полей, без секции AI); AI-специфичные — только `getAIModule().getMetrics()`.
 
 ---
 
@@ -545,10 +531,11 @@ import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
   ai: {
-    modules: {
-      anomaly: {
-        sensitivity: 0.5
-      }
+    thresholds: {
+      // выше порог → реже срабатывает (пример значений)
+      anomalyThreshold: 0.9,
+      threatThreshold: 0.85,
+      trustThreshold: 0.3
     }
   }
 })
@@ -556,13 +543,18 @@ const shield = new FABShield({
 
 ---
 
-### Добавить исключение для конкретного пути
+### Отключить лишний AI-модуль
+
+Per-path исключений для AI в текущей версии нет — если ложные срабатывания
+идут с одного анализатора, выключите его:
 
 ```typescript
-shield.ai.addException({
-  path: '/api/health',
-  reason: 'Health check endpoint',
-  type: 'allow'
+const shield = new FABShield({
+  ai: {
+    modules: {
+      userAgentAnalysis: false
+    }
+  }
 })
 ```
 
@@ -577,10 +569,11 @@ import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
   ai: {
-    modules: {
-      anomaly: {
-        sensitivity: 0.9
-      }
+    thresholds: {
+      // ниже порог → ловим больше (пример значений)
+      anomalyThreshold: 0.5,
+      threatThreshold: 0.7,
+      trustThreshold: 0.4
     }
   }
 })
@@ -590,12 +583,20 @@ const shield = new FABShield({
 
 ### Добавить кастомное правило
 
+AI не принимает внешних правил — расширение детекта делается плагином:
+
 ```typescript
-shield.ai.addRule({
-  pattern: 'SELECT.*FROM',
-  action: 'block',
-  severity: 'high'
-})
+const sqlGuard = {
+  name: 'strict-sql',
+  version: '1.0.0',
+  onRequest: async (req) => {
+    if (/SELECT.+FROM/i.test(req.path)) {
+      return { block: true, status: 403, reason: 'Strict SQL pattern' }
+    }
+  }
+}
+
+const shield = new FABShield({ plugins: [sqlGuard] })
 ```
 
 ---
@@ -607,32 +608,21 @@ shield.ai.addRule({
 - включены ли все AI-модули сразу;
 - анализируется ли слишком большой body;
 - используются ли тяжелые плагины;
-- включено ли кэширование;
-- настроен ли `maxSize` для content analysis.
 
 ### Пример оптимизации
 
 ```typescript
 const shield = new FABShield({
   ai: {
+    // каждый модуль добавляет работу на запрос — оставить нужные
     modules: {
-      content: {
-        enabled: true,
-        maxSize: 50000
-      },
-
-      behavior: {
-        enabled: true,
-        maxHistory: 50
-      }
+      behavioralAnalysis: false,
+      userAgentAnalysis: false
     }
   },
 
   performance: {
-    cache: {
-      enabled: true,
-      ttl: 300
-    }
+    lazyLoading: true
   }
 })
 ```
@@ -682,7 +672,7 @@ AI Detection должен использоваться как дополните
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | **Сайт** | [devorbit.ru](https://devorbit.ru) |
 | **GitHub** | [zammartin2/shield](https://github.com/zammartin2/shield) |

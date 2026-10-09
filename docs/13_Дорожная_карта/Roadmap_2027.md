@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 2.0.0
 **Дата:** 2026-07-04
 **Автор:** Фабрициус Владимир Николаевич
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -219,7 +218,7 @@
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---

@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -54,7 +53,7 @@ express-example/
 
 ```typescript
 import express from 'express'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 import apiRoutes from './routes/api'
 import publicRoutes from './routes/public'
 import { customMiddleware } from './middleware/custom'
@@ -379,7 +378,7 @@ function generateRequestId(): string {
         "watch": "tsc --watch"
     },
     "dependencies": {
-        "@fab-registry/shield": "^1.0.0",
+        "@fab-orbita/shield": "^1.0.0",
         "express": "^4.18.2",
         "dotenv": "^16.3.1"
     },
@@ -455,7 +454,7 @@ cd express-example
 npm init -y
 
 # Установка зависимостей
-npm install @fab-registry/shield express dotenv
+npm install @fab-orbita/shield express dotenv
 npm install -D @types/express @types/node typescript ts-node nodemon
 
 # Создаем файлы
@@ -533,7 +532,7 @@ X-Security-Level: high
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---

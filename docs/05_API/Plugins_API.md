@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -54,9 +53,13 @@ interface Plugin {
         [key: string]: (context: PluginContext, ...args: any[]) => any
     }
 }
-📝 Создание плагина
-Шаг 1: Определение плагина
-typescript
+```
+
+## 📝 Создание плагина
+
+### Шаг 1: Определение плагина
+
+```typescript
 // plugins/my-plugin.ts
 
 const myPlugin: Plugin = {
@@ -89,10 +92,13 @@ const myPlugin: Plugin = {
         console.log('🛑 Плагин остановлен')
     }
 }
-Шаг 2: Регистрация плагина
-typescript
+```
+
+### Шаг 2: Регистрация плагина
+
+```typescript
 // app.ts
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 import myPlugin from './plugins/my-plugin'
 
 const shield = new FABShield({
@@ -100,9 +106,13 @@ const shield = new FABShield({
 })
 
 app.use(shield.middleware())
-🧩 Plugin Context
-Доступ к контексту
-typescript
+```
+
+## 🧩 Plugin Context
+
+### Доступ к контексту
+
+```typescript
 onInit: async (context: PluginContext) => {
     // Доступ к конфигурации
     const config = context.getConfig('my-plugin')
@@ -124,8 +134,11 @@ onInit: async (context: PluginContext) => {
         console.log('🚨 Обнаружена угроза!', threat)
     })
 }
-PluginContext API
-typescript
+```
+
+### PluginContext API
+
+```typescript
 interface PluginContext {
     // Конфигурация
     getConfig(name?: string): any
@@ -158,9 +171,13 @@ interface PluginContext {
     getTimestamp(): Date
     generateId(): string
 }
-🎯 Продвинутый плагин
-Плагин с API
-typescript
+```
+
+## 🎯 Продвинутый плагин
+
+### Плагин с API
+
+```typescript
 const advancedPlugin: Plugin = {
     name: 'advanced-plugin',
     version: '1.0.0',
@@ -173,11 +190,14 @@ const advancedPlugin: Plugin = {
         })
         context.registerRoutes('/advanced', router)
         
-        // Регистрируем API методы
-        context.registerAPI('getStats', async () => {
+    },
+
+    // API-методы плагина (поле api в типе Plugin)
+    api: {
+        getStats: async (context) => {
             const shield = context.getShield()
             return shield.getMetrics()
-        })
+        }
     },
     
     middleware: (req, res, next) => {
@@ -189,7 +209,7 @@ const advancedPlugin: Plugin = {
     onRequest: async (req, context) => {
         // Анализируем запрос
         const shield = context.getShield()
-        const analysis = await shield.ai.analyze(req)
+        const analysis = await shield.getAIModule().analyze(req)
         
         return {
             block: analysis.isThreat,
@@ -203,71 +223,101 @@ const advancedPlugin: Plugin = {
         await context.emit('plugin:error', { error, plugin: 'advanced-plugin' })
     }
 }
-🔌 Управление плагинами
-Включение/выключение
-typescript
-// Включить плагин
-await shield.plugins.enable('my-plugin')
+```
 
-// Выключить плагин
-await shield.plugins.disable('my-plugin')
+## 🔌 Управление плагинами
 
-// Проверить статус
-const status = shield.plugins.getStatus('my-plugin')
-console.log(`Плагин ${status.enabled ? 'активен' : 'отключен'}`)
-Обновление плагина
-typescript
-// Обновить конфигурацию плагина
-await shield.plugins.updateConfig('my-plugin', {
-    logLevel: 'debug',
-    customOption: 'new-value'
-})
+### Включение/выключение
 
-// Перезагрузить плагин
-await shield.plugins.reload('my-plugin')
+Поле `shield.plugins` приватное — работайте через публичный аксессор
+`shield.getPluginManager()`:
 
-// Обновить плагин (новая версия)
-await shield.plugins.update('my-plugin', newVersion)
-Удаление плагина
-typescript
-// Удалить плагин
-await shield.plugins.remove('my-plugin')
+```typescript
+const manager = shield.getPluginManager()
+
+// Включить плагин (синхронно)
+manager.enable('my-plugin')
+
+// Выключить плагин (синхронно)
+manager.disable('my-plugin')
+
+// Статус: { enabled, lastRun, errors } | undefined
+const status = manager.getStatus('my-plugin')
+console.log(`Плагин ${status?.enabled ? 'активен' : 'отключен'}`)
+```
+
+### Обновление конфигурации
+
+Конфигурация плагина — это поле `config` объекта плагина; отдельного
+`updateConfig`/`reload` API нет. Изменить конфигурацию можно через
+перерегистрацию:
+
+```typescript
+const manager = shield.getPluginManager()
+
+manager.unregister('my-plugin')
+manager.register(myPlugin({
+    config: {
+        logLevel: 'debug',
+        customOption: 'new-value'
+    }
+}))
+```
+
+### Удаление плагина
+
+```typescript
+// Удалить плагин (или shield.unregisterPlugin('my-plugin'))
+shield.getPluginManager().unregister('my-plugin')
 
 // Удалить все плагины
-await shield.plugins.removeAll()
-📦 Система плагинов
-Получение информации
-typescript
+const manager = shield.getPluginManager()
+for (const name of manager.getPlugins()) {
+    manager.unregister(name)
+}
+```
+
+## 📦 Система плагинов
+
+### Получение информации
+
+```typescript
+const manager = shield.getPluginManager()
+
 // Список всех плагинов
-const plugins = shield.plugins.getList()
+const plugins = manager.getPlugins()
 console.log(`Загружено плагинов: ${plugins.length}`)
 
 // Получить плагин по имени
-const plugin = shield.plugins.get('my-plugin')
+const plugin = manager.getPlugin('my-plugin')
 
 // Получить все активные плагины
-const activePlugins = shield.plugins.getActive()
+const activePlugins = manager.getActivePlugins()
 
-// Получить все отключенные плагины
-const disabledPlugins = shield.plugins.getDisabled()
-Метрики плагинов
-typescript
+// Отключённые плагины = все минус активные
+const disabledPlugins = plugins.filter((name) => manager.getStatus(name)?.enabled === false)
+```
+
+### Метрики плагинов
+
+```typescript
 // Метрики работы плагинов
-const metrics = shield.plugins.getMetrics()
+const metrics = shield.getPluginManager().getMetrics()
 console.log({
     total: metrics.total,
     active: metrics.active,
     disabled: metrics.disabled,
-    performance: {
-        avgExecutionTime: metrics.avgExecutionTime,
-        totalExecutionTime: metrics.totalExecutionTime,
-        slowest: metrics.slowest
-    },
-    errors: metrics.errors
+    errors: metrics.errors,
+    // Статус каждого плагина: { enabled, errors, lastRun }
+    plugins: metrics.plugins
 })
-🛡️ Безопасность плагинов
-Ограничения
-typescript
+```
+
+## 🛡️ Безопасность плагинов
+
+### Ограничения
+
+```typescript
 const shield = new FABShield({
     plugins: {
         security: {
@@ -290,8 +340,11 @@ const shield = new FABShield({
         }
     }
 })
-Валидация
-typescript
+```
+
+### Валидация
+
+```typescript
 // Валидация плагина перед загрузкой
 function validatePlugin(plugin: Plugin): boolean {
     // Проверяем обязательные поля
@@ -311,9 +364,13 @@ function validatePlugin(plugin: Plugin): boolean {
     
     return true
 }
-📝 Примеры плагинов
-1. Telegram Notifier
-typescript
+```
+
+## 📝 Примеры плагинов
+
+### 1. Telegram Notifier
+
+```typescript
 const telegramPlugin: Plugin = {
     name: 'telegram-notifier',
     version: '1.0.0',
@@ -352,8 +409,11 @@ const telegramPlugin: Plugin = {
         }
     }
 }
-2. WAF Integration
-typescript
+```
+
+### 2. WAF Integration
+
+```typescript
 const wafPlugin: Plugin = {
     name: 'waf-integration',
     version: '1.0.0',
@@ -393,8 +453,11 @@ const wafPlugin: Plugin = {
         }
     }
 }
-3. Audit Logger
-typescript
+```
+
+### 3. Audit Logger
+
+```typescript
 const auditPlugin: Plugin = {
     name: 'audit-logger',
     version: '1.0.0',
@@ -433,28 +496,32 @@ const auditPlugin: Plugin = {
         context.logStream.write(JSON.stringify(log) + '\n')
     }
 }
-📊 Метрики плагинов
-typescript
+```
+
+## 📊 Метрики плагинов
+
+```typescript
 // Получение метрик
-const pluginMetrics = shield.plugins.getMetrics()
+const pluginMetrics = shield.getPluginManager().getMetrics()
 
 console.log({
     totalPlugins: pluginMetrics.total,
     activePlugins: pluginMetrics.active,
     disabledPlugins: pluginMetrics.disabled,
-    executionTime: {
-        avg: pluginMetrics.avgExecutionTime,
-        total: pluginMetrics.totalExecutionTime,
-        slowest: pluginMetrics.slowestPlugin
-    },
-    errors: pluginMetrics.errors
+    errors: pluginMetrics.errors,
+    details: pluginMetrics.plugins
 })
-📞 Контакты
+```
+
+## 📞 Контакты
+
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
-🏆 Итог
+
+## 🏆 Итог
+
 Plugins API — это:
 
 🔌 Безграничная расширяемость — добавляйте любую функциональность

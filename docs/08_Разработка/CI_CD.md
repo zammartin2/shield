@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-10-03  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -15,8 +14,9 @@
 
 ### ⚙️ Фактический CI
 
-Для **FAB Shield** используется **один** пайплайн — `.gitlab-ci.yml` в саморазмещённом GitLab
-(`lab.devorbit.ru`). Он обязателен: без зелёного прогона изменения не принимаются.
+Для **FAB Shield** используется два workflow в GitHub Actions:
+обязательный пайплайн проверок (`.github/workflows/ci.yml`) и публикацию в npm по тегу
+(`.github/workflows/publish.yml`, триггер `v*`). Без зелёного прогона ci.yml изменения не принимаются.
 
 | Стадия | Команда | Назначение |
 |---|---|---|
@@ -25,8 +25,9 @@
 | `test` | `npm ci && npm run test:ci` | Jest + покрытие (пороги 98/94/99/98) |
 | `build` | `npm ci && npm run build` | CJS + ESM + `.d.ts` в `dist/` |
 
-Каждый job явно задаёт `image: node:22` — образ по умолчанию у раннера другой и в нём нет `node`.
-Разделы **GitHub Actions** и **Jenkins** ниже приведены справочно и **не используются**.
+Задачи выполняются на `ubuntu-latest` с матрицей Node.js 20.x / 22.x.
+Конфиг `.gitlab-ci.yml` сохранён в корне и дублирует те же четыре стадии;
+разделы **Jenkins** и **`deploy.yml`** ниже приведены справочно и **не используются**.
 
 В этом документе описаны:
 
@@ -85,7 +86,7 @@
 
 ---
 
-## 📄 GitHub Actions (справочно, не используется)
+## 📄 GitHub Actions
 
 ### `.github/workflows/ci.yml`
 
@@ -101,113 +102,25 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-
+        node-version: [20.x, 22.x]
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Run tests
-        run: npm run test:ci
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/cobertura-coverage.xml
-          fail_ci_if_error: true
-
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Build Docker image
-        run: |
-          docker build -t fab-shield:${{ github.sha }} .
-          docker tag fab-shield:${{ github.sha }} fab-shield:latest
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
-        run: |
-          docker push fab-shield:${{ github.sha }}
-          docker push fab-shield:latest
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: dist/
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run Snyk Security Scan
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Run npm audit
-        run: npm audit --audit-level=high
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: fab-shield:${{ github.sha }}
-          format: sarif
-          output: trivy-results.sarif
-
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: trivy-results.sarif
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm run test:ci
+      - run: npm run build
 ```
 
 ---
 
-### `.github/workflows/deploy.yml`
+### `.github/workflows/deploy.yml` (справочно, в репозитории отсутствует)
 
 ```yaml
 name: Deploy
@@ -273,11 +186,11 @@ jobs:
 
 ---
 
-## 📄 GitLab CI
+## 📄 GitLab CI (справочно)
 
 ### `.gitlab-ci.yml`
 
-Фактический конфиг из корня репозитория:
+Конфиг из корня репозитория (дублирует те же стадии):
 
 ```yaml
 stages:
@@ -286,7 +199,7 @@ stages:
   - test
   - build
 
-# Каждый job обязан задавать image: дефолтный образ раннера lab.devorbit.ru —
+# Каждый job обязан задавать image: дефолтный образ раннера по умолчанию —
 # registry.gitlab.com/hadzhioglu/padavan-ng, в нём нет рабочего node/npm.
 .npm:
   image: node:22
@@ -485,7 +398,7 @@ pipeline {
 ```bash
 #!/bin/bash
 # Релиз FAB Shield.
-# ВАЖНО: пуш идёт ТОЛЬКО в локальный GitLab (remote `lab`), в GitHub — никогда.
+# ВАЖНО: пуш идёт в origin (GitHub).
 set -euo pipefail
 
 VERSION=${1:-}
@@ -515,8 +428,8 @@ npm run build
 git add package.json package-lock.json fab.json src/core/FABShield.ts CHANGELOG.md
 git commit -m "Release $VERSION"
 git tag -a "v$VERSION" -m "Release $VERSION"
-git push lab main
-git push lab "v$VERSION"
+git push origin main
+git push origin "v$VERSION"
 echo "✅ Release $VERSION complete!"
 ```
 
@@ -524,10 +437,12 @@ echo "✅ Release $VERSION complete!"
 
 ## 📊 Мониторинг деплоя
 
-### `scripts/health-check.js`
+### Пример: health-check.js (заготовка для вашего пайплайна)
+
+> ⚠️ Файл-заготовка: в репозитории FAB Shield скрипта нет (в `scripts/` — `build.sh`, `release.sh`, `test.sh`). Адаптируйте под свой деплой.
 
 ```javascript
-// scripts/health-check.js
+// health-check.js — пример скрипта проверки деплоя
 
 const axios = require('axios')
 const { exec } = require('child_process')
@@ -564,6 +479,7 @@ async function runHealthCheck() {
     if (!isHealthy) {
         console.error('❌ Health check failed, rolling back...')
 
+        // команда отката вашего пайплайна (в репозитории FAB Shield rollback-скрипта нет)
         exec('npm run rollback', (error, stdout, stderr) => {
             if (error) {
                 console.error('❌ Rollback failed:', error)
@@ -591,7 +507,7 @@ runHealthCheck()
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | legal@devorbit.ru |
+| **Email** | Director@devorbit.ru |
 | **Реестр** | fab.devorbit.ru |
 
 ---

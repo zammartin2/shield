@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -84,8 +83,9 @@ const shield = new FABShield({
         windowMs: 60000
     }
 })
-❓ Как проверить, что защита работает?
-bash
+```
+### ❓ Как проверить, что защита работает?
+```bash
 # Проверка заголовков
 curl -I https://your-app.com
 
@@ -97,8 +97,9 @@ curl -I https://your-app.com | grep "Strict-Transport-Security"
 
 # Проверка метрик
 curl https://your-app.com/metrics
-❓ Как добавить исключения?
-typescript
+```
+### ❓ Как добавить исключения?
+```typescript
 // Исключения для CSP
 const shield = new FABShield({
     csp: {
@@ -114,8 +115,9 @@ const shield = new FABShield({
         ]
     }
 })
-🤖 AI-защита
-❓ Как работает AI-защита?
+```
+## 🤖 AI-защита
+### ❓ Как работает AI-защита?
 AI-защита анализирует каждый запрос и:
 
 🔍 Анализирует поведение
@@ -126,14 +128,15 @@ AI-защита анализирует каждый запрос и:
 
 🎯 Адаптирует защиту
 
-❓ Можно ли отключить AI?
-typescript
+### ❓ Можно ли отключить AI?
+```typescript
 const shield = new FABShield({
     ai: {
         enabled: false
     }
 })
-❓ Как AI учится?
+```
+### ❓ Как AI учится?
 AI учится на:
 
 📊 Исторических данных
@@ -144,8 +147,8 @@ AI учится на:
 
 📈 Трендах
 
-🔌 Плагины
-❓ Безопасны ли плагины?
+## 🔌 Плагины
+### ❓ Безопасны ли плагины?
 Да, плагины:
 
 ✅ Проходят проверку кода
@@ -156,8 +159,8 @@ AI учится на:
 
 ✅ Обновляются регулярно
 
-❓ Как проверить плагин?
-typescript
+### ❓ Как проверить плагин?
+```typescript
 // Валидация плагина
 function validatePlugin(plugin: Plugin) {
     // Проверка метаданных
@@ -177,18 +180,19 @@ function validatePlugin(plugin: Plugin) {
     
     return true
 }
-❓ Можно ли создавать свои плагины?
+```
+### ❓ Можно ли создавать свои плагины?
 Да! См. Создание плагина
 
-📊 Мониторинг
-❓ Какие метрики собирает FAB Shield?
+## 📊 Мониторинг
+### ❓ Какие метрики собирает FAB Shield?
 Метрика	Описание
 Запросы	Количество, статусы
 Угрозы	Типы, источники
 Производительность	Время ответа, CPU
 AI	Точность, анализ
-❓ Как настроить оповещения?
-typescript
+### ❓ Как настроить оповещения?
+```typescript
 const shield = new FABShield({
     monitoring: {
         alerts: {
@@ -202,7 +206,7 @@ const shield = new FABShield({
                 },
                 {
                     name: 'Performance Degradation',
-                    metric: 'response_time',
+                    metric: 'avg_response_time',
                     threshold: 1000,
                     severity: 'warning'
                 }
@@ -210,26 +214,28 @@ const shield = new FABShield({
         }
     }
 })
-🔄 Обновления
-❓ Как часто выходят обновления?
+```
+## 🔄 Обновления
+### ❓ Как часто выходят обновления?
 🐛 Hotfix: по необходимости
 
 🔧 Minor: ежемесячно
 
 🚀 Major: раз в квартал
 
-❓ Как обновить FAB Shield?
-bash
+### ❓ Как обновить FAB Shield?
+```bash
 # Обновление через npm
-npm update @fab-registry/shield
+npm update @fab-orbita/shield
 
 # Обновление до конкретной версии
-npm install @fab-registry/shield@1.0.0
+npm install @fab-orbita/shield@1.0.0
 
 # Проверка обновлений
-npm outdated @fab-registry/shield
-🚨 Инциденты
-❓ Что делать при обнаружении угрозы?
+npm outdated @fab-orbita/shield
+```
+## 🚨 Инциденты
+### ❓ Что делать при обнаружении угрозы?
 🛑 Заблокировать источник
 
 🔍 Проанализировать инцидент
@@ -240,7 +246,7 @@ npm outdated @fab-registry/shield
 
 🔧 Исправить уязвимость
 
-❓ Как сообщить о уязвимости?
+### ❓ Как сообщить о уязвимости?
 📧 Написать на email
 
 🔒 Не раскрывать публично
@@ -251,15 +257,15 @@ npm outdated @fab-registry/shield
 
 См. SECURITY.md
 
-❓ Есть ли программа bug bounty?
+### ❓ Есть ли программа bug bounty?
 Да! См. Баг-баунти программа
 
-📞 Контакты
+## 📞 Контакты
 Ответственный	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
-🏆 Итог
+## 🏆 Итог
 FAB Shield — это:
 
 🔒 Максимальная защита — все векторы атак

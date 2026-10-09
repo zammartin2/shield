@@ -5,7 +5,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -699,7 +698,7 @@ IP Reputation должен использоваться как один из у�
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | **Сайт** | [devorbit.ru](https://devorbit.ru) |
 | **GitHub** | [zammartin2/shield](https://github.com/zammartin2/shield) |

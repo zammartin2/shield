@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -11,502 +10,135 @@
 
 ## 📋 Введение
 
-**Rate Limiting** — это механизм ограничения количества запросов к вашему приложению. Это одна из ключевых защит от DDoS-атак, брутфорса и чрезмерной нагрузки.
+**Security Headers** — это набор HTTP-заголовков, которые FAB Shield добавляет к каждому ответу, чтобы закрыть классические векторы: кликовый جacking, MIME-сниффинг, утечки referer, встраивание в чужие фреймы и раскрытие версий ПО.
+
+Модуль реализован в `HeadersModule` (`src/modules/headers/HeadersModule.ts`) и управляется секцией `headers` конфигурации (`HeaderConfig`). Включён по умолчанию; `Content-Security-Policy` выдаёт **отдельный** модуль CSP и этим модулем не дублируется.
 
 ---
 
-## 🎯 Что дает Rate Limiting
+## 📦 Устанавливаемые заголовки
 
-### Ключевые преимущества
+Заголовки записываются в каждый ответ (значения — по умолчанию):
 
-| Преимущество | Описание |
-|:---|:---|
-| **Защита от DDoS** | Ограничивает количество запросов от одного источника |
-| **Предотвращение брутфорса** | Блокирует подбор паролей |
-| **Стабильность** | Предотвращает перегрузку сервера |
-| **Справедливость** | Равное распределение ресурсов |
-| **Экономия** | Снижает нагрузку на инфраструктуру |
+| Заголовок | Формируемое значение |
+|---|---|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` |
+| `X-Frame-Options` | `DENY` (настраивается: `SAMEORIGIN` / `ALLOW-FROM`) |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `X-DNS-Prefetch-Control` | `off` |
+| `X-Download-Options` | `noopen` |
+| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `Cross-Origin-Opener-Policy` | `same-origin` (по умолчанию) |
+| `Cross-Origin-Embedder-Policy` | только если задан `crossOrigin.embedder` |
+| `Cross-Origin-Resource-Policy` | только если задан `crossOrigin.resource` |
+| `Origin-Agent-Cluster` | `?1` |
+| `Permissions-Policy` | `geolocation=(), microphone=(), camera=()` |
+| `X-Request-ID`, `X-Shield-Version`, `X-Shield-Status` | корреляционные заголовки, добавляемые `middleware()` |
 
----
-
-## 🧠 Как это работает
-
-### Архитектура Rate Limiting
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ RATE LIMITING ENGINE │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ INPUT LAYER │ │
-│ │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ │ │
-│ │ │ Client │ │ User │ │ API Key │ │ Path │ │ │
-│ │ │ IP │ │ ID │ │ │ │ │ │ │
-│ │ └────────────┘ └────────────┘ └────────────┘ └────────────┘ │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ COUNTER LAYER │ │
-│ │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ │ │
-│ │ │ In-Memory │ │ Redis │ │ Database │ │ Custom │ │ │
-│ │ │ Cache │ │ │ │ │ │ Store │ │ │
-│ │ └────────────┘ └────────────┘ └────────────┘ └────────────┘ │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ DECISION LAYER │ │
-│ │ • Проверка лимитов │ │
-│ │ • Сравнение с порогами │ │
-│ │ • Принятие решения │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ ACTION LAYER │ │
-│ │ • ALLOW - Пропустить │ │
-│ │ • BLOCK - Заблокировать │ │
-│ │ • CHALLENGE - Проверка (CAPTCHA) │ │
-│ │ • THROTTLE - Замедлить │ │
-│ │ • DELAY - Добавить задержку │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-text
+`X-Powered-By` и `Server` удаляются из каждого ответа. `Content-Security-Policy` отдельно выдаёт модуль CSP (см. [`Dynamic_CSP.md`](./Dynamic_CSP.md)).
 
 ---
 
-## 
+## 🔧 Конфигурация
+
+Секция `headers` (`HeaderConfig`):
+
+| Путь | Тип | Назначение |
+|---|---|---|
+| `enabled` | `boolean` | `false` — полностью пропустить модуль заголовков |
+| `disabled` | `string[]` | Имена заголовков, которые нужно **удалить** из ответа (приоритет выше всех значений) |
+| `custom` | `Record<string, string>` | Пользовательские заголовки, добавляются дословно |
+| `hsts.maxAge` | `number` | `max-age` в секундах (по умолчанию `31536000`) |
+| `hsts.includeSubDomains` | `boolean` | Добавить `; includeSubDomains` |
+| `hsts.preload` | `boolean` | Добавить `; preload` |
+| `xFrame.action` | `'DENY' \| 'SAMEORIGIN' \| 'ALLOW-FROM'` | Значение `X-Frame-Options` (по умолчанию `DENY`) |
+| `referrerPolicy.policy` | `string` | Значение `Referrer-Policy` (по умолчанию `strict-origin-when-cross-origin`) |
+| `crossOrigin.embedder` | `string` | `Cross-Origin-Embedder-Policy` (задаётся только если указан) |
+| `crossOrigin.opener` | `string` | `Cross-Origin-Opener-Policy` (по умолчанию `same-origin`) |
+| `crossOrigin.resource` | `string` | `Cross-Origin-Resource-Policy` (задаётся только если указан) |
+| `xContentTypeOptions` | `boolean` | `false` — не ставить `X-Content-Type-Options` |
+| `xXssProtection` | `boolean` | `false` — не ставить `X-XSS-Protection` |
+| `xDnsPrefetchControl` | `boolean` | `false` — не ставить `X-DNS-Prefetch-Control` |
+| `xDownloadOptions` | `boolean` | `false` — не ставить `X-Download-Options` |
+| `xPermittedCrossDomainPolicies` | `boolean` | `false` — не ставить `X-Permitted-Cross-Domain-Policies` |
+
+> Заголовки `X-Powered-By` и `Server` удаляются всегда — отдельного флага для них нет. Для удаления HSTS, `X-Frame-Options` или `Referrer-Policy` используйте список `disabled`.
+
+---
+
+## 💻 Примеры
+
+### Значения по умолчанию
+
+```ts
+import { FABShield } from '@fab-orbita/shield'
+
+// headers включены по умолчанию — конфигурация не нужна
+const shield = new FABShield()
 ```
 
-## 🔧 Использование
+### Кастомизация
 
-### Базовая конфигурация
-
-``````typescript
+```ts
 const shield = new FABShield({
-    rateLimit: {
-        enabled: true,
-        windowMs: 60000,    // 1 минута
-        max: 100            // 100 запросов в минуту
-    }
-})
-Расширенная конфигурация
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        enabled: true,
-        
-        // Глобальные настройки
-        default: {
-            windowMs: 60000,
-            max: 100,
-            message: 'Too many requests'
-        },
-        
-        // Настройки по ролям
-        roles: {
-            admin: {
-                windowMs: 60000,
-                max: 1000
-            },
-            user: {
-                windowMs: 60000,
-                max: 100
-            },
-            guest: {
-                windowMs: 60000,
-                max: 50
-            }
-        },
-        
-        // Настройки по путям
-        paths: {
-            '/api/auth/*': {
-                windowMs: 60000,
-                max: 10           // 10 попыток входа в минуту
-            },
-            '/api/upload/*': {
-                windowMs: 3600000,
-                max: 10           // 10 загрузок в час
-            },
-            '/api/public/*': {
-                windowMs: 60000,
-                max: 200
-            }
-        },
-        
-        // Ключ для подсчета
-        keyGenerator: (req) => {
-            // Приоритет: user ID > API key > IP
-            return req.user?.id || req.headers['x-api-key'] || req.ip
-        },
-        
-        // Хранилище
-        store: {
-            type: 'redis',     // 'memory' | 'redis' | 'database'
-            options: {
-                host: 'localhost',
-                port: 6379,
-                password: process.env.REDIS_PASSWORD
-            }
-        },
-        
-        // Обработка превышения
-        onLimitReached: (req, res, next, { key, limit, windowMs }) => {
-            // Логирование
-            console.warn(`Rate limit exceeded: ${key}`)
-            
-            // Уведомление
-            sendAlert({
-                type: 'rate_limit',
-                key,
-                limit,
-                windowMs,
-                ip: req.ip,
-                path: req.path
-            })
-        }
-    }
-})
-🎯 Типы Rate Limiting
-1. Глобальный лимит
-Назначение: Общий лимит для всех запросов.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        global: {
-            windowMs: 60000,
-            max: 1000
-        }
-    }
-})
-2. Лимит по IP
-Назначение: Лимит для каждого IP-адреса.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        ip: {
-            enabled: true,
-            windowMs: 60000,
-            max: 100,
-            // Исключения для доверенных IP
-            whitelist: ['10.0.0.1', '10.0.0.2', '192.168.1.100']
-        }
-    }
-})
-3. Лимит по пользователю
-Назначение: Лимит для каждого пользователя.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        user: {
-            enabled: true,
-            windowMs: 60000,
-            max: 100,
-            // Разные лимиты для разных ролей
-            roles: {
-                admin: 1000,
-                moderator: 500,
-                user: 100,
-                guest: 50
-            }
-        }
-    }
-})
-4. Лимит по пути
-Назначение: Разные лимиты для разных путей.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        paths: {
-            '/api/auth/login': {
-                windowMs: 60000,
-                max: 5             // 5 попыток входа в минуту
-            },
-            '/api/auth/register': {
-                windowMs: 3600000,
-                max: 3             // 3 регистрации в час
-            },
-            '/api/packages/*': {
-                windowMs: 60000,
-                max: 100
-            },
-            '/api/uploads/*': {
-                windowMs: 3600000,
-                max: 10            // 10 загрузок в час
-            }
-        }
-    }
-})
-5. Адаптивный лимит
-Назначение: Лимит, который меняется в зависимости от нагрузки.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        adaptive: {
-            enabled: true,
-            baseLimit: 100,
-            maxLimit: 200,
-            minLimit: 50,
-            
-            // Условия изменения
-            conditions: [
-                {
-                    metric: 'cpu_usage',
-                    threshold: 70,
-                    action: 'decrease_by_50'
-                },
-                {
-                    metric: 'response_time',
-                    threshold: 500,
-                    action: 'decrease_by_30'
-                },
-                {
-                    metric: 'error_rate',
-                    threshold: 5,
-                    action: 'increase_by_20'
-                }
-            ]
-        }
-    }
-})
-6. Распределенный Rate Limiting
-Назначение: Ограничение запросов в распределенной системе.
-
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        distributed: {
-            enabled: true,
-            store: 'redis',
-            keyPrefix: 'ratelimit:',
-            
-            // Синхронизация между инстансами
-            sync: {
-                enabled: true,
-                interval: 1000,  // ms
-                channel: 'rate-limit-sync'
-            }
-        }
-    }
-})
-📊 Мониторинг Rate Limiting
-Метрики
-typescript
-const metrics = shield.rateLimit.getMetrics()
-
-console.log({
-    // Статистика
-    totalRequests: metrics.totalRequests,
-    allowedRequests: metrics.allowedRequests,
-    blockedRequests: metrics.blockedRequests,
-    
-    // По IP
-    topBlockedIPs: metrics.topBlockedIPs,
-    
-    // По пользователям
-    topBlockedUsers: metrics.topBlockedUsers,
-    
-    // По путям
-    blockedByPath: metrics.blockedByPath,
-    
-    // Время
-    windowStats: metrics.windowStats
-})
-Дашборд
-typescript
-// Создаем дашборд для Rate Limiting
-const dashboard = shield.rateLimit.createDashboard({
-    charts: [
-        {
-            title: 'Запросы в минуту',
-            type: 'area',
-            data: metrics.requestsByMinute
-        },
-        {
-            title: 'Топ заблокированных IP',
-            type: 'bar',
-            data: metrics.topBlockedIPs
-        },
-        {
-            title: 'Текущие лимиты',
-            type: 'gauge',
-            data: {
-                current: metrics.currentRequests,
-                limit: metrics.limit
-            }
-        }
-    ]
-})
-🚨 Обработка превышения
-Кастомные действия
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        onLimitReached: async (req, res, info) => {
-            // 1. Логирование
-            await logRateLimitEvent(info)
-            
-            // 2. Уведомление
-            await sendAlert({
-                type: 'rate_limit',
-                ip: req.ip,
-                path: req.path,
-                limit: info.limit,
-                window: info.windowMs
-            })
-            
-            // 3. Автоблокировка
-            if (info.exceededBy > 3) {
-                await blockIP(req.ip, {
-                    duration: 3600,
-                    reason: 'Rate limit exceeded'
-                })
-            }
-            
-            // 4. Ответ
-            res.status(429).json({
-                error: 'Too many requests',
-                retryAfter: Math.ceil(info.windowMs / 1000),
-                limit: info.limit,
-                remaining: 0,
-                reset: new Date(Date.now() + info.windowMs).toISOString()
-            })
-        }
-    }
-})
-Заголовки ответа
-typescript
-// Автоматические заголовки (RFC 6585)
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 42
-X-RateLimit-Reset: 2026-07-01T12:00:00Z
-Retry-After: 3600
-🔧 Интеграция с AI
-Умный Rate Limiting
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        smart: {
-            enabled: true,
-            // AI анализирует поведение и корректирует лимиты
-            adjustByBehavior: true,
-            
-            // Автоматическая настройка
-            autoAdjust: {
-                enabled: true,
-                learningPeriod: 604800, // 7 дней
-                minLimit: 10,
-                maxLimit: 1000,
-                adjustmentFactor: 0.1  // 10% за раз
-            }
-        }
-    }
-})
-📋 Примеры конфигураций
-1. Для высоконагруженного API
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        default: {
-            windowMs: 60000,
-            max: 1000
-        },
-        paths: {
-            '/api/search': {
-                windowMs: 60000,
-                max: 100
-            }
-        }
-    }
-})
-2. Для авторизации
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        paths: {
-            '/api/auth/login': {
-                windowMs: 60000,
-                max: 5,
-                message: 'Too many login attempts'
-            },
-            '/api/auth/register': {
-                windowMs: 3600000,
-                max: 3,
-                message: 'Too many registrations'
-            },
-            '/api/auth/reset-password': {
-                windowMs: 3600000,
-                max: 2,
-                message: 'Too many reset requests'
-            }
-        }
-    }
-})
-3. Для загрузки файлов
-```typescript
-const shield = new FABShield({
-    rateLimit: {
-        paths: {
-            '/api/upload': {
-                windowMs: 3600000,
-                max: 10,
-                message: 'Upload limit exceeded'
-            }
-        }
-    }
+  headers: {
+    enabled: true,
+    hsts: { maxAge: 63072000, includeSubDomains: true, preload: true },
+    xFrame: { action: 'SAMEORIGIN' },
+    referrerPolicy: { policy: 'no-referrer' },
+    crossOrigin: { opener: 'same-origin', resource: 'same-origin' },
+    custom: { 'X-Robots-Tag': 'noindex' },
+    disabled: ['X-Download-Options'],
+  },
 })
 ```
 
-## 🚨 Устранение проблем
-Проблема: Слишком много ложных срабатываний
-typescript
-// Увеличить лимиты
+Заголовки `custom` применяются дословно поверх встроенного набора; имена из `disabled` удаляются в последнюю очередь и потому имеют приоритет над всеми перечисленными выше.
+
+### Полное отключение модуля
+
+```ts
 const shield = new FABShield({
-    rateLimit: {
-        default: {
-            windowMs: 60000,
-            max: 500  // Было 100
-        }
-    }
-})
-Проблема: Блокировка легитимных пользователей
-typescript
-// Добавить в белый список
-const shield = new FABShield({
-    rateLimit: {
-        whitelist: {
-            enabled: true,
-            ips: ['10.0.0.1', '10.0.0.2'],
-            users: ['admin', 'system'],
-            apiKeys: ['sk-xxx', 'pk-xxx']
-        }
-    }
+  headers: { enabled: false },
 })
 ```
+
+---
+
+## 🌍 Переменные окружения
+
+| Переменная | Формат | По умолчанию | Соответствует |
+|---|---|---|---|
+| `SHIELD_HEADERS` | `'true'` → вкл | `true` | `headers.enabled` |
+| `HSTS_MAX_AGE` | целое число секунд | `31536000` | `headers.hsts.maxAge` |
+| `HSTS_INCLUDE_SUBDOMAINS` | `!== 'false'` | `true` | `headers.hsts.includeSubDomains` |
+| `HSTS_PRELOAD` | `=== 'true'` | `false`, если `HSTS_MAX_AGE` задан без неё | `headers.hsts.preload` — если задать только `HSTS_MAX_AGE`, preload будет **выключен**, пока дополнительно не задано `HSTS_PRELOAD=true` |
+
+```env
+HSTS_MAX_AGE=63072000
+HSTS_PRELOAD=true
+```
+
+---
+
+## 🔗 Связанные разделы
+
+- **Content Security Policy** — [`Dynamic_CSP.md`](./Dynamic_CSP.md) (отдельный модуль, заголовок `Content-Security-Policy`)
+- Полный справочник конфигурации — [README](../../README.ru.md#заголовки-безопасности)
+
+---
 
 ## 📞 Контакты
-Автор	Фабрициус Владимир Николаевич
-Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
-Реестр	fab.devorbit.ru
-🏆 Итог
-Rate Limiting — это:
 
-🛡️ Защита от DDoS — ограничение запросов
+| Поле | Значение |
+|---|---|
+| Репозиторий | [github.com/zammartin2/shield](https://github.com/zammartin2/shield) |
+| Пакет | [@fab-orbita/shield](https://www.npmjs.com/package/@fab-orbita/shield) |
+| Email | Director@devorbit.ru |
+| Живое демо | [shield.devorbit.ru](https://shield.devorbit.ru/) |
 
-🔒 Защита от брутфорса — блокировка подбора
-
-⚡ Стабильность — предотвращение перегрузки
-
-🎯 Гибкость — настройка под любые нужды
-
-🤖 Умный — адаптация под нагрузку
-
-Защитите свое приложение от перегрузок! ⚡
+---
 
 © 2026 ООО «Деворбит». Все права защищены.

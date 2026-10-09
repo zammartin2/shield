@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -93,7 +92,6 @@ const shield = new FABShield({
 ### Расширенная конфигурация
 
 ```typescript
-typescript
 const shield = new FABShield({
     rateLimit: {
         enabled: true,
@@ -102,7 +100,6 @@ const shield = new FABShield({
         default: {
             windowMs: 60000,
             max: 100,
-            message: 'Too many requests'
         },
         
         // Настройки по ролям
@@ -143,31 +140,9 @@ const shield = new FABShield({
             return req.user?.id || req.headers['x-api-key'] || req.ip
         },
         
-        // Хранилище
-        store: {
-            type: 'redis',     // 'memory' | 'redis' | 'database'
-            options: {
-                host: 'localhost',
-                port: 6379,
-                password: process.env.REDIS_PASSWORD
-            }
-        },
-        
-        // Обработка превышения
-        onLimitReached: (req, res, next, { key, limit, windowMs }) => {
-            // Логирование
-            console.warn(`Rate limit exceeded: ${key}`)
-            
-            // Уведомление
-            sendAlert({
-                type: 'rate_limit',
-                key,
-                limit,
-                windowMs,
-                ip: req.ip,
-                path: req.path
-            })
-        }
+        // Примечание: store (redis) и колбэк onLimitReached в RateLimitConfig нет —
+        // счётчики в памяти процесса, при превышении middleware отвечает 429
+        // и публикует событие rateLimit:exceeded
     }
 })
 ```
@@ -264,203 +239,132 @@ const shield = new FABShield({
 
 ### 5. Адаптивный лимит
 
-```typescript
-Назначение: Лимит, который меняется в зависимости от нагрузки.
-
-typescript
-const shield = new FABShield({
-    rateLimit: {
-        adaptive: {
-            enabled: true,
-            baseLimit: 100,
-            maxLimit: 200,
-            minLimit: 50,
-            
-            // Условия изменения
-            conditions: [
-                {
-                    metric: 'cpu_usage',
-                    threshold: 70,
-                    action: 'decrease_by_50'
-                },
-                {
-                    metric: 'response_time',
-                    threshold: 500,
-                    action: 'decrease_by_30'
-                },
-                {
-                    metric: 'error_rate',
-                    threshold: 5,
-                    action: 'increase_by_20'
-                }
-            ]
-        }
-    }
-})
-```
-
-### 6. Распределенный Rate Limiting
+> ⚠️ Встроенного режима `adaptive` в `rateLimit` пока нет. Адаптивность строится из реальных API: наблюдайте метрики через `getMetrics()` и меняйте лимиты через `updateConfig()` (конфигурация deep-merge'ится).
 
 ```typescript
-Назначение: Ограничение запросов в распределенной системе.
-
-typescript
 const shield = new FABShield({
-    rateLimit: {
-        distributed: {
-            enabled: true,
-            store: 'redis',
-            keyPrefix: 'ratelimit:',
-            
-            // Синхронизация между инстансами
-            sync: {
-                enabled: true,
-                interval: 1000,  // ms
-                channel: 'rate-limit-sync'
-            }
-        }
-    }
+  rateLimit: {
+    enabled: true,
+    default: { max: 100, windowMs: 60000 }
+  }
 })
+
+// Раз в 30 секунд подстраиваем лимит под нагрузкой
+setInterval(() => {
+  const { p95ResponseTime } = shield.getMetrics()
+
+  if (p95ResponseTime > 500) {
+    shield.updateConfig({ rateLimit: { default: { max: 50, windowMs: 60000 } } })
+  } else {
+    shield.updateConfig({ rateLimit: { default: { max: 100, windowMs: 60000 } } })
+  }
+}, 30000)
 ```
+
+---
+
+### 6. Распределённый Rate Limiting
+
+> ⚠️ Общего счётчика для нескольких инстансов (например, через Redis) в `rateLimit` пока нет: лимиты считаются in-memory **в каждом процессе отдельно**.
+
+При горизонтальном масштабировании:
+
+- задавайте `max` с запасом с учётом числа реплик (≈ суммарный лимит / количество инстансов);
+- либо вынесите ограничение частоты на уровень инфраструктуры (nginx `limit_req`, API-шлюз), где общий счётчик уже есть.
+
+---
 
 ## 📊 Мониторинг Rate Limiting
-### Метрики
+
+### Статистика лимитера
 
 ```typescript
-typescript
-const metrics = shield.rateLimit.getMetrics()
+const stats = shield.getRateLimiter()?.getStats()
 
 console.log({
-    // Статистика
-    totalRequests: metrics.totalRequests,
-    allowedRequests: metrics.allowedRequests,
-    blockedRequests: metrics.blockedRequests,
-    
-    // По IP
-    topBlockedIPs: metrics.topBlockedIPs,
-    
-    // По пользователям
-    topBlockedUsers: metrics.topBlockedUsers,
-    
-    // По путям
-    blockedByPath: metrics.blockedByPath,
-    
-    // Время
-    windowStats: metrics.windowStats
+  totalKeys: stats?.totalKeys,      // активных ключей в памяти
+  defaultLimit: stats?.defaultLimit,
+  defaultWindow: stats?.defaultWindow
 })
+```
+
+### Событие превышения
+
+```typescript
+shield.on('rateLimit:exceeded', ({ limit, remaining, retryAfter }) => {
+  console.warn(`429: лимит ${limit} исчерпан, remaining=${remaining}, retry=${retryAfter}s`)
+})
+```
+
+### Счётчик 429
+
+Ответы 429 не попадают в `getMetrics().byStatus` — лимитер отвечает раньше
+записи метрик. Считайте превышения по событию:
+
+```typescript
+let overflows = 0
+shield.on('rateLimit:exceeded', () => {
+  overflows++
+})
+```
+
+### Сброс счётчиков
+
+```typescript
+const limiter = shield.getRateLimiter()
+limiter?.resetAll()          // все ключи
+limiter?.reset('1.2.3.4')    // конкретный ключ
 ```
 
 ### Дашборд
 
-```typescript
-typescript
-// Создаем дашборд для Rate Limiting
-const dashboard = shield.rateLimit.createDashboard({
-    charts: [
-        {
-            title: 'Запросы в минуту',
-            type: 'area',
-            data: metrics.requestsByMinute
-        },
-        {
-            title: 'Топ заблокированных IP',
-            type: 'bar',
-            data: metrics.topBlockedIPs
-        },
-        {
-            title: 'Текущие лимиты',
-            type: 'gauge',
-            data: {
-                current: metrics.currentRequests,
-                limit: metrics.limit
-            }
-        }
-    ]
-})
-```
+FAB Shield не рендерит дашборды сам — соберите виджеты из `getStats()`,
+событий `rateLimit:exceeded` и `getMetrics().byStatus` на своей стороне
+(например, Grafana поверх prometheus-экспорта, см. [`Metrics.md`](./Metrics.md)).
+
+---
 
 ## 🚨 Обработка превышения
-### Кастомные действия
 
-```typescript
-typescript
-const shield = new FABShield({
-    rateLimit: {
-        onLimitReached: async (req, res, info) => {
-            // 1. Логирование
-            await logRateLimitEvent(info)
-            
-            // 2. Уведомление
-            await sendAlert({
-                type: 'rate_limit',
-                ip: req.ip,
-                path: req.path,
-                limit: info.limit,
-                window: info.windowMs
-            })
-            
-            // 3. Автоблокировка
-            if (info.exceededBy > 3) {
-                await blockIP(req.ip, {
-                    duration: 3600,
-                    reason: 'Rate limit exceeded'
-                })
-            }
-            
-            // 4. Ответ
-            res.status(429).json({
-                error: 'Too many requests',
-                retryAfter: Math.ceil(info.windowMs / 1000),
-                limit: info.limit,
-                remaining: 0,
-                reset: new Date(Date.now() + info.windowMs).toISOString()
-            })
-        }
-    }
-})
+В `RateLimitConfig` нет колбэка `onLimitReached` и настраиваемого тела ответа —
+при превышении middleware сам возвращает `429`:
+
+```json
+{
+    "error": "Too many requests",
+    "requestId": "…",
+    "retryAfter": 3600,
+    "limit": 100,
+    "remaining": 0,
+    "reset": "2026-07-01T12:00:00.000Z"
+}
 ```
 
-### Заголовки ответа
+Реакция на превышение — через событие `rateLimit:exceeded` (см. «Событие
+превышения» выше): логирование, алерты, собственный счётчик блокировок —
+всё на стороне приложения. Сами же лимиты настраиваются `default`,
+`roles`/`paths` и `keyGenerator`.
 
-```text
-typescript
-// Автоматические заголовки (RFC 6585)
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 42
-X-RateLimit-Reset: 2026-07-01T12:00:00Z
-Retry-After: 3600
-```
+### Ответ при превышении
+
+Активная цепочка FAB Shield не ставит заголовки `X-RateLimit-*` и `Retry-After` —
+лимит и время повтора доступны в теле `429` (см. «Обработка превышения»)
+и в событии `rateLimit:exceeded`.
 
 ## 🔧 Интеграция с AI
-### Умный Rate Limiting
 
-```typescript
-typescript
-const shield = new FABShield({
-    rateLimit: {
-        smart: {
-            enabled: true,
-            // AI анализирует поведение и корректирует лимиты
-            adjustByBehavior: true,
-            
-            // Автоматическая настройка
-            autoAdjust: {
-                enabled: true,
-                learningPeriod: 604800, // 7 дней
-                minLimit: 10,
-                maxLimit: 1000,
-                adjustmentFactor: 0.1  // 10% за раз
-            }
-        }
-    }
-})
-```
+Секции `rateLimit.smart` (автоподстройка лимитов поведением) в конфиге нет.
+Реальные рычаги «адаптивности»:
+
+- наблюдать нагрузку — `shield.getMetrics()` (`p95ResponseTime`, `threatsBlocked`);
+- подстраивать лимиты в рантайме — `shield.updateConfig({ rateLimit: … })`
+  (пример в разделе «Адаптивный лимит»);
+- учитывать роль/путь — `roles` и `paths`.
 
 ## 📋 Примеры конфигураций
 ### 1. Для высоконагруженного API
 
 ```typescript
-typescript
 const shield = new FABShield({
     rateLimit: {
         default: {
@@ -480,24 +384,20 @@ const shield = new FABShield({
 ### 2. Для авторизации
 
 ```typescript
-typescript
 const shield = new FABShield({
     rateLimit: {
         paths: {
             '/api/auth/login': {
                 windowMs: 60000,
                 max: 5,
-                message: 'Too many login attempts'
             },
             '/api/auth/register': {
                 windowMs: 3600000,
                 max: 3,
-                message: 'Too many registrations'
             },
             '/api/auth/reset-password': {
                 windowMs: 3600000,
                 max: 2,
-                message: 'Too many reset requests'
             }
         }
     }
@@ -507,14 +407,12 @@ const shield = new FABShield({
 ### 3. Для загрузки файлов
 
 ```typescript
-typescript
 const shield = new FABShield({
     rateLimit: {
         paths: {
             '/api/upload': {
                 windowMs: 3600000,
                 max: 10,
-                message: 'Upload limit exceeded'
             }
         }
     }
@@ -525,7 +423,6 @@ const shield = new FABShield({
 ### Проблема: Слишком много ложных срабатываний
 
 ```typescript
-typescript
 // Увеличить лимиты
 const shield = new FABShield({
     rateLimit: {
@@ -540,7 +437,6 @@ const shield = new FABShield({
 ### Проблема: Блокировка легитимных пользователей
 
 ```typescript
-typescript
 // Добавить в белый список
 const shield = new FABShield({
     rateLimit: {
@@ -553,11 +449,14 @@ const shield = new FABShield({
     }
 })
 ```
+> ⚠️ Поля `whitelist.*` типизированы, но лимитер их в текущей версии не читает.
+> Рабочие обходы: не подключайте `shield.middleware()` к доверенным маршрутам
+> или поднимайте лимит через `updateConfig()`.
 
 ## 📞 Контакты
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
 🏆 Итог
 Rate Limiting — это:
@@ -570,7 +469,7 @@ Rate Limiting — это:
 
 🎯 Гибкость — настройка под любые нужды
 
-🤖 Умный — адаптация под нагрузку
+📊 Прозрачно — событие rateLimit:exceeded и getStats() для мониторинга
 
 Защитите свое приложение от перегрузок! ⚡
 

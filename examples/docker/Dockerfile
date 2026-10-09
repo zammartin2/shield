@@ -6,6 +6,6 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npm install @fab-registry/shield
+RUN npm install @fab-orbita/shield
 
 CMD ["node", "app.js"]

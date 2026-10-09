@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -51,7 +50,7 @@ fastify-example/
 
 ```typescript
 import Fastify from 'fastify'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 import apiRoutes from './routes/api'
 import publicRoutes from './routes/public'
 import shieldPlugin from './plugins/shield'
@@ -233,7 +232,7 @@ start()
 
 ```typescript
 import { FastifyPluginAsync } from 'fastify'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 interface ShieldPluginOptions {
     shield: FABShield
@@ -408,7 +407,7 @@ export default apiRoutes
         "watch": "tsc --watch"
     },
     "dependencies": {
-        "@fab-registry/shield": "^1.0.0",
+        "@fab-orbita/shield": "^1.0.0",
         "fastify": "^4.24.0",
         "dotenv": "^16.3.1"
     },
@@ -481,7 +480,7 @@ cd fastify-example
 npm init -y
 
 # Установка зависимостей
-npm install @fab-registry/shield fastify dotenv
+npm install @fab-orbita/shield fastify dotenv
 npm install -D @types/node typescript ts-node
 
 # Создаем файлы
@@ -570,7 +569,7 @@ const metrics = {
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---

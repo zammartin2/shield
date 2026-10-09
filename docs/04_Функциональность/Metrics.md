@@ -5,7 +5,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -54,41 +53,27 @@ Metrics превращает security-layer из «черного ящика» �
 
 ### Что собирается
 
-- количество запросов;
-- HTTP-методы;
-- маршруты;
-- статусы ответов;
-- время ответа;
-- размер ответа;
-- requests per second;
-- ошибки клиента и сервера.
+- количество запросов (`totalRequests`);
+- HTTP-методы и маршруты (`byMethod`, `byPath`);
+- статусы ответов (`byStatus`);
+- время ответа (`avgResponseTime`, `p95ResponseTime`, `p99ResponseTime`);
+- ошибки (`errors`).
+
+Размер ответа, requests per second и бакеты 1xx–5xx Shield не считает —
+`byMethod`/`byStatus` учитывают фактические значения, которые встретились.
 
 ```typescript
-interface RequestMetrics {
-  total: number
+// Реальные поля shield.getMetrics()
+const m = shield.getMetrics()
 
-  byMethod: {
-    GET: number
-    POST: number
-    PUT: number
-    PATCH: number
-    DELETE: number
-    OPTIONS: number
-    OTHER: number
-  }
-
-  byStatus: {
-    '1xx': number
-    '2xx': number
-    '3xx': number
-    '4xx': number
-    '5xx': number
-  }
-
-  averageResponseTime: number
-  totalDataTransferred: number
-  requestsPerSecond: number
-}
+console.log({
+  totalRequests: m.totalRequests,
+  avgResponseTime: m.avgResponseTime,
+  errors: m.errors,
+  byMethod: m.byMethod,     // { GET: 120, POST: 45, ... }
+  byStatus: m.byStatus,     // { '200': 140, '404': 3, ... }
+  byPath: m.byPath          // { '/api/data': 80, ... }
+})
 ```
 
 ---
@@ -99,41 +84,24 @@ interface RequestMetrics {
 
 ### Что собирается
 
-- обнаруженные угрозы;
-- заблокированные запросы;
-- типы атак;
-- источники угроз;
-- аномалии;
-- CSP violations;
-- rate limit events;
-- false positives.
+- заблокированные запросы (`threatsBlocked`);
+- последние обнаруженные угрозы (`threats` — последние 10 записей);
+- типы атак (`threatTypes`, `threatStats`).
+
+Отдельных счётчиков аномалий, CSP violations, rate-limit событий и false
+positives в `getMetrics()` нет — при необходимости считайте их на своей
+стороне (например, в плагине через `onRequest`).
 
 ```typescript
-interface SecurityMetrics {
-  threatsDetected: number
-  threatsBlocked: number
+// Реальные поля shield.getMetrics()
+const m = shield.getMetrics()
 
-  byType: {
-    xss: number
-    sqlInjection: number
-    csrf: number
-    ddos: number
-    bruteForce: number
-    pathTraversal: number
-    commandInjection: number
-    bot: number
-    other: number
-  }
-
-  bySource: {
-    [ip: string]: number
-  }
-
-  anomaliesDetected: number
-  cspViolations: number
-  rateLimitHits: number
-  falsePositives: number
-}
+console.log({
+  threatsBlocked: m.threatsBlocked,
+  recentThreats: m.threats,     // последние 10 событий
+  threatTypes: m.threatTypes,   // ['xss', 'sqlInjection', ...]
+  threatStats: m.threatStats    // { xss: 3, sqlInjection: 1, ... }
+})
 ```
 
 ---
@@ -144,35 +112,29 @@ interface SecurityMetrics {
 
 ### Что собирается
 
-- использование CPU;
-- использование памяти;
-- время обработки;
+Из метрик FAB Shield доступны (поля `shield.getMetrics()`):
+
+- среднее время обработки запроса (`avgResponseTime`);
 - p95 / p99 latency;
-- throughput;
-- active connections;
-- latency отдельных модулей.
+- общее число запросов и ошибок;
+- uptime процесса Shield.
+
+CPU, память, throughput и число активных соединений Shield **не собирает** —
+снимайте их сами средствами Node.js (`process.memoryUsage()`, `os.loadavg()`)
+или внешним APM.
 
 ```typescript
-interface PerformanceMetrics {
-  cpuUsage: number
+// Реальные поля, связанные с производительностью
+const m = shield.getMetrics()
 
-  memoryUsage: {
-    heapUsed: number
-    heapTotal: number
-    external: number
-    rss: number
-  }
-
-  processingTime: {
-    average: number
-    p95: number
-    p99: number
-    max: number
-  }
-
-  throughput: number
-  activeConnections: number
-}
+console.log({
+  avgResponseTime: m.avgResponseTime, // мс
+  p95ResponseTime: m.p95ResponseTime,
+  p99ResponseTime: m.p99ResponseTime,
+  totalRequests: m.totalRequests,
+  errors: m.errors,
+  uptime: m.uptime // мс
+})
 ```
 
 ---
@@ -192,31 +154,19 @@ interface PerformanceMetrics {
 - статус обучения;
 - версия модели.
 
-```typescript
-interface AIMetrics {
-  totalAnalyses: number
-  accuracy: number
-  falsePositives: number
-  falseNegatives: number
-  averageAnalysisTime: number
-  modelVersion: string
-  lastTraining: Date
-
-  trainingStatus:
-    | 'idle'
-    | 'training'
-    | 'completed'
-    | 'failed'
-}
-```
-
-> Метрики точности имеют смысл только при наличии размеченных данных и процесса валидации.
+> **Важно:** в текущем API FAB Shield отдельного объекта AI-метрик нет —
+> `shield.getAIModule()` возвращает рабочий модуль (`analyze()`, `train()`),
+> а не отчёт по точности. Accuracy, false positives/negatives и время анализа
+> считайте на своей стороне по размеченным данным; готовых
+> `getAIMetrics()`/`accuracy` Shield не отдаёт.
 
 ---
 
 ### 5. Business Metrics
 
 **Business Metrics** — опциональные пользовательские метрики приложения.
+Shield не собирает их автоматически — определяйте и записывайте их в самом
+приложении (например, через собственный плагин).
 
 ### Что может собираться
 
@@ -252,7 +202,7 @@ interface BusinessMetrics {
 import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
-  metrics: {
+  monitoring: {
     enabled: true
   }
 })
@@ -270,44 +220,14 @@ console.log(metrics)
 import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
-  metrics: {
+  monitoring: {
     enabled: true,
 
-    collect: {
-      requests: true,
-      security: true,
-      performance: true,
-      ai: true,
-      business: false
-    },
+    // Форматы экспорта
+    export: ['prometheus', 'json'],
 
+    // Интервал сбора, сек
     interval: 60,
-
-    storage: {
-      type: 'memory',
-      retention: 86400,
-      maxSize: 10000
-    },
-
-    export: {
-      prometheus: {
-        enabled: true,
-        port: 9090,
-        path: '/metrics'
-      },
-
-      json: {
-        enabled: true,
-        path: './metrics.json',
-        interval: 3600
-      },
-
-      webhook: {
-        enabled: false,
-        url: 'https://monitoring.example.com/metrics',
-        interval: 300
-      }
-    },
 
     alerts: {
       enabled: true,
@@ -321,7 +241,7 @@ const shield = new FABShield({
         },
 
         {
-          metric: 'response_time',
+          metric: 'avg_response_time',
           threshold: 1000,
           window: 30,
           severity: 'medium'
@@ -339,25 +259,20 @@ const shield = new FABShield({
 ### Получение метрик через API FAB Shield
 
 ```typescript
-// Получить все метрики
+// Все текущие метрики (снимок)
 const allMetrics = shield.getMetrics()
 
-// Получить конкретную группу метрик
-const security = shield.getMetrics('security')
+// Экспорт в разных форматах
+const json = shield.exportMetrics('json')
+const prometheus = shield.exportMetrics('prometheus')
+const csv = shield.exportMetrics('csv')
 
-// Получить историю за период
-const history = shield.getMetricsHistory({
-  from: new Date('2026-06-01'),
-  to: new Date('2026-07-01'),
-  type: 'security'
-})
-
-// Получить агрегированные метрики
-const aggregated = shield.getMetricsAggregated({
-  groupBy: 'day',
-  metrics: ['requests', 'threats']
-})
+// Текущий статус модулей
+const status = shield.getStatus()
 ```
+
+Истории и агрегаций за период API не хранит — делайте периодические снимки
+`getMetrics()` или `exportMetrics('json')` и агрегируйте на своей стороне (см. «Анализ метрик» ниже).
 
 ---
 
@@ -369,7 +284,7 @@ import { FABShield } from '@fab-orbita/shield'
 
 const app = express()
 const shield = new FABShield({
-  metrics: {
+  monitoring: {
     enabled: true
   }
 })
@@ -404,68 +319,43 @@ fs.writeFileSync('metrics.csv', csvMetrics)
 
 ## 📊 Визуализация
 
-### Веб-дашборд
+### Данные для дашборда
+
+FAB Shield не рендерит графики сам — он отдаёт данные, а отображение остаётся
+за вашим приложением или внешней системой (например, Grafana).
 
 ```typescript
-const dashboard = shield.createDashboard({
-  refreshInterval: 5000,
+// Снимок текущих метрик — источник данных для любого виджета
+const m = shield.getMetrics()
 
-  charts: [
-    {
-      type: 'line',
-      title: 'Запросы в секунду',
-      metric: 'requests_per_second'
-    },
+m.totalRequests        // всего запросов
+m.threatsBlocked       // заблокировано угроз
+m.avgResponseTime      // среднее время ответа, мс
+m.p95ResponseTime      // 95-й перцентиль, мс
+m.p99ResponseTime      // 99-й перцентиль, мс
+m.threatStats          // { [тип угрозы]: количество }
+m.byPath               // { [путь]: количество }
+m.byMethod             // { [метод]: количество }
+m.byStatus             // { [код]: количество }
+m.uptime               // аптайм, мс
+```
 
-    {
-      type: 'bar',
-      title: 'Типы атак',
-      metric: 'threats_by_type'
-    },
+### Prometheus-экспорт для Grafana
 
-    {
-      type: 'gauge',
-      title: 'CPU Usage',
-      metric: 'cpu_usage',
-      min: 0,
-      max: 100
-    },
+Отдайте prometheus-экспорт своим маршрутом — Grafana подключается к нему напрямую:
 
-    {
-      type: 'table',
-      title: 'Топ IP',
-      metric: 'top_attackers',
-      columns: ['ip', 'count', 'type']
-    }
-  ]
-})
+```typescript
+import express from 'express'
 
-app.get('/dashboard', (req, res) => {
-  res.send(dashboard.render())
+const app = express()
+
+app.get('/metrics', (_req, res) => {
+  res.type('text/plain')
+  res.send(shield.exportMetrics('prometheus'))
 })
 ```
 
-> В production dashboard должен быть защищен авторизацией и доступен только администраторам.
-
----
-
-### Графики
-
-```typescript
-const chart = shield.createChart({
-  type: 'line',
-  data: shield.getMetricsHistory(),
-
-  options: {
-    title: 'Угрозы по дням',
-    xAxis: 'date',
-    yAxis: 'count',
-    legend: ['XSS', 'SQL Injection', 'DDoS', 'Brute Force']
-  }
-})
-
-const chartHTML = chart.renderHTML()
-```
+JSON и CSV доступны так же — `shield.exportMetrics('json')` и `shield.exportMetrics('csv')` — ими можно питать любой свой фронтенд или чарт-библиотеку.
 
 ---
 
@@ -477,7 +367,7 @@ const chartHTML = chart.renderHTML()
 import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
-  metrics: {
+  monitoring: {
     alerts: {
       enabled: true,
 
@@ -510,7 +400,7 @@ const shield = new FABShield({
 
         {
           name: 'Performance Degradation',
-          metric: 'response_time',
+          metric: 'avg_response_time',
           condition: '>',
           threshold: 2000,
           window: 120,
@@ -536,10 +426,11 @@ const shield = new FABShield({
 | Правило | Метрика | Условие | Действие |
 |:---|:---|:---|:---|
 | High Threat Rate | `threats_blocked` | `> 50` за 60 сек | Critical alert |
-| Performance Degradation | `response_time` | `> 2000ms` | Warning |
-| CSP Spike | `csp_violations` | `> 20` за 5 мин | Security alert |
-| Rate Limit Spike | `rate_limit_hits` | `> 100` за 1 мин | Monitor / alert |
-| Error Rate | `5xx` | `> 5%` | Ops alert |
+| Latency Spike | `p95_response_time` | `> 2000 мс` | Warning |
+| Error Rate | `errors_total` | `> 10` за 5 мин | Ops alert |
+| Traffic Surge | `total_requests` | `> 10000` за 1 мин | Monitor / alert |
+
+Имена метрик — реальные (Prometheus-экспорт). `monitoring.alerts.rules` — контейнер конфигурации в `MonitoringConfig`; сопоставление правил с метриками и отправку уведомлений реализует потребитель.
 
 ---
 
@@ -549,7 +440,7 @@ const shield = new FABShield({
 
 ```typescript
 setInterval(() => {
-  const metrics = shield.getMetrics('security')
+  const metrics = shield.getMetrics()
 
   if (metrics.threatsBlocked > 100) {
     console.log('🔴 Обнаружено много атак!')
@@ -563,31 +454,36 @@ setInterval(() => {
 ### 2. Оптимизация производительности
 
 ```typescript
-const metrics = shield.getMetrics('performance')
+const metrics = shield.getMetrics()
 
-if (metrics.processingTime.p95 > 500) {
+// p95ResponseTime — реальное поле getMetrics(); сам анализ — ваша функция
+if (metrics.p95ResponseTime > 500) {
   console.log('⚠️ Высокая задержка, нужно оптимизировать')
-  analyzePerformance(metrics)
+  analyzePerformance(metrics) // собственный хелпер приложения
 }
 ```
 
 ---
 
-### 3. Анализ трендов
+### 3. Анализ метрик
+
+История в памяти не хранится — `getMetrics()` отдаёт текущий снимок.
+Для трендов снимайте метрики по расписанию и агрегируйте на своей стороне:
 
 ```typescript
-const history = shield.getMetricsHistory({
-  from: new Date(Date.now() - 7 * 86400000),
-  to: new Date()
+const m = shield.getMetrics()
+
+console.log('📈 Текущее состояние:', {
+  requests: m.totalRequests,
+  threats: m.threatsBlocked,
+  p95: m.p95ResponseTime,
+  uptime: m.uptime
 })
 
-const trends = analyzeTrends(history)
-
-console.log('📈 Тренды:', {
-  requests: trends.requests,
-  threats: trends.threats,
-  performance: trends.performance
-})
+// Периодические снимки для тренда
+setInterval(() => {
+  fs.appendFileSync('metrics.log', shield.exportMetrics('json') + '\n')
+}, 60000)
 ```
 
 ---
@@ -595,89 +491,34 @@ console.log('📈 Тренды:', {
 ### 4. Экспорт security summary
 
 ```typescript
-const securitySummary = shield.getMetricsAggregated({
-  groupBy: 'hour',
-  metrics: [
-    'threats_detected',
-    'threats_blocked',
-    'rate_limit_hits',
-    'csp_violations'
-  ]
-})
+const m = shield.getMetrics()
+
+const securitySummary = {
+  generatedAt: m.timestamp,
+  requests: m.totalRequests,
+  threats: { total: m.threatsBlocked, byType: m.threatStats },
+  latency: { avg: m.avgResponseTime, p95: m.p95ResponseTime, p99: m.p99ResponseTime },
+  errors: m.errors,
+  uptime: m.uptime
+}
 
 console.log(securitySummary)
+
+// Или готовым JSON-файлом
+fs.writeFileSync('security-summary.json', shield.exportMetrics('json'))
 ```
 
 ---
 
-## 🧩 Storage backends
+## 🧩 Хранение метрик
 
-### Memory
+Метрики хранятся **только в памяти процесса** (`MetricsCollector`): счётчики,
+агрегаты по путям/методам/статусам/типам угроз и буфер последних 1000 событий
+угроз. Внешних хранилищ (Redis, база данных) у метрик нет, после перезапуска
+процесса счётчики начинаются заново.
 
-```typescript
-const shield = new FABShield({
-  metrics: {
-    storage: {
-      type: 'memory',
-      retention: 3600,
-      maxSize: 5000
-    }
-  }
-})
-```
-
-Подходит для:
-
-- разработки;
-- тестов;
-- небольших приложений;
-- краткосрочной истории.
-
----
-
-### Redis
-
-```typescript
-const shield = new FABShield({
-  metrics: {
-    storage: {
-      type: 'redis',
-      url: process.env.REDIS_URL,
-      retention: 86400
-    }
-  }
-})
-```
-
-Подходит для:
-
-- нескольких инстансов;
-- shared metrics;
-- distributed rate limiting;
-- production-среды.
-
----
-
-### Database
-
-```typescript
-const shield = new FABShield({
-  metrics: {
-    storage: {
-      type: 'database',
-      url: process.env.DATABASE_URL,
-      retention: 2592000
-    }
-  }
-})
-```
-
-Подходит для:
-
-- долгосрочной истории;
-- аудита;
-- отчетности;
-- аналитики.
+Исторического API (запрос за диапазоном дат) нет — для истории делайте
+периодические снимки `exportMetrics('json')` и сохраняйте их на своей стороне.
 
 ---
 
@@ -726,7 +567,7 @@ console.log(config.metrics)
 ### Сброс метрик
 
 ```typescript
-shield.resetMetrics()
+shield.reset()
 ```
 
 ---
@@ -787,7 +628,7 @@ Metrics не защищает приложение сам по себе.
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | **Сайт** | [devorbit.ru](https://devorbit.ru) |
 | **GitHub** | [zammartin2/shield](https://github.com/zammartin2/shield) |

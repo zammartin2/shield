@@ -5,7 +5,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -63,7 +62,7 @@
 - 🆓 бесплатная MIT-лицензия;
 - 🚀 open source и прозрачность;
 - 💡 развитие через сообщество;
-- 📚 документация на русском и английском;
+- 📚 README на русском и английском, docs/ — на русском;
 - 🧩 возможность начать с базовой защиты и расширять её постепенно.
 
 ---
@@ -437,7 +436,7 @@ FAB Shield усиливает безопасность приложения, н�
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | **Сайт** | [devorbit.ru](https://devorbit.ru) |
 | **GitHub** | [zammartin2/shield](https://github.com/zammartin2/shield) |

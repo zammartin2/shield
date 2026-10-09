@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -23,11 +22,13 @@
 
 ```typescript
 shield.middleware(): (req: Request, res: Response, next: NextFunction) => void
-Пример использования:
+```
 
-typescript
+**Пример использования:**
+
+```typescript
 import express from 'express'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 const app = express()
 const shield = new FABShield()
@@ -39,9 +40,13 @@ app.use(shield.middleware())
 app.get('/', (req, res) => {
     res.json({ message: 'Hello World!' })
 })
-🎯 Конфигурация middleware
-Базовая конфигурация
-typescript
+```
+
+## 🎯 Конфигурация middleware
+
+### Базовая конфигурация
+
+```typescript
 const shield = new FABShield({
     // Включаем/выключаем отдельные модули
     headers: { enabled: true },
@@ -51,44 +56,53 @@ const shield = new FABShield({
 })
 
 app.use(shield.middleware())
-Конфигурация через параметры
-typescript
-// Можно передать конфигурацию прямо в middleware
-app.use(shield.middleware({
-    // Переопределение настроек для конкретного маршрута
-    headers: {
-        'X-Custom-Header': 'custom-value'
-    }
-}))
-🛣️ Middleware для конкретных путей
-Применение к конкретным маршрутам
-typescript
-// Только для API
-app.use('/api/*', shield.middleware({
-    headers: {
-        hsts: { maxAge: 31536000 }
-    }
-}))
+```
 
-// Только для админки
-app.use('/admin/*', shield.middleware({
+### Конфигурация через параметры
+
+`middleware()` не принимает аргументов — вся конфигурация передаётся в
+конструктор `new FABShield({...})`:
+
+```typescript
+const shield = new FABShield({
+    headers: {
+        custom: { 'X-Custom-Header': 'custom-value' }
+    }
+})
+
+app.use(shield.middleware())
+```
+
+## 🛣️ Middleware для конкретных путей
+
+### Применение к конкретным маршрутам
+
+```typescript
+// Отдельный экземпляр для API
+const apiShield = new FABShield({
+    headers: { hsts: { maxAge: 31536000 } }
+})
+app.use('/api', apiShield.middleware())
+
+// Отдельный экземпляр для админки
+const adminShield = new FABShield({
     headers: {
         hsts: { maxAge: 31536000 },
         csp: { strict: true }
     }
-}))
+})
+app.use('/admin', adminShield.middleware())
+```
 
-// Разные настройки для разных путей
-app.use('/api/public/*', shield.middleware({
-    headers: { enabled: false }
-}))
+Маршруты Express 5 не поддерживают glob-пути вида `/api/*` — используйте
+префиксы (`'/api'`): они совместимы и с Express 4, и с Express 5.
+Маршруты, которые не нужно защищать, просто не подключайте к ним middleware.
 
-app.use('/api/private/*', shield.middleware({
-    headers: { enabled: true }
-}))
-🔧 Кастомные middleware
-Создание кастомного middleware
-typescript
+## 🔧 Кастомные middleware
+
+### Создание кастомного middleware
+
+```typescript
 // Создаем кастомный middleware
 const customMiddleware = (req, res, next) => {
     // Логика до обработки FAB Shield
@@ -107,8 +121,11 @@ app.use((req, res, next) => {
     console.log('Custom middleware after shield')
     next()
 })
-Middleware с конфигурацией
-typescript
+```
+
+### Middleware с конфигурацией
+
+```typescript
 // Фабрика middleware
 const createCustomMiddleware = (options) => {
     return (req, res, next) => {
@@ -133,9 +150,13 @@ const createCustomMiddleware = (options) => {
 
 app.use(createCustomMiddleware({ logRequests: true }))
 app.use(shield.middleware())
-🎯 Middleware по условию
-Условное применение
-typescript
+```
+
+## 🎯 Middleware по условию
+
+### Условное применение
+
+```typescript
 // Применяем только в production
 if (process.env.NODE_ENV === 'production') {
     app.use(shield.middleware())
@@ -157,9 +178,13 @@ app.use((req, res, next) => {
     }
     next()
 })
-🔄 Порядок middleware
-Рекомендуемый порядок
-typescript
+```
+
+## 🔄 Порядок middleware
+
+### Рекомендуемый порядок
+
+```typescript
 // 1. Безопасность
 app.use(helmet())  // Если используете
 
@@ -190,9 +215,13 @@ app.use('/api', routes)
 
 // 9. Обработка ошибок
 app.use(errorHandler)
-🎨 Продвинутые техники
-Композиция middleware
-typescript
+```
+
+## 🎨 Продвинутые техники
+
+### Композиция middleware
+
+```typescript
 // Комбинируем несколько middleware
 const composeMiddleware = (...middlewares) => {
     return (req, res, next) => {
@@ -220,15 +249,18 @@ app.use(composeMiddleware(
     shield.middleware(),
     authMiddleware
 ))
-Динамическое включение/выключение
-typescript
+```
+
+### Динамическое включение/выключение
+
+```typescript
 // Динамическое отключение в зависимости от нагрузки
 let shieldEnabled = true
 
 app.use((req, res, next) => {
     // Отключаем при высокой нагрузке
     const metrics = shield.getMetrics()
-    if (metrics.requestsPerSecond > 1000) {
+    if (metrics.p95ResponseTime > 1000) {
         shieldEnabled = false
     }
     
@@ -237,9 +269,13 @@ app.use((req, res, next) => {
     }
     next()
 })
-📊 Мониторинг middleware
-Отслеживание производительности
-typescript
+```
+
+## 📊 Мониторинг middleware
+
+### Отслеживание производительности
+
+```typescript
 // Middleware для мониторинга
 const monitoringMiddleware = (req, res, next) => {
     const start = Date.now()
@@ -263,8 +299,11 @@ const monitoringMiddleware = (req, res, next) => {
 
 app.use(monitoringMiddleware)
 app.use(shield.middleware())
-Логирование
-typescript
+```
+
+### Логирование
+
+```typescript
 // Middleware для логирования
 const loggingMiddleware = (req, res, next) => {
     const start = Date.now()
@@ -286,9 +325,13 @@ const loggingMiddleware = (req, res, next) => {
 
 app.use(loggingMiddleware)
 app.use(shield.middleware())
-🛡️ Middleware безопасности
-Дополнительные проверки
-typescript
+```
+
+## 🛡️ Middleware безопасности
+
+### Дополнительные проверки
+
+```typescript
 // Middleware для проверки безопасности
 const securityCheckMiddleware = (req, res, next) => {
     // Проверка наличия токена
@@ -314,40 +357,75 @@ const securityCheckMiddleware = (req, res, next) => {
 
 app.use(securityCheckMiddleware)
 app.use(shield.middleware())
-🔌 Интеграция с фреймворками
-Express.js
-typescript
+```
+
+## 🔌 Интеграция с фреймворками
+
+### Express.js
+
+```typescript
 import express from 'express'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 const app = express()
 const shield = new FABShield()
 
 app.use(shield.middleware())
-Fastify
-typescript
-import fastify from 'fastify'
-import { FABShield } from '@fab-registry/shield'
+```
 
-const app = fastify()
+### Fastify
+
+`protect()` оборачивает Express-стиль middleware в промис для Fastify-хуков:
+
+```typescript
+import Fastify from 'fastify'
+import { FABShield } from '@fab-orbita/shield'
+
+const app = Fastify()
 const shield = new FABShield()
 
-app.use(shield.middleware())
-Koa
-typescript
+app.addHook('onRequest', async (request, reply) => {
+    await shield.protect(request, reply)
+})
+
+app.get('/', async () => {
+    return { message: 'Protected by FAB Shield' }
+})
+
+app.listen({ port: 3000 })
+```
+
+### Koa
+
+`koa(ctx, next)` адаптирует пайплайн под контекст Koa и пробрасывает ошибки в `next`:
+
+```typescript
 import Koa from 'koa'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 const app = new Koa()
 const shield = new FABShield()
 
-app.use(shield.middleware())
-📞 Контакты
+app.use(async (ctx, next) => {
+    await shield.koa(ctx, next)
+})
+
+app.use(async (ctx) => {
+    ctx.body = { message: 'Protected by FAB Shield' }
+})
+
+app.listen(3000)
+```
+
+## 📞 Контакты
+
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
-🏆 Итог
+
+## 🏆 Итог
+
 Middleware API — это:
 
 🔌 Простая интеграция — одна строка кода

@@ -5,7 +5,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -233,10 +232,11 @@ AI-защита — это дополнительный слой анализа 
 Пример логики:
 
 ```typescript
-const analysis = await shield.ai.analyze(req)
+const analysis = await shield.getAIModule().analyze(req)
 
-if (analysis.isAttack) {
-  shield.block(analysis)
+if (analysis.isThreat) {
+  console.warn(`Обнаружены угрозы: ${analysis.threats.map((t) => t.type).join(', ')}`)
+  // middleware() сам прерывает запрос с 403 при isThreat
 }
 ```
 
@@ -477,7 +477,7 @@ FAB Shield — это важный security-layer, но он не являетс
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 | **Сайт** | [devorbit.ru](https://devorbit.ru) |
 | **GitHub** | [zammartin2/shield](https://github.com/zammartin2/shield) |

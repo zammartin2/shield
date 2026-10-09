@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -21,45 +20,63 @@
 
 ```typescript
 new FABShield(config?: ShieldConfig)
-Параметры:
+```
+
+**Параметры:**
 
 config (опционально) — объект конфигурации
 
-Пример:
+**Пример:**
 
-typescript
+```typescript
 const shield = new FABShield({
     ai: { enabled: true },
     monitoring: { enabled: true }
 })
-Основные методы
-.middleware()
+```
+
+### Основные методы
+
+#### .middleware()
+
 Возвращает middleware для Express/Fastify/Koa.
 
-typescript
+```typescript
 shield.middleware(): MiddlewareFunction
-Пример:
+```
 
-typescript
+**Пример:**
+
+```typescript
 app.use(shield.middleware())
-.getMetrics()
+```
+
+#### .getMetrics()
+
 Возвращает текущие метрики.
 
-typescript
+```typescript
 shield.getMetrics(): Metrics
-Пример:
+```
 
-typescript
+**Пример:**
+
+```typescript
 const metrics = shield.getMetrics()
 console.log(metrics.totalRequests)
-.generateReport()
+```
+
+#### .generateReport()
+
 Генерирует отчет о безопасности.
 
-typescript
+```typescript
 shield.generateReport(options?: ReportOptions): Promise<Report>
-Параметры:
+```
 
-typescript
+**Параметры:**
+
+```typescript
 interface ReportOptions {
     type?: 'executive' | 'security' | 'technical' | 'compliance'
     period?: {
@@ -68,9 +85,11 @@ interface ReportOptions {
     }
     format?: 'json' | 'pdf' | 'html' | 'csv'
 }
-Пример:
+```
 
-typescript
+**Пример:**
+
+```typescript
 const report = await shield.generateReport({
     type: 'executive',
     period: {
@@ -78,14 +97,19 @@ const report = await shield.generateReport({
         to: new Date('2026-07-01')
     }
 })
-.registerPlugin()
+```
+
+#### .registerPlugin()
+
 Регистрирует плагин.
 
-typescript
+```typescript
 shield.registerPlugin(plugin: Plugin): void
-Пример:
+```
 
-typescript
+**Пример:**
+
+```typescript
 shield.registerPlugin({
     name: 'custom-plugin',
     middleware: (req, res, next) => {
@@ -93,100 +117,161 @@ shield.registerPlugin({
         next()
     }
 })
-.getConfig()
+```
+
+#### .getConfig()
+
 Возвращает текущую конфигурацию.
 
-typescript
+```typescript
 shield.getConfig(): ShieldConfig
-.updateConfig()
+```
+
+#### .updateConfig()
+
 Обновляет конфигурацию.
 
-typescript
+```typescript
 shield.updateConfig(config: Partial<ShieldConfig>): void
-🧩 Модули
-HeadersModule
-typescript
-import { HeadersModule } from '@fab-registry/shield/headers'
-Методы:
-.apply()
+```
 
-typescript
+## 🧩 Модули
+
+### HeadersModule
+
+```typescript
+import { HeadersModule } from '@fab-orbita/shield/headers'
+```
+
+**Методы:**
+
+#### .apply()
+
+```typescript
 headersModule.apply(req: Request, res: Response): void
-.setHeader()
+```
 
-typescript
+#### .setHeader()
+
+```typescript
 headersModule.setHeader(name: string, value: string): void
-.getHeaders()
+```
 
-typescript
+#### .getHeaders()
+
+```typescript
 headersModule.getHeaders(): Record<string, string>
-CSPModule
-typescript
-import { CSPModule } from '@fab-registry/shield/csp'
-Методы:
-.generate()
+```
 
-typescript
+### CSPModule
+
+```typescript
+import { CSPModule } from '@fab-orbita/shield/csp'
+```
+
+**Методы:**
+
+#### .generate()
+
+```typescript
 cspModule.generate(req: Request, res: Response): string
-.setDirective()
+```
 
-typescript
+#### .setDirective()
+
+```typescript
 cspModule.setDirective(name: string, value: string[]): void
-.getDirective()
+```
 
-typescript
+#### .getDirective()
+
+```typescript
 cspModule.getDirective(name: string): string[]
-AIModule
-typescript
-import { AIModule } from '@fab-registry/shield/ai'
-Методы:
-.analyze()
+```
 
-typescript
+### AIModule
+
+```typescript
+import { AIModule } from '@fab-orbita/shield/ai'
+```
+
+**Методы:**
+
+#### .analyze()
+
+```typescript
 aiModule.analyze(req: Request): Promise<AnalysisResult>
-.detectAnomaly()
+```
 
-typescript
+#### .detectAnomaly()
+
+```typescript
 aiModule.detectAnomaly(data: any): Promise<AnomalyResult>
-.train()
+```
 
-typescript
+#### .train()
+
+```typescript
 aiModule.train(options?: TrainingOptions): Promise<void>
-MetricsModule
-typescript
-import { MetricsModule } from '@fab-registry/shield/metrics'
-Методы:
-.collect()
+```
 
-typescript
+### MetricsModule
+
+```typescript
+import { MetricsModule } from '@fab-orbita/shield/metrics'
+```
+
+**Методы:**
+
+#### .collect()
+
+```typescript
 metricsModule.collect(): Metrics
-.export()
+```
 
-typescript
+#### .export()
+
+```typescript
 metricsModule.export(format: 'json' | 'csv' | 'prometheus'): string
-.getHistory()
+```
 
-typescript
+#### .getHistory()
+
+```typescript
 metricsModule.getHistory(limit?: number): Metrics[]
-PluginsModule
-typescript
-import { PluginsModule } from '@fab-registry/shield/plugins'
-Методы:
-.register()
+```
 
-typescript
+### PluginsModule
+
+```typescript
+import { PluginsModule } from '@fab-orbita/shield/plugins'
+```
+
+**Методы:**
+
+#### .register()
+
+```typescript
 pluginsModule.register(plugin: Plugin): void
-.unregister()
+```
 
-typescript
+#### .unregister()
+
+```typescript
 pluginsModule.unregister(name: string): void
-.getPlugins()
+```
 
-typescript
+#### .getPlugins()
+
+```typescript
 pluginsModule.getPlugins(): Plugin[]
-📝 Типы и интерфейсы
-ShieldConfig
-typescript
+```
+
+## 📝 Типы и интерфейсы
+
+### ShieldConfig
+
+```typescript
 interface ShieldConfig {
     // Основные настройки
     enabled?: boolean
@@ -208,8 +293,11 @@ interface ShieldConfig {
     cache?: CacheConfig
     performance?: PerformanceConfig
 }
-Plugin
-typescript
+```
+
+### Plugin
+
+```typescript
 interface Plugin {
     // Метаданные
     name: string
@@ -232,50 +320,37 @@ interface Plugin {
     // Конфигурация
     config?: Record<string, any>
 }
-Metrics
-typescript
+```
+
+### Metrics
+
+```typescript
 interface Metrics {
     // Запросы
     totalRequests: number
-    requestsPerSecond: number
-    byMethod: Record<string, number>
-    byStatus: Record<string, number>
-    
-    // Безопасность
-    threatsDetected: number
-    threatsBlocked: number
-    byType: Record<string, number>
-    bySource: Record<string, number>
-    
-    // Производительность
     avgResponseTime: number
     p95ResponseTime: number
     p99ResponseTime: number
-    maxResponseTime: number
-    memoryUsage: {
-        heapUsed: number
-        heapTotal: number
-        external: number
-        rss: number
-    }
-    cpuUsage: number
-    
-    // AI
-    aiAnalyses: number
-    aiAccuracy: number
-    aiFalsePositives: number
-    aiFalseNegatives: number
-    
-    // Rate Limiting
-    blockedByRateLimit: number
-    activeRateLimits: number
-    
+    errors: number
+
+    // Безопасность
+    threatsBlocked: number
+    threats: Array<Record<string, any>>   // последние события (срез до 10)
+    threatTypes: string[]
+    threatStats: Record<string, number>
+    byPath: Record<string, number>
+    byMethod: Record<string, number>
+    byStatus: Record<string, number>
+
     // Система
     uptime: number
-    activeConnections: number
+    timestamp: Date
 }
-Report
-typescript
+```
+
+### Report
+
+```typescript
 interface Report {
     // Основная информация
     id: string
@@ -305,8 +380,11 @@ interface Report {
     format: 'json' | 'pdf' | 'html' | 'csv'
     content: string | Buffer | object
 }
-Threat
-typescript
+```
+
+### Threat
+
+```typescript
 interface Threat {
     id: string
     timestamp: Date
@@ -335,10 +413,14 @@ interface Threat {
     actionTaken: boolean
     recommendations: string[]
 }
-🚀 Примеры использования
-Полная настройка
-typescript
-import { FABShield } from '@fab-registry/shield'
+```
+
+## 🚀 Примеры использования
+
+### Полная настройка
+
+```typescript
+import { FABShield } from '@fab-orbita/shield'
 
 const shield = new FABShield({
     env: 'production',
@@ -408,9 +490,13 @@ app.get('/report', async (req, res) => {
     })
     res.json(report)
 })
-📞 Контакты
+```
+
+## 📞 Контакты
+
 Автор	Фабрициус Владимир Николаевич
 Компания	ООО «Деворбит» (DEVORBIT LLC)
-Email	derector@devorbit.ru
+Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
+
 © 2026 ООО «Деворбит». Все права защищены.

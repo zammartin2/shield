@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.1.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -11,510 +10,196 @@
 
 ## 📋 Введение
 
-**Reporting** — это система генерации отчетов о безопасности, которая превращает сырые данные в понятные и информативные документы для разных аудиторий: от разработчиков до руководства.
+**Reporting** в **FAB Shield** — это сводный JSON-отчёт и экспорт снимка метрик. Всё, что относится к отчётности, сводится к трём вызовам на инстансе:
 
----
-
-## 🎯 Что дают отчеты
-
-### Ключевые преимущества
-
-| Преимущество | Описание |
+| Метод | Что делает |
 |:---|:---|
-| **Прозрачность** | Показывают состояние безопасности |
-| **Аналитика** | Выявляют тренды и проблемы |
-| **Комплаенс** | Соответствие регуляторным требованиям |
-| **Принятие решений** | Данные для управления безопасностью |
-| **Доказательство** | Подтверждение эффективности защиты |
+| `await shield.generateReport(options?)` | Асинхронный сводный отчёт: id, период, summary, список плагинов |
+| `shield.exportMetrics(format?)` | Синхронный текстовый экспорт снимка метрик: `json` / `prometheus` / `csv` |
+| `shield.getMetrics()` | Живой снимок счётчиков — подробнее в [Metrics.md](./Metrics.md) |
+
+Встроенного PDF/HTML-рендера, шаблонов, плановой генерации и «отчётов для руководства» нет — см. раздел «Ограничения». Дашборды и графики строятся на стороне вашего приложения или Grafana поверх prometheus-экспорта (см. [Metrics.md](./Metrics.md)).
 
 ---
 
-## 📊 Типы отчетов
+## 📊 Отчёт generateReport()
 
-### 1. Executive Report (Для руководства)
+`generateReport()` — async-метод на инстансе `FABShield`. Возвращает обычный JS-объект (Promise); ничего не пишет на диск и ничего не рендерит.
 
-**Цель:** Общее состояние безопасности
+### Пример
 
 ```typescript
-interface ExecutiveReport {
-    // Ключевые метрики
-    summary: {
-        totalThreats: number;
-        blockedPercent: number;
-        riskLevel: 'low' | 'medium' | 'high' | 'critical';
-        incidents: number;
-    };
+import { FABShield } from '@fab-orbita/shield'
 
-    // Тренды
-    trends: {
-        threats: Trend[];
-        performance: Trend[];
-        incidents: Trend[];
-    };
+const shield = new FABShield()
+app.use(shield.middleware())
 
-    // Рекомендации
-    recommendations: string[];
+// Сводка «на сейчас»
+const report = await shield.generateReport()
 
-    // Бюджет и ресурсы
-    resources: {
-        saved: number;      // Сэкономлено (в часах)
-        prevented: number;  // Предотвращено атак
-        efficiency: number; // Эффективность защиты (%)
-    };
+// С явным period — он лишь попадает в поле period ответа
+const juneReport = await shield.generateReport({
+  period: {
+    from: new Date('2026-06-01').toISOString(),
+    to: new Date('2026-07-01').toISOString()
+  }
+})
+
+console.log(juneReport.id, juneReport.summary.totalRequests)
+```
+
+### Формат ответа
+
+```typescript
+interface GenerateReportResult {
+  id: string                 // generateRequestId(): `req-<timestamp>-<rand>`
+  generatedAt: string        // ISO-8601
+  period: { from: string; to: string }  // options.period либо [создание инстанса, now]
+  summary: {
+    status: 'active' | 'inactive'      // isActive() на момент вызова
+    uptime: number          // мс с момента создания инстанса
+    totalRequests: number
+    threatsBlocked: number
+    errors: number
+    avgResponseTime: number // округлённое среднее, мс
+  }
+  plugins: Array<{ name: string; version: string; enabled: boolean }>
 }
 ```
 
-### Пример Executive Report
+> **Важно:** `options.period` влияет **только** на поле `period` в ответе. `summary` всегда берётся из текущих накопительных счётчиков `getMetrics()` — за всё время работы процесса Shield, без фильтрации по датам. В `plugins[].enabled` для каждого зарегистрированного плагина всегда `true`.
 
-```json
-{
-    "summary": {
-        "totalThreats": 1567,
-        "blockedPercent": 98.7,
-        "riskLevel": "low",
-        "incidents": 2
-    },
-    "trends": {
-        "threats": {
-            "direction": "decreasing",
-            "change": -12.5,
-            "description": "Угрозы снижаются"
-        }
-    },
-    "recommendations": [
-        "Включить 2FA для всех администраторов",
-        "Обновить правила CSP",
-        "Усилить мониторинг API"
-    ],
-    "resources": {
-        "saved": 240,
-        "prevented": 127,
-        "efficiency": 95
-    }
-}
-```
-
-### 2. Security Report (Для команды безопасности)
-
-**Цель:** Детальный анализ угроз
+### getStatus() — статус модулей
 
 ```typescript
-interface SecurityReport {
-    // Обнаруженные угрозы
-    threats: {
-        total: number;
-        byType: ThreatDistribution;
-        bySource: SourceDistribution;
-        byTime: TimeDistribution;
-    };
+const status = shield.getStatus()
 
-    // Заблокированные атаки
-    blocks: {
-        total: number;
-        byRule: RuleDistribution;
-        byIP: IPDistribution;
-    };
-
-    // Уязвимости
-    vulnerabilities: {
-        found: number;
-        critical: number;
-        high: number;
-        medium: number;
-        low: number;
-        patched: number;
-    };
-
-    // Анализ
-    analysis: {
-        patterns: Pattern[];
-        anomalies: Anomaly[];
-        predictions: Prediction[];
-    };
-}
-```
-
-### 3. Technical Report (Для разработчиков)
-
-**Цель:** Технические детали
-
-```typescript
-interface TechnicalReport {
-    // Производительность
-    performance: {
-        avgResponseTime: number;
-        p95ResponseTime: number;
-        p99ResponseTime: number;
-        requestsPerSecond: number;
-        errorRate: number;
-    };
-
-    // Конфигурация
-    config: {
-        rules: Rule[];
-        headers: Header[];
-        csp: CSPConfig;
-        rateLimits: RateLimitConfig[];
-    };
-
-    // Логи
-    logs: {
-        access: AccessLog[];
-        security: SecurityLog[];
-        errors: ErrorLog[];
-    };
-
-    // Рекомендации для разработчиков
-    recommendations: DeveloperRecommendation[];
-}
-```
-
-### 4. Compliance Report (Для аудита)
-
-**Цель:** Соответствие стандартам
-
-```typescript
-interface ComplianceReport {
-    // Соответствие
-    compliance: {
-        gdpr: {
-            status: 'compliant' | 'non-compliant' | 'partial';
-            issues: string[];
-        };
-        pci: {
-            status: 'compliant' | 'non-compliant' | 'partial';
-            issues: string[];
-        };
-        hipaa: {
-            status: 'compliant' | 'non-compliant' | 'partial';
-            issues: string[];
-        };
-        iso27001: {
-            status: 'compliant' | 'non-compliant' | 'partial';
-            issues: string[];
-        };
-    };
-
-    // Аудит
-    audit: {
-        logs: AuditLog[];
-        access: AccessRecord[];
-        changes: ChangeRecord[];
-    };
-
-    // Доказательства
-    evidence: {
-        policies: Policy[];
-        procedures: Procedure[];
-        tests: TestResult[];
-    };
+interface StatusResult {
+  status: 'ok' | 'inactive'
+  version: string           // например '1.4.1'
+  uptime: number            // мс
+  active: boolean
+  modules: {
+    headers: boolean
+    csp: boolean
+    ai: boolean
+    rateLimit: boolean
+    monitoring: boolean
+  }
+  plugins: string[]         // только имена
+  metrics: object           // тот же снимок, что и getMetrics()
 }
 ```
 
 ---
 
-## 🔧 Использование
+## 📤 Экспорт метрик exportMetrics()
 
-### Базовая генерация
-
-```typescript
-const shield = new FABShield({
-    reporting: {
-        enabled: true
-    }
-})
-
-// Генерация отчета
-const report = await shield.reporting.generate({
-    type: 'executive',
-    period: 'month',
-    format: 'json'
-})
-
-console.log(report)
-```
-
-### Расширенная конфигурация
+Синхронный вызов, возвращает строку. Форматы — ровно три: `'json'` (по умолчанию), `'prometheus'`, `'csv'`.
 
 ```typescript
-const shield = new FABShield({
-    reporting: {
-        enabled: true,
-
-        // Типы отчетов
-        types: {
-            executive: {
-                enabled: true,
-                frequency: 'monthly',
-                recipients: ['ceo@company.com', 'cso@company.com']
-            },
-            security: {
-                enabled: true,
-                frequency: 'weekly',
-                recipients: ['security@company.com']
-            },
-            technical: {
-                enabled: true,
-                frequency: 'daily',
-                recipients: ['dev@company.com']
-            },
-            compliance: {
-                enabled: true,
-                frequency: 'quarterly',
-                recipients: ['audit@company.com']
-            }
-        },
-
-        // Форматы
-        formats: ['pdf', 'html', 'json', 'csv'],
-
-        // Автоматическая отправка
-        delivery: {
-            email: {
-                enabled: true,
-                smtp: {
-                    host: 'smtp.company.com',
-                    port: 587,
-                    user: 'reports@company.com',
-                    password: process.env.SMTP_PASSWORD
-                }
-            },
-            webhook: {
-                enabled: true,
-                url: 'https://monitoring.company.com/reports'
-            },
-            storage: {
-                enabled: true,
-                path: './reports',
-                retention: 90 // дней
-            }
-        },
-
-        // Шаблоны
-        templates: {
-            executive: './templates/executive.hbs',
-            security: './templates/security.hbs',
-            technical: './templates/technical.hbs'
-        }
-    }
-})
-```
-
----
-
-## 📝 Генерация отчетов
-
-### По запросу
-
-```typescript
-// Генерация отчета за период
-const report = await shield.reporting.generate({
-    type: 'security',
-    period: {
-        from: new Date('2026-06-01'),
-        to: new Date('2026-07-01')
-    },
-    format: 'pdf'
-})
-
-// Сохранение отчета
-await report.save('./reports/security-2026-06.pdf')
-```
-
-### Автоматическая генерация
-
-```typescript
-// Настройка автоматической генерации
-shield.reporting.schedule({
-    type: 'executive',
-    schedule: '0 9 1 * *',  // 1-го числа каждого месяца в 9:00
-    format: 'pdf',
-    action: 'email'         // отправить по email
-})
-
-// Еженедельный отчет
-shield.reporting.schedule({
-    type: 'security',
-    schedule: '0 9 * * 1',  // Каждый понедельник в 9:00
-    format: 'html',
-    action: 'webhook'
-})
-
-// Ежедневный технический отчет
-shield.reporting.schedule({
-    type: 'technical',
-    schedule: '0 18 * * *',  // Каждый день в 18:00
-    format: 'json',
-    action: 'storage'
-})
-```
-
----
-
-## 📊 Кастомизация отчетов
-
-### Создание шаблона
-
-```handlebars
-<!-- templates/executive.hbs -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Executive Security Report</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .header { background: #1a237e; color: white; padding: 20px; }
-        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        .metric { background: #f5f5f5; padding: 15px; border-radius: 8px; }
-        .value { font-size: 24px; font-weight: bold; }
-        .trend-up { color: #4CAF50; }
-        .trend-down { color: #F44336; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>FAB Shield — Executive Report</h1>
-        <p>Generated: {{generatedAt}}</p>
-        <p>Period: {{period.from}} — {{period.to}}</p>
-    </div>
-
-    <div class="metrics">
-        <div class="metric">
-            <div>Всего угроз</div>
-            <div class="value">{{summary.totalThreats}}</div>
-        </div>
-        <div class="metric">
-            <div>Заблокировано</div>
-            <div class="value">{{summary.blockedPercent}}%</div>
-        </div>
-        <div class="metric">
-            <div>Уровень риска</div>
-            <div class="value">{{summary.riskLevel}}</div>
-        </div>
-        <div class="metric">
-            <div>Инцидентов</div>
-            <div class="value">{{summary.incidents}}</div>
-        </div>
-    </div>
-
-    <div class="trends">
-        <h2>Тренды</h2>
-        {{#each trends}}
-        <div>
-            <span>{{this.name}}:</span>
-            <span class="trend-{{this.direction}}">{{this.change}}%</span>
-        </div>
-        {{/each}}
-    </div>
-</body>
-</html>
-```
-
-### Добавление кастомных данных
-
-```typescript
-// Добавление кастомных данных в отчет
-shield.reporting.registerDataProvider('custom', async () => {
-    return {
-        customMetrics: await getCustomMetrics(),
-        customAnalysis: await analyzeCustomData()
-    }
-})
-
-// Использование в отчете
-const report = await shield.reporting.generate({
-    type: 'executive',
-    include: ['custom']
-})
-```
-
----
-
-## 📤 Экспорт отчетов
-
-### PDF
-
-```typescript
-// Экспорт в PDF
-const pdf = await shield.reporting.exportPDF(report)
-fs.writeFileSync('report.pdf', pdf)
-
-// Опции PDF
-const pdfOptions = {
-    format: 'A4',
-    landscape: true,
-    margin: {
-        top: 20,
-        bottom: 20,
-        left: 20,
-        right: 20
-    },
-    header: {
-        text: 'FAB Shield Report',
-        fontSize: 10
-    },
-    footer: {
-        text: 'Page {page} of {pages}',
-        fontSize: 8
-    }
-}
-```
-
-### HTML
-
-```typescript
-// Экспорт в HTML
-const html = await shield.reporting.exportHTML(report)
-fs.writeFileSync('report.html', html)
+const json = shield.exportMetrics() // === 'json', pretty-print
+const prom = shield.exportMetrics('prometheus')
+const csv  = shield.exportMetrics('csv')
 ```
 
 ### JSON
 
-```typescript
-// Экспорт в JSON
-const json = await shield.reporting.exportJSON(report)
-fs.writeFileSync('report.json', JSON.stringify(json, null, 2))
+`JSON.stringify(shield.getMetrics(), null, 2)` — полный снимок: счётчики, p95/p99, последние 10 угроз, `threatStats`, `byPath` / `byMethod` / `byStatus`, `uptime`, `timestamp`.
+
+### Prometheus
+
+Ровно шесть метрик; HELP-строки — из `MetricsCollector.export()`:
+
+| Метрика | Тип | HELP |
+|:---|:---|:---|
+| `total_requests` | counter | Total requests processed |
+| `threats_blocked` | counter | Total threats blocked |
+| `avg_response_time` | gauge | Average response time in ms |
+| `p95_response_time` | gauge | 95th percentile response time |
+| `errors_total` | counter | Total errors |
+| `uptime_seconds` | gauge | System uptime in seconds |
+
+Пример вывода (фрагмент — остальные четыре метрики идут тем же формату):
+
+```text
+# HELP total_requests Total requests processed
+# TYPE total_requests counter
+total_requests 142
+
+# HELP threats_blocked Total threats blocked
+# TYPE threats_blocked counter
+threats_blocked 3
 ```
 
 ### CSV
 
+Один заголовок и одна строка значений — снимок на момент вызова:
+
+```text
+totalRequests,threatsBlocked,avgResponseTime,p95ResponseTime,p99ResponseTime,errors
+142,3,12,31,40,0
+```
+
+### Эндпоинт для Prometheus
+
+Shield **не поднимает** HTTP-эндпоинт сам: `integrations.prometheus` в типах конфигурации — лишь форма настроек, в рантайме порт и scrape-endpoint она не открывает. Отдавайте экспорт своим маршрутом:
+
 ```typescript
-// Экспорт в CSV
-const csv = await shield.reporting.exportCSV(report)
-fs.writeFileSync('report.csv', csv)
+app.get('/metrics', (_req, res) => {
+  res.set('Content-Type', 'text/plain')
+  res.send(shield.exportMetrics('prometheus'))
+})
+```
+
+Дальше Prometheus/Grafana скрейпят `/metrics` по обычной схеме; дашборды — на стороне Grafana (см. [Metrics.md](./Metrics.md)).
+
+---
+
+## 🔗 Связь с событиями
+
+Для реактивной отчётности подписывайтесь на события инстанса (`FABShield extends EventEmitter`; полный список — в README):
+
+| Событие | Полезная нагрузка |
+|:---|:---|
+| `threat:detected` | `{ threats, requestId, req }` |
+| `rateLimit:exceeded` | `{ req, requestId, limit, retryAfter, … }` |
+| `alert` | нормализованный `{ type, severity, data, timestamp }` |
+| `error` | `(error, req, res)` |
+
+Минимальный агрегатор на стороне приложения:
+
+```typescript
+const counters = { threats: 0, rateLimits: 0, errors: 0, alerts: 0 }
+
+shield.on('threat:detected', () => { counters.threats++ })
+shield.on('rateLimit:exceeded', () => { counters.rateLimits++ })
+shield.on('error', () => { counters.errors++ })
+shield.on('alert', () => { counters.alerts++ })
+
+// Периодически снимайте сводку; историю храните на своей стороне
+setInterval(async () => {
+  const report = await shield.generateReport()
+  await saveSnapshot({ ...report, counters: { ...counters } })
+}, 60_000)
 ```
 
 ---
 
-## 📊 Визуализация
+## ⚠️ Ограничения
 
-### Графики и диаграммы
+Если вы видели более ранние черновики этой страницы — разделы про нижеперечисленное описывали **несуществующий** API. В текущей версии FAB Shield отчётность — это только `generateReport()`, `exportMetrics()` и `getMetrics()`.
 
-```typescript
-// Добавление графиков в отчет
-const report = await shield.reporting.generate({
-    type: 'executive',
-    charts: [
-        {
-            type: 'line',
-            title: 'Угрозы по дням',
-            data: threatsByDay,
-            xAxis: 'date',
-            yAxis: 'count'
-        },
-        {
-            type: 'pie',
-            title: 'Типы атак',
-            data: threatsByType
-        },
-        {
-            type: 'bar',
-            title: 'Топ 10 атакующих IP',
-            data: topAttackers
-        }
-    ]
-})
-```
+Чего **нет**:
+
+- отчётов `ExecutiveReport` / `SecurityReport` / `TechnicalReport` / `ComplianceReport`, «типов отчётов», секций, шаблонов (Handlebars и др.) и кастомизации через `registerDataProvider`;
+- PDF/HTML-рендера, `exportPDF()` / `exportHTML()` / `report.save()`;
+- плановой генерации (`reporting.schedule()`, cron, email/webhook-доставки, retention на диске);
+- встроенных графиков, диаграмм и дашбордов (`createChart` / `createDashboard`) — дашборды строятся Grafana и иными внешними системами поверх prometheus-экспорта;
+- полей `bySource`, `byTime`, `errorRate`, `requestsPerSecond` в `summary` отчёта, prometheus- и CSV-экспорте;
+- исторического API: `generateReport()` не фильтрует счётчики по `period` — для истории делайте периодические снимки на своей стороне (см. [Metrics.md](./Metrics.md)).
+
+Поля `byPath` / `byMethod` / `byStatus` / `threatStats` доступны в `getMetrics()` и `exportMetrics('json')`, но не входят в `summary` отчёта.
 
 ---
 
@@ -524,22 +209,21 @@ const report = await shield.reporting.generate({
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [derector@devorbit.ru](mailto:derector@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---
 
 ## 🏆 Итог
 
-**Reporting** — это:
+**Reporting** в FAB Shield — это:
 
-- 📊 Прозрачность — видимость состояния безопасности
-- 📈 Аналитика — понимание трендов
-- 📋 Комплаенс — соответствие требованиям
-- 🎯 Решения — данные для управления
-- 📤 Гибкость — разные форматы и шаблоны
+- 📊 сводный JSON-отчёт `generateReport()` — id, период, uptime, счётчики, плагины;
+- 📤 экспорт снимка метрик `exportMetrics()` — json / prometheus / csv;
+- 🔗 реактивная отчётность через события `alert`, `threat:detected`, `rateLimit:exceeded`, `error`;
+- 📈 данные для Grafana и внешних дашбордов.
 
-Принимайте решения на основе данных! 📊
+Для детальной аналитики и истории используйте [Metrics.md](./Metrics.md).
 
 ---
 

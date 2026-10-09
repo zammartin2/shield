@@ -2,7 +2,6 @@
 
 ---
 
-**Версия:** 1.0.0  
 **Дата:** 2026-07-01  
 **Автор:** Фабрициус Владимир Николаевич  
 **Компания:** ООО «Деворбит» (DEVORBIT LLC)
@@ -53,7 +52,7 @@ koa-example/
 import Koa from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 import apiRoutes from './routes/api'
 import publicRoutes from './routes/public'
 import { shieldMiddleware } from './middleware/shield'
@@ -236,7 +235,7 @@ export default app
 
 ```typescript
 import { Context, Next } from 'koa'
-import { FABShield } from '@fab-registry/shield'
+import { FABShield } from '@fab-orbita/shield'
 
 export const shieldMiddleware = (shield: FABShield) => {
     return async (ctx: Context, next: Next) => {
@@ -397,7 +396,7 @@ export default router
         "watch": "tsc --watch"
     },
     "dependencies": {
-        "@fab-registry/shield": "^1.0.0",
+        "@fab-orbita/shield": "^1.0.0",
         "koa": "^2.14.2",
         "@koa/router": "^12.0.1",
         "koa-bodyparser": "^4.4.1",
@@ -476,7 +475,7 @@ cd koa-example
 npm init -y
 
 # Установка зависимостей
-npm install @fab-registry/shield koa @koa/router koa-bodyparser dotenv
+npm install @fab-orbita/shield koa @koa/router koa-bodyparser dotenv
 npm install -D @types/koa @types/koa-bodyparser @types/node typescript ts-node nodemon
 
 # Создаем файлы
@@ -540,7 +539,7 @@ curl -I http://localhost:3000
 |:---|:---|
 | **Автор** | Фабрициус Владимир Николаевич |
 | **Компания** | ООО «Деворбит» (DEVORBIT LLC) |
-| **Email** | [legal@devorbit.ru](mailto:legal@devorbit.ru) |
+| **Email** | [Director@devorbit.ru](mailto:Director@devorbit.ru) |
 | **Реестр** | [fab.devorbit.ru](https://fab.devorbit.ru) |
 
 ---
