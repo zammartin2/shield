@@ -4,7 +4,7 @@
 > Этот документ описывает, как сообщать об уязвимостях, какие версии поддерживаются и как проект обрабатывает security-issues.
 
 [![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](#-сообщение-об-уязвимости)
-[![Supported Version](https://img.shields.io/badge/FAB%20Shield-1.3.x-brightgreen.svg)](#-поддерживаемые-версии)
+[![Supported Version](https://img.shields.io/badge/FAB%20Shield-1.4.x-brightgreen.svg)](#-поддерживаемые-версии)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ---
