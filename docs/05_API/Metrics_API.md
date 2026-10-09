@@ -235,4 +235,4 @@ console.log(report.plugins) // [{ name, version, enabled }]
 
 ---
 
-© 2026 ООО «Деворбит». Все права защищены.
+© 2026 ООО «Деворбит» (DEVORBIT LLC)

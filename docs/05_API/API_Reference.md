@@ -499,4 +499,4 @@ app.get('/report', async (req, res) => {
 Email	Director@devorbit.ru
 Реестр	fab.devorbit.ru
 
-© 2026 ООО «Деворбит». Все права защищены.
+© 2026 ООО «Деворбит» (DEVORBIT LLC)

@@ -771,4 +771,4 @@ Made with ❤️ by **Vladimir Fabrisius**
 
 ---
 
-© 2026 ООО «Деворбит». Все права защищены.
+© 2026 ООО «Деворбит» (DEVORBIT LLC)
