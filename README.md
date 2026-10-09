@@ -13,11 +13,14 @@ Zero-dependency TypeScript security middleware for Node.js — security headers,
 </p>
 
 <p align="center">
-  <a href="https://lab.devorbit.ru/root/fab-shield">Repository</a> ·
+  <a href="https://github.com/zammartin2/shield">Repository</a> ·
   <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
-  <a href="https://lab.devorbit.ru/root/fab-shield/-/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/zammartin2/shield/tree/main/docs">Docs</a> ·
+  <a href="https://shield.devorbit.ru/"><strong>Live demo</strong></a> ·
   <strong>English</strong> | <a href="./README.ru.md">Русский</a>
 </p>
+
+> 🛡️ **Try it live at [shield.devorbit.ru](https://shield.devorbit.ru/)** — an interactive demo with the full documentation, a sandbox of classic attacks (SQLi, XSS, command injection, path traversal, …) fired through the real middleware, a live attack feed, before/after Shield toggle, latency analytics, and multi-tenant dashboards. No install needed.
 
 ---
 
@@ -120,7 +123,7 @@ app.listen(3000, () => {
 });
 ```
 
-Every response now carries correlation headers set by the middleware (`X-Request-ID`, `X-Shield-Version: 1.4.0`, `X-Shield-Status: active`) plus the security headers described in [Security Headers](#security-headers). Blocked requests return structured JSON:
+Every response now carries correlation headers set by the middleware (`X-Request-ID`, `X-Shield-Version: 1.4.1`, `X-Shield-Status: active`) plus the security headers described in [Security Headers](#security-headers). Blocked requests return structured JSON:
 
 - `429` — rate limit exceeded (`retryAfter`, `limit`, `reset`);
 - `403` — critical/high-severity threat detected (`threats[]` with type, severity, confidence);
@@ -701,7 +704,7 @@ const shield = new FABShield(config);
 | `getMetrics()` | `() => object` | Live metrics snapshot |
 | `getConfig()` | `() => ShieldConfig` | Effective configuration |
 | `updateConfig(partial)` | `(Partial<ShieldConfig>) => void` | Runtime config update (rate-limit store preserved) |
-| `getVersion()` | `() => string` | Package version (`1.4.0`) |
+| `getVersion()` | `() => string` | Package version (`1.4.1`) |
 | `isActive()` / `start()` / `stop()` | — | Toggle the pipeline without rebuilding |
 | `registerPlugin(p)` / `unregisterPlugin(name)` | — | Manage plugins at runtime |
 | `exportMetrics(format)` | `'json' \| 'prometheus' \| 'csv'` | Export a metrics snapshot as text |
@@ -726,13 +729,13 @@ const shield = new FABShield(config);
 | `src/core/ConfigManager.ts` | **100%** (statements, branches, functions, lines) |
 | `src/middleware/headers.middleware.ts` | **100%** (statements, branches, functions, lines) |
 
-CI runs on the project's self-hosted GitLab (`.gitlab-ci.yml`) with four stages on `image: node:22`:
+CI runs on GitHub Actions (`.github/workflows/ci.yml`) with four stages on Node.js 20.x / 22.x:
 
 ```text
 lint → typecheck → test → build
 ```
 
-The `test` job runs `npm run test:ci` (coverage enabled), so the thresholds above fail the pipeline on any regression. Because the GitLab instance is private, the README carries no CI badge — a badge image would be dead for outside readers.
+The `test` job runs `npm run test:ci` (coverage enabled), so the thresholds above fail the pipeline on any regression. The workflow runs on every push and pull request.
 
 Local commands:
 
@@ -757,7 +760,7 @@ npm test  &&  npm run lint  &&  npm run type-check  &&  npm run build
 
 FAB Shield performs all analysis in-process. It does not phone home, does not fetch threat lists, and requires no external services of any kind.
 
-Report vulnerabilities privately to **derector@devorbit.ru** — see [`SECURITY.md`](./SECURITY.md) for the disclosure process. Please do not open public issues for exploitable bugs.
+Report vulnerabilities privately to **Director@devorbit.ru** — see [`SECURITY.md`](./SECURITY.md) for the disclosure process. Please do not open public issues for exploitable bugs.
 
 ---
 
@@ -771,21 +774,29 @@ Recommended pairing: HTTPS everywhere, secure cookies, CSRF tokens, strict input
 
 ## Roadmap
 
+### `1.4.1` — released 2026-10-04
+
+- documentation and links migrated to GitHub (`https://github.com/zammartin2/shield`);
+- contact address corrected to `Director@devorbit.ru`;
+- internal-infrastructure references removed from docs and release tooling.
+
 ### `1.4.0` — released 2026-10-03
 
-- CI on the self-hosted GitLab: `lint → typecheck → test → build` on `node:22`;
+- CI: `lint → typecheck → test → build` on `node:22`;
 - documentation rebuilt so every example matches the real public API;
 - flakiness removed from the suite — 1405 tests / 35 suites, coverage ≈ 99.5%;
 - Jest thresholds raised to 98 / 94 / 99 / 98 so CI blocks coverage regressions; zero runtime dependencies maintained.
 
-### Next (`2.0.0`, in development — no fixed date)
+### Next (`2.0.0`, planned for 2026-12-01)
 
 - redesigned AI / analytics module;
-- built-in WAF with customizable rules;
+- built-in WAF;
+- cloud version;
 - plugin marketplace;
-- cloud and enterprise editions.
+- advanced dashboard;
+- enterprise presets.
 
-Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://lab.devorbit.ru/root/fab-shield/-/releases) for shipped versions.
+Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://github.com/zammartin2/shield/releases) for shipped versions.
 
 ---
 
@@ -793,8 +804,8 @@ Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://lab.devor
 
 | Metric | Value |
 |---|---:|
-| Current version | `1.4.0` |
-| Released | `2026-10-03` |
+| Current version | `1.4.1` |
+| Released | `2026-10-04` |
 | Tests | `1405` passed |
 | Test suites | `35` passed |
 | Coverage (statements / branches / functions / lines) | `99.55% / 96.71% / 99.75% / 99.7%` |
@@ -803,7 +814,7 @@ Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://lab.devor
 | Node.js | `>= 18` |
 | License | MIT |
 
-The project is stable and under active maintenance. Version `1.4.0` focuses on test reliability, CI enforcement, and documentation accuracy.
+The project is stable and under active maintenance. Version `1.4.1` focuses on documentation accuracy: repository links migrated to GitHub and contact details corrected.
 
 ---
 
@@ -819,17 +830,17 @@ Contributions are welcome — bug reports, documentation fixes, examples, plugin
 
 - Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Code of conduct: [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
-- Issues and merge requests: <https://lab.devorbit.ru/root/fab-shield/-/issues>
+- Issues and pull requests: <https://github.com/zammartin2/shield/issues>
 
 ```bash
-git clone https://lab.devorbit.ru/root/fab-shield.git
+git clone https://github.com/zammartin2/shield.git
 cd fab-shield
 npm ci
 npm run lint && npm run type-check && npm test && npm run build
 git checkout -b feature/my-feature
 ```
 
-All four CI gates must pass before a merge request is accepted. Include a minimal reproduction and expected/actual behavior when reporting bugs.
+All four CI gates must pass before a pull request is accepted. Include a minimal reproduction and expected/actual behavior when reporting bugs.
 
 ---
 
@@ -837,11 +848,12 @@ All four CI gates must pass before a merge request is accepted. Include a minima
 
 | Channel | Link |
 |---|---|
-| Repository & issues | [lab.devorbit.ru/root/fab-shield](https://lab.devorbit.ru/root/fab-shield) |
+| Repository & issues | [github.com/zammartin2/shield](https://github.com/zammartin2/shield) |
 | npm package | [@fab-orbita/shield](https://www.npmjs.com/package/@fab-orbita/shield) |
 | Product site | [fab.devorbit.ru](https://fab.devorbit.ru) |
+| Live demo | [shield.devorbit.ru](https://shield.devorbit.ru/) |
 | Telegram | [@fab_shield](https://t.me/fab_shield) |
-| Security contact | derector@devorbit.ru |
+| Security contact | Director@devorbit.ru |
 
 ---
 
@@ -887,7 +899,7 @@ Overhead is designed to be small: in-memory checks, no I/O, no dependencies load
 
 **Author:** Фабрициус Владимир Николаевич (Vladimir Fabritsius) — founder of DEVORBIT LLC.
 
-**Contacts:** derector@devorbit.ru · repository https://lab.devorbit.ru/root/fab-shield · company https://devorbit.ru · product site https://fab.devorbit.ru
+**Contacts:** Director@devorbit.ru · repository https://github.com/zammartin2/shield · company https://devorbit.ru · product site https://fab.devorbit.ru · live demo https://shield.devorbit.ru
 
 ---
 

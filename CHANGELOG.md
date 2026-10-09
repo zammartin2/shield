@@ -7,11 +7,31 @@
 
 ---
 
+## [1.4.1] - 2026-10-04
+
+### 📚 Документация
+
+- **Все ссылки переведены на GitHub** — разделы Repository, Releases, Issues и Security
+  Advisories в README (EN/RU) и документации указывают на
+  `https://github.com/zammartin2/shield`; исправлены устаревшие и битые ссылки.
+- **Актуализированы релизные скрипты и описание CI** — `scripts/release.sh` пушит в `origin`,
+  описание пайплайна приведено к GitHub Actions, из README и документации удалены
+  ссылки на непубличные хосты.
+- **Исправлен контактный адрес** — устранена опечатка, во всех документах и mailto-ссылках
+  указан `Director@devorbit.ru`.
+
+### 🔧 Изменено
+
+- Версия пакета: `1.4.0` → `1.4.1` (`package.json`, `package-lock.json`, `fab.json`,
+  `SHIELD_VERSION`, README, `SECURITY.md`).
+
+---
+
 ## [1.4.0] - 2026-10-03
 
 ### 🚀 Добавлено
 
-- **CI/CD в локальном GitLab** — добавлен `.gitlab-ci.yml` со стадиями `lint → typecheck → test → build`;
+- **CI/CD** — добавлен `.gitlab-ci.yml` со стадиями `lint → typecheck → test → build`;
   каждый job задаёт `image: node:22` (образ по умолчанию у раннера — другой). `npm ci` кэшируется по
   `package-lock.json`.
 - **README переработаны с нуля** — `README.md` (English) и `README.ru.md` (Русский) теперь зеркальны по
@@ -24,7 +44,7 @@
 - Переработано ядро `src/core/FABShield.ts` (singleton изолирован, добавлен `destroy()`).
 - `scripts/release.sh` переписан: обновляет `package.json`, `package-lock.json`, `fab.json` **и `SHIELD_VERSION`**
   (раньше версия в `src` расходилась с `package.json` и уронила бы тесты `getVersion()`), прогоняет все гейты
-  и пушит **только** в локальный GitLab — в GitHub никогда.
+  и пушит релиз в `origin`.
 - `package.json`: `build:watch` указывает на существующий `rollup.config.mjs`; удалён скрипт
   `test:integration` (директории `tests/integration` не существует).
 - `.gitignore`: `types/` → `/types/` (раньше правило гасило **новые** файлы в `src/types/`), добавлены
@@ -341,7 +361,7 @@ Runtime использует только встроенные модули Node
 
 ## Планируемые релизы
 
-### [2.0.0] — ожидается
+### [2.0.0] — запланировано на 2026-12-01
 
 ### 🚀 Крупное обновление
 
@@ -359,18 +379,25 @@ Runtime использует только встроенные модули Node
   - Автоматическое обновление правил
   - Логирование и алертинг
 
-- **Облачная версия**
+- **Облачная версия (cloud version)**
   - SaaS-решение
   - Централизованное управление
   - Мульти-тенантность
   - API для управления
-  - Dashboard для мониторинга
 
 - **Marketplace для плагинов**
   - Официальные плагины от команды
   - Плагины от сообщества
   - Система рейтингов и отзывов
   - Автоматическая установка и обновление
+
+- **Advanced dashboard**
+  - Расширенная аналитика и визуализация
+  - Настраиваемые виджеты и отчёты
+
+- **Enterprise presets**
+  - Готовые профили конфигурации для предприятий
+  - Расширенные политики безопасности
 
 **Breaking Changes:**
 - Изменение API для AI-модуля
@@ -391,7 +418,7 @@ Runtime использует только встроенные модули Node
 
 ## Ссылки
 
-- [Релизы в GitLab](https://lab.devorbit.ru/root/fab-shield/-/releases)
+- [Релизы GitHub](https://github.com/zammartin2/shield/releases)
 - [npm Package](https://www.npmjs.com/package/@fab-orbita/shield)
 - [Fab Registry](https://fab.devorbit.ru/packages/@fab-orbita/shield)
 - [Socket.dev Security Report](https://socket.dev/npm/package/@fab-orbita/shield)

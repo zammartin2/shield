@@ -1,15 +1,22 @@
 {
   "name": "@fab-orbita/shield",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Advanced security framework for Node.js with AI-powered protection",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["dist/index.d.ts"]
     }
   },
   "files": [
@@ -20,24 +27,26 @@
     "CHANGELOG.md",
     "SECURITY.md"
   ],
+  "sideEffects": false,
   "scripts": {
-    "build": "npm run build:clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build": "npm run build:clean && npm run build:rollup && npm run build:types",
     "build:clean": "rimraf dist",
-    "build:cjs": "tsc -p tsconfig.build.json",
-    "build:esm": "tsc -p tsconfig.module.json",
-    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
-    "build:watch": "tsc -p tsconfig.build.json --watch",
+    "build:rollup": "rollup -c rollup.config.mjs",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
+    "build:watch": "rollup -c rollup.config.mjs -w",
     "build:analyze": "npm run build && source-map-explorer dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts",
+    "test:unit": "jest tests/unit",
+    "test:e2e": "jest tests/e2e",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage node_modules",
-    "prepublishOnly": "npm run build && npm run test",
+    "prepublishOnly": "npm run build && npm test",
     "dev": "ts-node examples/server.ts",
     "start": "node dist/index.js",
     "example": "ts-node examples/server.ts",
@@ -60,57 +69,85 @@
       "optional": true
     }
   },
-  "dependencies": {},
   "devDependencies": {
-    "@types/events": "^3.0.3",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/express": "^4.17.25",
-    "@types/jest": "^29.5.10",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.19.43",
-    "@types/uuid": "^9.0.7",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
+    "@types/supertest": "^6.0.3",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^7.6.0",
+    "@typescript-eslint/parser": "^7.6.0",
+    "dotenv": "^17.4.2",
     "eslint": "^8.55.0",
     "express": "^5.2.1",
     "jest": "^29.7.0",
+    "jest-junit": "^17.0.0",
     "nodemon": "^3.0.2",
     "prettier": "^3.1.1",
+    "redis": "^6.1.0",
     "rimraf": "^5.0.5",
+    "rollup": "^4.9.6",
     "source-map-explorer": "^2.5.3",
-    "ts-jest": "^29.1.1",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "tslib": "^2.8.1",
+    "typescript": "^5.3.3",
+    "uuid": "^14.0.1",
+    "winston": "^3.19.0"
   },
   "keywords": [
     "security",
-    "headers",
+    "nodejs-security",
+    "api-security",
+    "express-security",
+    "fastify-security",
+    "koa-security",
+    "security-headers",
+    "content-security-policy",
     "csp",
-    "ai",
-    "protection",
-    "express",
-    "fastify",
-    "koa",
+    "rate-limiting",
     "middleware",
     "waf",
     "firewall",
-    "xss",
-    "csrf",
+    "xss-protection",
+    "csrf-protection",
     "hsts",
-    "csp",
+    "sql-injection",
+    "nosql-injection",
+    "path-traversal",
+    "command-injection",
+    "helmet-alternative",
+    "http-security",
+    "request-validation",
+    "threat-detection",
+    "ai-security",
+    "metrics",
+    "monitoring",
+    "express-middleware",
+    "nestjs-security",
+    "typescript-security",
+    "open-source-security",
     "fab",
     "shield",
-    "fab-orbita"
+    "fab-orbita",
+    "devorbit"
   ],
   "author": {
     "name": "Фабрициус Владимир Николаевич",
-    "email": "derector@devorbit.ru"
+    "email": "Director@devorbit.ru"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@lab.devorbit.ru:52984/root/fab-shield.git"
+    "url": "git+https://github.com/zammartin2/shield.git"
   },
   "bugs": {
-    "url": "https://lab.devorbit.ru/root/fab-shield/-/issues"
+    "url": "https://github.com/zammartin2/shield/issues"
   },
   "homepage": "https://fab.devorbit.ru",
   "engines": {

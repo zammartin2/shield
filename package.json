@@ -1,15 +1,22 @@
 {
   "name": "@fab-orbita/shield",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Advanced security framework for Node.js with AI-powered protection",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["dist/index.d.ts"]
     }
   },
   "files": [
@@ -34,9 +41,9 @@
     "test:ci": "jest --ci --coverage --maxWorkers=2",
     "test:unit": "jest tests/unit",
     "test:e2e": "jest tests/e2e",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage node_modules",
     "prepublishOnly": "npm run build && npm test",
@@ -132,15 +139,15 @@
   ],
   "author": {
     "name": "Фабрициус Владимир Николаевич",
-    "email": "derector@devorbit.ru"
+    "email": "Director@devorbit.ru"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@lab.devorbit.ru:52984/root/fab-shield.git"
+    "url": "git+https://github.com/zammartin2/shield.git"
   },
   "bugs": {
-    "url": "https://lab.devorbit.ru/root/fab-shield/-/issues"
+    "url": "https://github.com/zammartin2/shield/issues"
   },
   "homepage": "https://fab.devorbit.ru",
   "engines": {

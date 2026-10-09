@@ -4,7 +4,7 @@ stages:
   - test
   - build
 
-# Каждый job обязан задавать image: дефолтный образ раннера lab.devorbit.ru —
+# Каждый job обязан задавать image: дефолтный образ раннера по умолчанию —
 # registry.gitlab.com/hadzhioglu/padavan-ng, в нём нет рабочего node/npm.
 .npm:
   image: node:22

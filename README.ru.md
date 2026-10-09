@@ -13,11 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://lab.devorbit.ru/root/fab-shield">Репозиторий</a> ·
+  <a href="https://github.com/zammartin2/shield">Репозиторий</a> ·
   <a href="https://www.npmjs.com/package/@fab-orbita/shield">npm</a> ·
-  <a href="https://lab.devorbit.ru/root/fab-shield/-/tree/main/docs">Документация</a> ·
+  <a href="https://github.com/zammartin2/shield/tree/main/docs">Документация</a> ·
+  <a href="https://shield.devorbit.ru/"><strong>Живое демо</strong></a> ·
   <a href="./README.md">English</a> | <strong>Русский</strong>
 </p>
+
+> 🛡️ **Попробуйте вживую: [shield.devorbit.ru](https://shield.devorbit.ru/)** — интерактивное демо с полной документацией, песочницей классических атак (SQLi, XSS, инъекция команд, path traversal, …), которые проходят через реальный мидлварь, живой лентой атак, переключателем Shield «до/после», аналитикой латентности и мультитенантными дашбордами. Без установки.
 
 ---
 
@@ -120,7 +123,7 @@ app.listen(3000, () => {
 });
 ```
 
-Каждый ответ теперь содержит корреляционные заголовки, которые задаёт мидлварь (`X-Request-ID`, `X-Shield-Version: 1.4.0`, `X-Shield-Status: active`), а также заголовки безопасности из раздела [Заголовки безопасности](#заголовки-безопасности). Заблокированные запросы получают структурированный JSON:
+Каждый ответ теперь содержит корреляционные заголовки, которые задаёт мидлварь (`X-Request-ID`, `X-Shield-Version: 1.4.1`, `X-Shield-Status: active`), а также заголовки безопасности из раздела [Заголовки безопасности](#заголовки-безопасности). Заблокированные запросы получают структурированный JSON:
 
 - `429` — превышен лимит запросов (`retryAfter`, `limit`, `reset`);
 - `403` — обнаружена угроза критической или высокой серьёзности (`threats[]` с типом, серьёзностью и достоверностью);
@@ -701,7 +704,7 @@ const shield = new FABShield(config);
 | `getMetrics()` | `() => object` | Снимок актуальных метрик |
 | `getConfig()` | `() => ShieldConfig` | Действующая конфигурация |
 | `updateConfig(partial)` | `(Partial<ShieldConfig>) => void` | Обновление конфигурации во время работы (хранилище rate-limit сохраняется) |
-| `getVersion()` | `() => string` | Версия пакета (`1.4.0`) |
+| `getVersion()` | `() => string` | Версия пакета (`1.4.1`) |
 | `isActive()` / `start()` / `stop()` | — | Переключают конвейер без пересоздания |
 | `registerPlugin(p)` / `unregisterPlugin(name)` | — | Управление плагинами во время работы |
 | `exportMetrics(format)` | `'json' \| 'prometheus' \| 'csv'` | Экспорт снимка метрик в текст |
@@ -726,13 +729,13 @@ const shield = new FABShield(config);
 | `src/core/ConfigManager.ts` | **100%** (утверждения, ветки, функции, строки) |
 | `src/middleware/headers.middleware.ts` | **100%** (утверждения, ветки, функции, строки) |
 
-CI выполняется на самохостинговом GitLab проекта (`.gitlab-ci.yml`): четыре стадии на `image: node:22`:
+CI выполняется на GitHub Actions (`.github/workflows/ci.yml`): четыре стадии на Node.js 20.x / 22.x:
 
 ```text
 lint → typecheck → test → build
 ```
 
-Задача `test` запускает `npm run test:ci` (с включённым покрытием), поэтому перечисленные выше пороги обрывают конвейер при любой регрессии. Поскольку инстанс GitLab закрытый, в README нет бейджа CI — его изображение было бы недоступно внешним читателям.
+Задача `test` запускает `npm run test:ci` (с включённым покрытием), поэтому перечисленные выше пороги обрывают конвейер при любой регрессии. Workflow запускается на каждый push и pull request.
 
 Локальные команды:
 
@@ -757,7 +760,7 @@ npm test  &&  npm run lint  &&  npm run type-check  &&  npm run build
 
 FAB Shield выполняет весь анализ внутри процесса. Он не отправляет данные наружу, не загружает списки угроз и не требует никаких внешних сервисов.
 
-Сообщайте об уязвимостях приватно на **derector@devorbit.ru** — процесс раскрытия описан в [`SECURITY.md`](./SECURITY.md). Пожалуйста, не открывайте публичные issues для воспроизводимых ошибок.
+Сообщайте об уязвимостях приватно на **Director@devorbit.ru** — процесс раскрытия описан в [`SECURITY.md`](./SECURITY.md). Пожалуйста, не открывайте публичные issues для воспроизводимых ошибок.
 
 ---
 
@@ -771,21 +774,29 @@ FAB Shield — прочная база, а не полноценная прог�
 
 ## Дорожная карта
 
+### `1.4.1` — выпущена 2026-10-04
+
+- документация и ссылки переведены на GitHub (`https://github.com/zammartin2/shield`);
+- исправлен контактный адрес: `Director@devorbit.ru`;
+- из документации и релизных скриптов удалены упоминания внутренней инфраструктуры.
+
 ### `1.4.0` — выпущена 2026-10-03
 
-- CI на самохостинговом GitLab: `lint → typecheck → test → build` на `node:22`;
+- CI: `lint → typecheck → test → build` на `node:22`;
 - документация переработана так, чтобы каждый пример соответствовал реальному публичному API;
 - устранена недетерминированность тестов — 1405 тестов / 35 наборов, покрытие ≈ 99.5%;
 - пороги Jest повышены до 98 / 94 / 99 / 98, чтобы CI блокировал регрессии покрытия; ноль рантайм-зависимостей сохраняется.
 
-### Далее (`2.0.0`, в разработке — без фиксированной даты)
+### Далее (`2.0.0`, планируется на 2026-12-01)
 
 - переработанный модуль AI / аналитики;
-- встроенный WAF с настраиваемыми правилами;
+- встроенный WAF;
+- облачная версия (cloud version);
 - маркетплейс плагинов;
-- облачные и корпоративные редакции.
+- advanced dashboard;
+- enterprise presets.
 
-Следите за [`CHANGELOG.md`](./CHANGELOG.md) и [страницей релизов](https://lab.devorbit.ru/root/fab-shield/-/releases), чтобы узнавать о вышедших версиях.
+Следите за [`CHANGELOG.md`](./CHANGELOG.md) и [страницей релизов](https://github.com/zammartin2/shield/releases), чтобы узнавать о вышедших версиях.
 
 ---
 
@@ -793,8 +804,8 @@ FAB Shield — прочная база, а не полноценная прог�
 
 | Показатель | Значение |
 |---|---:|
-| Текущая версия | `1.4.0` |
-| Выпущена | `2026-10-03` |
+| Текущая версия | `1.4.1` |
+| Выпущена | `2026-10-04` |
 | Тесты | `1405` пройдено |
 | Наборы тестов | `35` пройдено |
 | Покрытие кода (утверждения / ветки / функции / строки) | `99.55% / 96.71% / 99.75% / 99.7%` |
@@ -803,7 +814,7 @@ FAB Shield — прочная база, а не полноценная прог�
 | Node.js | `>= 18` |
 | Лицензия | MIT |
 
-Проект стабилен и активно поддерживается. Версия `1.4.0` нацелена на надёжность тестов, принудительный контроль со стороны CI и точность документации.
+Проект стабилен и активно поддерживается. Версия `1.4.1` нацелена на точность документации: ссылки переведены на GitHub, контактные данные исправлены.
 
 ---
 
@@ -819,17 +830,17 @@ FAB Shield — прочная база, а не полноценная прог�
 
 - Руководство по участию: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Кодекс поведения: [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
-- Issues и merge request'ы: <https://lab.devorbit.ru/root/fab-shield/-/issues>
+- Issues и pull request'ы: <https://github.com/zammartin2/shield/issues>
 
 ```bash
-git clone https://lab.devorbit.ru/root/fab-shield.git
+git clone https://github.com/zammartin2/shield.git
 cd fab-shield
 npm ci
 npm run lint && npm run type-check && npm test && npm run build
 git checkout -b feature/my-feature
 ```
 
-Все четыре гейта CI должны пройти, прежде чем merge request будет принят. При сообщении об ошибках прилагайте минимальный пример воспроизведения и ожидаемое/фактическое поведение.
+Все четыре гейта CI должны пройти, прежде чем pull request будет принят. При сообщении об ошибках прилагайте минимальный пример воспроизведения и ожидаемое/фактическое поведение.
 
 ---
 
@@ -837,11 +848,12 @@ git checkout -b feature/my-feature
 
 | Канал | Ссылка |
 |---|---|
-| Репозиторий и issues | [lab.devorbit.ru/root/fab-shield](https://lab.devorbit.ru/root/fab-shield) |
+| Репозиторий и issues | [github.com/zammartin2/shield](https://github.com/zammartin2/shield) |
 | Пакет npm | [@fab-orbita/shield](https://www.npmjs.com/package/@fab-orbita/shield) |
 | Сайт продукта | [fab.devorbit.ru](https://fab.devorbit.ru) |
+| Живое демо | [shield.devorbit.ru](https://shield.devorbit.ru/) |
 | Telegram | [@fab_shield](https://t.me/fab_shield) |
-| Контакт по безопасности | derector@devorbit.ru |
+| Контакт по безопасности | Director@devorbit.ru |
 
 ---
 
@@ -887,7 +899,7 @@ Express `^4.18.2 || ^5.0.0`, Fastify `^4` и Koa `^2` — все как необ
 
 **Автор:** Фабрициус Владимир Николаевич (Vladimir Fabritsius) — основатель DEVORBIT LLC.
 
-**Контакты:** derector@devorbit.ru · репозиторий https://lab.devorbit.ru/root/fab-shield · компания https://devorbit.ru · сайт продукта https://fab.devorbit.ru
+**Контакты:** Director@devorbit.ru · репозиторий https://github.com/zammartin2/shield · компания https://devorbit.ru · сайт продукта https://fab.devorbit.ru · живое демо https://shield.devorbit.ru
 
 ---
 

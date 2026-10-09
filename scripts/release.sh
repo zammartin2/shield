@@ -1,6 +1,6 @@
 #!/bin/bash
 # Релиз FAB Shield.
-# ВАЖНО: пуш идёт ТОЛЬКО в локальный GitLab (remote `lab`), в GitHub — никогда.
+# ВАЖНО: пуш идёт в origin (GitHub).
 set -euo pipefail
 
 VERSION=${1:-}
@@ -37,6 +37,6 @@ npm run build
 git add package.json package-lock.json fab.json src/core/FABShield.ts CHANGELOG.md
 git commit -m "Release $VERSION"
 git tag -a "v$VERSION" -m "Release $VERSION"
-git push lab main
-git push lab "v$VERSION"
+git push origin main
+git push origin "v$VERSION"
 echo "✅ Release $VERSION complete!"
