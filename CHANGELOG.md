@@ -7,6 +7,33 @@
 
 ---
 
+## [1.4.2] - 2026-10-09
+
+### 📚 Документация
+
+- **Полный аудит документации** — исправлены 15 файлов с незакрытыми блоками кода
+  (GitHub показывал хвост файла моноширинным), переписаны целые главы, описывавшие
+  несуществующий API (`Threat_Detection`, `Metrics_API`, `Security_Headers`,
+  `Rate_Limiting`), приведены в соответствие с исходным кодом.
+- **Убраны выдуманные API-примеры** — фантомные методы (`getPerformanceMetrics`,
+  `getAIMetrics`, `shield.plugins.updateConfig`, `createDashboard` и др.) заменены
+  на реальные: плагины через `onRequest`, события `threat:detected` /
+  `rateLimit:exceeded`, `getMetrics()` / `getStatus()` / `generateReport()`;
+  несуществующие возможности теперь явно помечены «в API нет».
+- **Актуализированы таблицы версий** поддержки и совместимости (`SECURITY.md`,
+  `docs/14`, дорожная карта, история изменений).
+
+### 🔧 Изменено
+
+- Версия пакета: `1.4.1` → `1.4.2` (`package.json`, `package-lock.json`, `fab.json`,
+  `SHIELD_VERSION`).
+- Упаковка пакета: `exports` дополнен `./package.json` и `default`, добавлен
+  `typesVersions`, цитирование glob в скриптах `lint`/`format`, `declarationMap: false`.
+- `src/modules/ai/AIEngine.ts`: очищены избыточные экранирования кавычек в regex
+  (поведение не изменено).
+
+---
+
 ## [1.4.1] - 2026-10-04
 
 ### 📚 Документация

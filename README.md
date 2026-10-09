@@ -123,7 +123,7 @@ app.listen(3000, () => {
 });
 ```
 
-Every response now carries correlation headers set by the middleware (`X-Request-ID`, `X-Shield-Version: 1.4.1`, `X-Shield-Status: active`) plus the security headers described in [Security Headers](#security-headers). Blocked requests return structured JSON:
+Every response now carries correlation headers set by the middleware (`X-Request-ID`, `X-Shield-Version: 1.4.2`, `X-Shield-Status: active`) plus the security headers described in [Security Headers](#security-headers). Blocked requests return structured JSON:
 
 - `429` — rate limit exceeded (`retryAfter`, `limit`, `reset`);
 - `403` — critical/high-severity threat detected (`threats[]` with type, severity, confidence);
@@ -704,7 +704,7 @@ const shield = new FABShield(config);
 | `getMetrics()` | `() => object` | Live metrics snapshot |
 | `getConfig()` | `() => ShieldConfig` | Effective configuration |
 | `updateConfig(partial)` | `(Partial<ShieldConfig>) => void` | Runtime config update (rate-limit store preserved) |
-| `getVersion()` | `() => string` | Package version (`1.4.1`) |
+| `getVersion()` | `() => string` | Package version (`1.4.2`) |
 | `isActive()` / `start()` / `stop()` | — | Toggle the pipeline without rebuilding |
 | `registerPlugin(p)` / `unregisterPlugin(name)` | — | Manage plugins at runtime |
 | `exportMetrics(format)` | `'json' \| 'prometheus' \| 'csv'` | Export a metrics snapshot as text |
@@ -774,6 +774,14 @@ Recommended pairing: HTTPS everywhere, secure cookies, CSRF tokens, strict input
 
 ## Roadmap
 
+### `1.4.2` — released 2026-10-09
+
+- full documentation audit: 15 files with broken code fences repaired;
+- chapters that described a fabricated API rewritten against the real source
+  (`Threat_Detection`, `Metrics_API`, `Security_Headers`, `Rate_Limiting`);
+- phantom API examples replaced with the real plugin / event surface, missing
+  capabilities marked explicitly as «not in the API».
+
 ### `1.4.1` — released 2026-10-04
 
 - documentation and links migrated to GitHub (`https://github.com/zammartin2/shield`);
@@ -804,8 +812,8 @@ Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://github.co
 
 | Metric | Value |
 |---|---:|
-| Current version | `1.4.1` |
-| Released | `2026-10-04` |
+| Current version | `1.4.2` |
+| Released | `2026-10-09` |
 | Tests | `1405` passed |
 | Test suites | `35` passed |
 | Coverage (statements / branches / functions / lines) | `99.55% / 96.71% / 99.75% / 99.7%` |
@@ -814,7 +822,7 @@ Follow [`CHANGELOG.md`](./CHANGELOG.md) and the [release page](https://github.co
 | Node.js | `>= 18` |
 | License | MIT |
 
-The project is stable and under active maintenance. Version `1.4.1` focuses on documentation accuracy: repository links migrated to GitHub and contact details corrected.
+The project is stable and under active maintenance. Version `1.4.2` completes the documentation audit: every documented example now matches the real public API.
 
 ---
 

@@ -205,7 +205,7 @@ const shield = new FABShield({
 
 | Метрика | Значение |
 |---|---:|
-| Актуальная версия | `1.4.1` |
+| Актуальная версия | `1.4.2` |
 | Тесты | `1405 / 1405` пройдено |
 | Test Suites | `35 / 35` пройдено |
 | Code coverage | `99.55%` |
@@ -329,8 +329,8 @@ Copyright (c) 2026 ООО «Деворбит» (DEVORBIT LLC)
 
 ---
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue)](https://github.com/zammartin2/shield/releases)
+[![Version](https://img.shields.io/badge/version-1.4.2-blue)](https://github.com/zammartin2/shield/releases)
 
-FAB Shield `v1.4.1` включает 25+ security-заголовков, AI-обнаружение XSS, SQL-инъекций и аномалий, систему плагинов, метрики, мониторинг и поддержку Express, Fastify и Koa.
+FAB Shield `v1.4.2` включает 25+ security-заголовков, AI-обнаружение XSS, SQL-инъекций и аномалий, систему плагинов, метрики, мониторинг и поддержку Express, Fastify и Koa.
 
 Проект распространяется под MIT, содержит 1405 тестов с заявленным покрытием кода `99.55%` и сопровождается документацией на русском языке.

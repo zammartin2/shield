@@ -76,7 +76,7 @@ const status = shield.getStatus()
 
 interface StatusResult {
   status: 'ok' | 'inactive'
-  version: string           // например '1.4.1'
+  version: string           // например '1.4.2'
   uptime: number            // мс
   active: boolean
   modules: {
